@@ -36,17 +36,17 @@ var PROJECT_PATTERNS = {
     ]
 };
 
-// gulp.task('lint', ['lint:javascript']);
-// gulp.task('lint:javascript', function () {
-//     // DOCS: http://eslint.org
-//     return gulp.src(PROJECT_PATTERNS.js)
-//         .pipe(gulpif(!process.env.CI, plumber()))
-//         .pipe(eslint())
-//         .pipe(eslint.format())
-//         .pipe(eslint.failAfterError())
-//         .pipe(gulpif(!process.env.CI, plumber.stop()));
-// });
-//
+gulp.task('lint', ['lint:javascript']);
+gulp.task('lint:javascript', function () {
+    // DOCS: http://eslint.org
+    return gulp.src(PROJECT_PATTERNS.js)
+        .pipe(gulpif(!process.env.CI, plumber()))
+        .pipe(eslint())
+        .pipe(eslint.format())
+        .pipe(eslint.failAfterError())
+        .pipe(gulpif(!process.env.CI, plumber.stop()));
+});
+
 var webpackBundle = function (opts) {
     var webpackOptions = opts || {};
 
