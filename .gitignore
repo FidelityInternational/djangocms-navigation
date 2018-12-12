@@ -1,0 +1,14 @@
+*.pyc
+*.egg-info
+.DS_Store
+.idea/
+.tox/
+.eggs/
+dist/
+build/
+.env
+local.sqlite
+.coverage
+htmlcov/
+.python-version
+!djangocms_versioning/static/djangocms_versioning/js/dist
