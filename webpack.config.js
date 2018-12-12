@@ -16,7 +16,7 @@ module.exports = function(opts) {
         watch: !!opts.watch,
         entry: {
             // CMS frontend
-            Contentexpiry: PROJECT_PATH.js + '/base.js',
+            Navigation: PROJECT_PATH.js + '/base.js',
         },
         output: {
             path: PROJECT_PATH.js + '/dist/',
