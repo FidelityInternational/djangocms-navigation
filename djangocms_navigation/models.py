@@ -20,16 +20,9 @@ class MenuContent(models.Model):
         Site,
         on_delete=models.PROTECT,
     )
-    menu = models.OneToOneField(
+    menu = models.ForeignKey(
         Menu,
-        on_delete=models.CASCADE,
-        primary_key=True,
-    )
-    modified_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
-        verbose_name=_('modified_by'),
-        null=True,
     )
 
     def __str__(self):
@@ -45,13 +38,7 @@ class MenuItem(MP_Node):
     object_id = models.PositiveIntegerField()
     content = GenericForeignKey('content_type', 'object_id')
     menu_content = models.ForeignKey(
-        MenuContent, on_delete=models.CASCADE
-    )
-    modified_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
-        verbose_name=_('modified_by'),
-        null=True,
+        MenuContent, on_delete=models.PROTECT,
     )
 
     def __str__(self):
