@@ -8,16 +8,28 @@ from treebeard.mp_tree import MP_Node
 
 
 class Menu(models.Model):
+    """
+    Menu Grouper
+    """
+    pass
+
+
+class MenuContent(models.Model):
     title = models.CharField(verbose_name=_('title'), max_length=100)
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
-        verbose_name=_('author'),
-    )
-    created_on = models.DateTimeField(auto_now_add=True)
     site = models.ForeignKey(
         Site,
         on_delete=models.PROTECT,
+    )
+    menu = models.OneToOneField(
+        Menu,
+        on_delete=models.CASCADE,
+        primary_key=True,
+    )
+    modified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        verbose_name=_('modified_by'),
+        null=True,
     )
 
     def __str__(self):
@@ -32,15 +44,15 @@ class MenuItem(MP_Node):
     )
     object_id = models.PositiveIntegerField()
     content = GenericForeignKey('content_type', 'object_id')
-    menu = models.ForeignKey(
-        Menu, on_delete=models.CASCADE
+    menu_content = models.ForeignKey(
+        MenuContent, on_delete=models.CASCADE
     )
-    created_by = models.ForeignKey(
+    modified_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
-        verbose_name=_('author'),
+        verbose_name=_('modified_by'),
+        null=True,
     )
-    created_on = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return "Node: {}".format(self.title)
+        return self.title

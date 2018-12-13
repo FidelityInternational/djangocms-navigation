@@ -2,30 +2,28 @@ from django.contrib import admin
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
 
-from .models import Menu, MenuItem
+from .models import Menu, MenuContent, MenuItem
 
 
-class MenuAdmin(admin.ModelAdmin):
-    exclude = ['created_by', ]
+class MenuContentAdmin(admin.ModelAdmin):
+    exclude = ['modified_by', 'menu', ]
 
     def save_model(self, request, obj, form, change):
         if not obj.pk:
-            # Only set created_by during the first save.
-            obj.created_by = request.user
+            obj.menu = Menu.objects.create()
+        obj.modified_by = request.user
         super().save_model(request, obj, form, change)
 
 
-class NodeAdmin(TreeAdmin):
+class MenuItemAdmin(TreeAdmin):
     form = movenodeform_factory(MenuItem)
 
-    exclude = ['created_by', ]
+    exclude = ['modified_by', ]
 
     def save_model(self, request, obj, form, change):
-        if not obj.pk:
-            # Only set created_by during the first save.
-            obj.created_by = request.user
+        obj.modified_by = request.user
         super().save_model(request, obj, form, change)
 
 
-admin.site.register(MenuItem, NodeAdmin)
-admin.site.register(Menu, MenuAdmin)
+admin.site.register(MenuItem, MenuItemAdmin)
+admin.site.register(MenuContent, MenuContentAdmin)
