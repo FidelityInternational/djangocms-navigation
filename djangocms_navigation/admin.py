@@ -9,7 +9,7 @@ class MenuContentAdmin(admin.ModelAdmin):
     exclude = ['menu', ]
 
     def save_model(self, request, obj, form, change):
-        if not obj.menu:
+        if not obj.id:
             obj.menu = Menu.objects.create()
         super().save_model(request, obj, form, change)
 
