@@ -9,7 +9,7 @@ from treebeard.mp_tree import MP_Node
 
 class Menu(models.Model):
     """
-    Menu Grouper
+    MenuContent Grouper
     """
     pass
 
