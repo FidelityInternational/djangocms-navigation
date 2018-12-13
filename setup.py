@@ -1,11 +1,10 @@
-from setuptools import find_packages, setup
-
 import djangocms_navigation
-
+from setuptools import find_packages, setup
 
 INSTALL_REQUIREMENTS = [
     'Django>=1.11,<2.0',
-    'django-cms>=3.5.0'
+    'django-cms>=3.5.0',
+    'django-treebeard>=4.3'
     ]
 
 
