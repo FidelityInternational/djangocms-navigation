@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
@@ -11,14 +10,16 @@ class Menu(models.Model):
     """
     MenuContent Grouper
     """
-    pass
-
-
-class MenuContent(models.Model):
-    title = models.CharField(verbose_name=_('title'), max_length=100)
     site = models.ForeignKey(
         Site,
         on_delete=models.PROTECT,
+    )
+
+
+class MenuContent(models.Model):
+    title = models.CharField(
+        verbose_name=_('title'),
+        max_length=100
     )
     menu = models.ForeignKey(
         Menu,
@@ -30,7 +31,10 @@ class MenuContent(models.Model):
 
 
 class MenuItem(MP_Node):
-    title = models.CharField(verbose_name=_('title'), max_length=100)
+    title = models.CharField(
+        verbose_name=_('title'),
+        max_length=100
+    )
     content_type = models.ForeignKey(
         ContentType,
         on_delete=models.PROTECT,

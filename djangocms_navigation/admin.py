@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.sites.shortcuts import get_current_site
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
 
@@ -11,12 +12,15 @@ class MenuContentAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if not change:
             # Creating grouper object for menu content
-            obj.menu = Menu.objects.create()
+            obj.menu = Menu.objects.create(
+                site=get_current_site(request)
+            )
         super().save_model(request, obj, form, change)
 
 
 class MenuItemAdmin(TreeAdmin):
     form = movenodeform_factory(MenuItem)
+
 
 admin.site.register(MenuItem, MenuItemAdmin)
 admin.site.register(MenuContent, MenuContentAdmin)
