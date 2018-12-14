@@ -21,6 +21,9 @@ class Menu(models.Model):
         on_delete=models.PROTECT,
     )
 
+    class Meta:
+        unique_together = ('id', 'site')
+
 
 class MenuContent(models.Model):
     title = models.CharField(
