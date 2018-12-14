@@ -9,7 +9,8 @@ class MenuContentAdmin(admin.ModelAdmin):
     exclude = ['menu', ]
 
     def save_model(self, request, obj, form, change):
-        if not obj.id:
+        if not change:
+            # Creating grouper object for menu content
             obj.menu = Menu.objects.create()
         super().save_model(request, obj, form, change)
 
