@@ -5,6 +5,8 @@ from __future__ import unicode_literals
 from django.db import migrations, models
 import django.db.models.deletion
 
+from ..constants import TARGETS
+
 
 class Migration(migrations.Migration):
 
@@ -40,7 +42,7 @@ class Migration(migrations.Migration):
                 ('numchild', models.PositiveIntegerField(default=0)),
                 ('title', models.CharField(max_length=100, verbose_name='title')),
                 ('object_id', models.PositiveIntegerField()),
-                ('link_target', models.CharField(choices=[('_blank', 'Load in a new window'), ('_self', 'Load in the same frame as it was clicked'), ('_top', 'Load in the full body of the window')], default='_self', max_length=20)),
+                ('link_target', models.CharField(choices=TARGETS, default='_self', max_length=20)),
                 ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='contenttypes.ContentType')),
                 ('menu_content', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='djangocms_navigation.MenuContent')),
             ],
