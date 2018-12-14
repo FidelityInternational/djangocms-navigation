@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.sites.shortcuts import get_current_site
+from django.utils.text import slugify
 
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
@@ -14,7 +15,11 @@ class MenuContentAdmin(admin.ModelAdmin):
         if not change:
             # Creating grouper object for menu content
             obj.menu = Menu.objects.create(
-                site=get_current_site(request)
+                identifier=slugify(
+                    obj.title,
+                    allow_unicode=True
+                ),
+                site=get_current_site(request),
             )
         super().save_model(request, obj, form, change)
 

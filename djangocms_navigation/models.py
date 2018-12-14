@@ -13,13 +13,17 @@ class Menu(models.Model):
     """
     MenuContent Grouper
     """
+    identifier = models.CharField(
+        verbose_name=_('identifier'),
+        max_length=100
+    )
     site = models.ForeignKey(
         Site,
         on_delete=models.PROTECT,
     )
 
     class Meta:
-        unique_together = ('id', 'site')
+        unique_together = (('identifier', 'site'), )
 
 
 class MenuContent(models.Model):
