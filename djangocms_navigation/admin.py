@@ -16,8 +16,7 @@ class MenuContentAdmin(admin.ModelAdmin):
             # Creating grouper object for menu content
             obj.menu = Menu.objects.create(
                 identifier=slugify(
-                    obj.title,
-                    allow_unicode=True
+                    obj.title
                 ),
                 site=get_current_site(request),
             )
