@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.sites.shortcuts import get_current_site
+
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
 
