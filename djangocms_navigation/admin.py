@@ -9,16 +9,13 @@ from .models import Menu, MenuContent, MenuItem
 
 
 class MenuContentAdmin(admin.ModelAdmin):
-    exclude = ['menu', ]
+    exclude = ["menu"]
 
     def save_model(self, request, obj, form, change):
         if not change:
             # Creating grouper object for menu content
             obj.menu = Menu.objects.create(
-                identifier=slugify(
-                    obj.title
-                ),
-                site=get_current_site(request),
+                identifier=slugify(obj.title), site=get_current_site(request)
             )
         super().save_model(request, obj, form, change)
 
