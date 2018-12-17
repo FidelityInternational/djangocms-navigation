@@ -56,7 +56,7 @@ class AppRegistrationTestCase(TestCase):
             self.assertTrue(TestModel4 in register_model)
 
 
-class InternalSearchIntegrationTestCase(TestCase):
+class NavigationIntegrationTestCase(TestCase):
     def setUp(self):
         app_registration.get_cms_extension_apps.cache_clear()
         app_registration.get_cms_config_apps.cache_clear()
