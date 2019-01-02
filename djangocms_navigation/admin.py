@@ -7,12 +7,13 @@ from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
 from treebeard.admin import TreeAdmin
-from treebeard.forms import movenodeform_factory
+from .forms import MenuItemForm
 from .models import Menu, MenuContent, MenuItem
-
+from .urls import urlpatterns
 
 class MenuContentAdmin(admin.ModelAdmin):
     exclude = ["menu"]
+    list_display = ["title", "get_menuitem_link"]
 
     def save_model(self, request, obj, form, change):
         if not change:
@@ -22,30 +23,28 @@ class MenuContentAdmin(admin.ModelAdmin):
             )
         super().save_model(request, obj, form, change)
 
-    def get_list_display(self, request):
-        list_display = ["title", "get_menuitem_link"]
-        return list_display
-
     def get_menuitem_link(self, obj):
         object_preview_url = reverse(
-            "admin:{app}_menuitem_list".format(
-                app=obj._meta.app_label, model=obj._meta.model_name
+            "admin:{app}_{model}_list".format(
+                app=obj._meta.app_label, model='menuitem'
             ),
             args=[obj.pk],
         )
 
         return format_html(
             '<a href="{}" class="js-moderation-close-sideframe" target="_top">'
-            '<span class="cms-icon cms-icon-eye"></span> Items'
+            '<span class="cms-icon cms-icon-eye"></span> {}'
             "</a>",
             object_preview_url,
+            _("Items")
         )
 
     get_menuitem_link.short_description = _("Menu Items")
 
 
 class MenuItemAdmin(TreeAdmin):
-    form = movenodeform_factory(MenuItem)
+    form = MenuItemForm
+
     change_list_template = "/admin/djangocms_navigation/menuitem/change_list.html"
 
     def get_urls(self):
@@ -61,28 +60,28 @@ class MenuItemAdmin(TreeAdmin):
                 self.admin_site.admin_view(self.add_view),
                 name="{}_{}_add".format(*info),
             ),
-        ] + super().get_urls()
+        ] + super().get_urls() + urlpatterns
 
     def get_queryset(self, request):
-        if hasattr(self, "menu_content_id"):
-            return MenuItem.objects.filter(menu_content=self.menu_content_id)
+        if hasattr(request, "menu_content_id"):
+            return MenuItem.objects.filter(menu_content=request.menu_content_id)
         return self.model().get_tree()
 
     def add_view(self, request, menu_content_id=None, form_url="", extra_context=None):
         extra_context = extra_context or {}
         if menu_content_id:
-            self.menu_content_id = menu_content_id
+            request.menu_content_id = menu_content_id
         return super().add_view(request, form_url=form_url, extra_context=extra_context)
 
     def changelist_view(self, request, menu_content_id=None, extra_context=None):
         extra_context = extra_context or {}
 
         if menu_content_id:
-            self.menu_content_id = menu_content_id
-            extra_context["menu_content_id"] = self.menu_content_id
+            request.menu_content_id = menu_content_id
+            extra_context["menu_content_id"] = request.menu_content_id
             extra_context["add_url"] = reverse(
                 "admin:djangocms_navigation_menuitem_add",
-                kwargs={"menu_content_id": self.menu_content_id},
+                kwargs={"menu_content_id": request.menu_content_id},
             )
 
         return super().changelist_view(request, extra_context)
@@ -90,14 +89,14 @@ class MenuItemAdmin(TreeAdmin):
     def response_change(self, request, obj):
         url = reverse(
             "admin:djangocms_navigation_menuitem_list",
-            kwargs={"menu_content_id": self.menu_content_id},
+            kwargs={"menu_content_id": request.menu_content_id},
         )
         return HttpResponseRedirect(url)
 
     def response_add(self, request, obj, post_url_continue=None):
         url = reverse(
             "admin:djangocms_navigation_menuitem_list",
-            kwargs={"menu_content_id": self.menu_content_id},
+            kwargs={"menu_content_id": request.menu_content_id},
         )
         return HttpResponseRedirect(url)
 
