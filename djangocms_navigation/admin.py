@@ -22,21 +22,6 @@ class MenuContentAdmin(admin.ModelAdmin):
             )
         super().save_model(request, obj, form, change)
 
-    def get_urls(self):
-        info = self.model._meta.app_label, self.model._meta.model_name
-        return [
-            url(
-                r"^(.+)/preview/",
-                self.admin_site.admin_view(self.preview_view),
-                name="{}_{}_preview".format(*info),
-            ),
-            url(
-                r"^(.+)/list/",
-                self.admin_site.admin_view(self.edit_view),
-                name="{}_{}_list".format(*info),
-            ),
-        ] + super().get_urls()
-
     def get_list_display(self, request):
         list_display = ["title", "get_menuitem_link"]
         return list_display
@@ -58,16 +43,6 @@ class MenuContentAdmin(admin.ModelAdmin):
 
     get_menuitem_link.short_description = _("Menu Items")
 
-    def preview_view(self, request, obj):
-        menu = MenuItem.objects.filter(menu_content=obj)
-        context = dict(object_id=request.GET.get("menu_id"), results=menu)
-        return render(request, "admin/djangocms_navigation/menu_preview.html", context)
-
-    def edit_view(self, request, obj):
-        menu = MenuItem.objects.filter(menu_content=obj)
-        context = dict(object_id=request.GET.get("menu_id"), results=menu)
-        return render(request, "admin/djangocms_navigation/menu_preview.html", context)
-
 
 class MenuItemAdmin(TreeAdmin):
     form = movenodeform_factory(MenuItem)
@@ -77,37 +52,37 @@ class MenuItemAdmin(TreeAdmin):
         info = self.model._meta.app_label, self.model._meta.model_name
         return [
             url(
-                r"^(?P<menucontent_id>\d+)/list/",
+                r"^(?P<menu_content_id>\d+)/list/",
                 self.admin_site.admin_view(self.changelist_view),
                 name="{}_{}_list".format(*info),
             ),
             url(
-                r"^(?P<menucontent_id>\d+)/add/",
+                r"^(?P<menu_content_id>\d+)/add/",
                 self.admin_site.admin_view(self.add_view),
                 name="{}_{}_add".format(*info),
             ),
         ] + super().get_urls()
 
     def get_queryset(self, request):
-        if hasattr(self, "menucontent"):
-            return MenuItem.objects.filter(menu_content=self.menucontent)
+        if hasattr(self, "menu_content_id"):
+            return MenuItem.objects.filter(menu_content=self.menu_content_id)
         return self.model().get_tree()
 
-    def add_view(self, request, menucontent_id=None, form_url="", extra_context=None):
+    def add_view(self, request, menu_content_id=None, form_url="", extra_context=None):
         extra_context = extra_context or {}
-        if menucontent_id:
-            self.menucontent = menucontent_id
+        if menu_content_id:
+            self.menu_content_id = menu_content_id
         return super().add_view(request, form_url=form_url, extra_context=extra_context)
 
-    def changelist_view(self, request, menucontent_id=None, extra_context=None):
+    def changelist_view(self, request, menu_content_id=None, extra_context=None):
         extra_context = extra_context or {}
 
-        if menucontent_id:
-            self.menucontent = menucontent_id
-            extra_context["menucontent"] = self.menucontent
+        if menu_content_id:
+            self.menu_content_id = menu_content_id
+            extra_context["menu_content_id"] = self.menu_content_id
             extra_context["add_url"] = reverse(
                 "admin:djangocms_navigation_menuitem_add",
-                kwargs={"menucontent_id": self.menucontent},
+                kwargs={"menu_content_id": self.menu_content_id},
             )
 
         return super().changelist_view(request, extra_context)
@@ -115,14 +90,14 @@ class MenuItemAdmin(TreeAdmin):
     def response_change(self, request, obj):
         url = reverse(
             "admin:djangocms_navigation_menuitem_list",
-            kwargs={"menucontent_id": self.menucontent},
+            kwargs={"menu_content_id": self.menu_content_id},
         )
         return HttpResponseRedirect(url)
 
     def response_add(self, request, obj, post_url_continue=None):
         url = reverse(
             "admin:djangocms_navigation_menuitem_list",
-            kwargs={"menucontent_id": self.menucontent},
+            kwargs={"menu_content_id": self.menu_content_id},
         )
         return HttpResponseRedirect(url)
 
