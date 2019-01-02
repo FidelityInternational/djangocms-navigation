@@ -26,7 +26,7 @@ class MenuContentAdmin(admin.ModelAdmin):
     def get_menuitem_link(self, obj):
         object_preview_url = reverse(
             "admin:{app}_{model}_list".format(
-                app=obj._meta.app_label, model="menuitem"
+                app=obj._meta.app_label, model=MenuItem._meta.model_name
             ),
             args=[obj.pk],
         )
@@ -48,21 +48,18 @@ class MenuItemAdmin(TreeAdmin):
 
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
-        return (
-            [
-                url(
-                    r"^(?P<menu_content_id>\d+)/list/",
-                    self.admin_site.admin_view(self.changelist_view),
-                    name="{}_{}_list".format(*info),
-                ),
-                url(
-                    r"^(?P<menu_content_id>\d+)/add/",
-                    self.admin_site.admin_view(self.add_view),
-                    name="{}_{}_add".format(*info),
-                ),
-            ]
-            + super().get_urls()
-        )
+        return [
+            url(
+                r"^(?P<menu_content_id>\d+)/list/",
+                self.admin_site.admin_view(self.changelist_view),
+                name="{}_{}_list".format(*info),
+            ),
+            url(
+                r"^(?P<menu_content_id>\d+)/add/",
+                self.admin_site.admin_view(self.add_view),
+                name="{}_{}_add".format(*info),
+            ),
+        ] + super().get_urls()
 
     def get_queryset(self, request):
         if hasattr(request, "menu_content_id"):
