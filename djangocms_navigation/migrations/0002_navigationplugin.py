@@ -5,6 +5,8 @@ from __future__ import unicode_literals
 from django.db import migrations, models
 import django.db.models.deletion
 
+from djangocms_navigation.constants import get_templates
+
 
 class Migration(migrations.Migration):
 
@@ -18,7 +20,7 @@ class Migration(migrations.Migration):
             name='NavigationPlugin',
             fields=[
                 ('cmsplugin_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, related_name='djangocms_navigation_navigationplugin', serialize=False, to='cms.CMSPlugin')),
-                ('template', models.CharField(choices=[('menu/menu.html', 'Default')], default='menu/menu.html', max_length=255, verbose_name='Template')),
+                ('template', models.CharField(choices=get_templates(), default=get_templates()[0][0], max_length=255, verbose_name='Template')),
             ],
             options={
                 'verbose_name': 'navigation plugin model',
