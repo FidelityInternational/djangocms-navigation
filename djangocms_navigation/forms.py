@@ -1,6 +1,6 @@
 from django import forms
 from treebeard.forms import MoveNodeForm, _get_exclude_for_model
-from .models import NavigationPlugin, MenuItem, MenuContent
+from .models import NavigationPlugin, MenuItem
 
 
 class NavigationPluginForm(forms.ModelForm):

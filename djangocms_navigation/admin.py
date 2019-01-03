@@ -10,7 +10,7 @@ from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
 from treebeard.admin import TreeAdmin
-from treebeard.forms import movenodeform_factory, _get_exclude_for_model
+
 from .models import Menu, MenuContent, MenuItem
 from .forms import MenuItemForm
 
