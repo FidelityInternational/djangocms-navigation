@@ -60,11 +60,6 @@ class MenuItemAdmin(TreeAdmin):
     form = MenuItemForm
     change_list_template = "/admin/djangocms_navigation/menuitem/change_list.html"
 
-    def save_model(self, request, obj, form, change):
-        if change:
-            obj.menu_content = MenuContent.objects.get(id=request.menu_content_id)
-        return super().save_model(request, obj, form, change)
-
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
         return [
@@ -151,13 +146,10 @@ class MenuItemAdmin(TreeAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
-
         if hasattr(request, "menu_content_id"):
             return True
-
         if obj is not None:
             return True
-
         return False
 
     def get_changelist(self, request, **kwargs):

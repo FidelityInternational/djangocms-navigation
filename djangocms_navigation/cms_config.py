@@ -3,6 +3,7 @@ from collections import Iterable
 from django.core.exceptions import ImproperlyConfigured
 
 from cms.app_base import CMSAppConfig, CMSAppExtension
+from cms.models import PageContent
 
 
 class NavigationCMSExtension(CMSAppExtension):
@@ -27,4 +28,4 @@ class NavigationCMSExtension(CMSAppExtension):
 class CoreCMSAppConfig(CMSAppConfig):
     djangocms_navigation_enabled = True
     # Todo: Register core model to navigation
-    navigation_models = []
+    navigation_models = [PageContent]
