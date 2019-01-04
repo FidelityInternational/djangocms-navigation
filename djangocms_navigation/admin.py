@@ -7,7 +7,7 @@ from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
 from treebeard.admin import TreeAdmin
-from treebeard.forms import movenodeform_factory
+from treebeard.forms import movenodeform_factory, _get_exclude_for_model
 from .models import Menu, MenuContent, MenuItem
 
 
@@ -43,8 +43,14 @@ class MenuContentAdmin(admin.ModelAdmin):
 
 
 class MenuItemAdmin(TreeAdmin):
-    form = movenodeform_factory(MenuItem)
+    form = movenodeform_factory(
+        MenuItem, exclude=_get_exclude_for_model(MenuItem, ['menu_content']))
     change_list_template = "/admin/djangocms_navigation/menuitem/change_list.html"
+
+    def save_form(self, request, form, change):
+        if not change:
+            form.cleaned_data['menu_content_id'] = request.menu_content_id
+        return super().save_form(request, form, change)
 
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
@@ -88,7 +94,7 @@ class MenuItemAdmin(TreeAdmin):
     def response_change(self, request, obj):
         url = reverse(
             "admin:djangocms_navigation_menuitem_list",
-            kwargs={"menu_content_id": request.menu_content_id},
+            kwargs={"menu_content_id": getattr(request, "menu_content_id", 0)},
         )
         return HttpResponseRedirect(url)
 

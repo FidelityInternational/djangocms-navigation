@@ -7,9 +7,7 @@ from cms import app_registration
 from cms.utils.setup import setup_cms_apps
 
 from djangocms_navigation.cms_config import NavigationCMSExtension
-
 from djangocms_navigation.test_utils.app_1.models import TestModel1, TestModel2
-
 from djangocms_navigation.test_utils.app_2.models import TestModel3, TestModel4
 
 from .utils import TestCase
