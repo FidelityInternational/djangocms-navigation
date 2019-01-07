@@ -3,6 +3,7 @@ HELPER_SETTINGS = {
         "djangocms_navigation",
         "djangocms_navigation.test_utils.app_1",
         "djangocms_navigation.test_utils.app_2",
+        "djangocms_versioning",
     ]
 }
 
