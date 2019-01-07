@@ -1,9 +1,8 @@
 {# Used for MP and NS trees #}
 {% extends "admin/tree_change_list.html" %}
+{% load admin_list admin_tree i18n %}
 
 {% block object-tools-items %}
-    {% load i18n %}
-
 <li>
     <a href="{{ add_url }}" class="addlink">
         {% blocktrans with cl.opts.verbose_name as name %}Add  {{ name }}{% endblocktrans %}
