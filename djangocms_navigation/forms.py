@@ -3,7 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
 from treebeard.forms import MoveNodeForm, _get_exclude_for_model
-from .models import NavigationPlugin, MenuItem
+from .models import NavigationPlugin, MenuItem, MenuContent
 from .utils import supported_models
 
 
@@ -27,6 +27,14 @@ class UrlTypeSelectWidget(Select2Mixin, forms.Select):
     pass
 
 
+class MenuContentForm(forms.ModelForm):
+    title = forms.CharField(label="Menu Title", max_length=100)
+
+    class Meta:
+        model = MenuContent
+        fields = ["title"]
+
+
 class MenuItemForm(MoveNodeForm):
     content_type = forms.ChoiceField(
         label=_("Content Type"),
@@ -42,7 +50,7 @@ class MenuItemForm(MoveNodeForm):
 
     class Meta:
         model = MenuItem
-        exclude = _get_exclude_for_model(model, ("menu_content",))
+        exclude = _get_exclude_for_model(model, None)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

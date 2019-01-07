@@ -12,7 +12,7 @@ from django.utils.translation import ugettext_lazy as _
 from treebeard.admin import TreeAdmin
 
 from .models import Menu, MenuContent, MenuItem
-from .forms import MenuItemForm
+from .forms import MenuItemForm, MenuContentForm
 
 
 class MenuItemChangeList(ChangeList):
@@ -20,21 +20,30 @@ class MenuItemChangeList(ChangeList):
         pk = getattr(result, self.pk_attname)
         return reverse(
             "admin:%s_%s_change" % (self.opts.app_label, self.opts.model_name),
-            args=(result.menu_content.id, quote(pk)),
+            args=(self.request.menu_content_id, quote(pk)),
             current_app=self.model_admin.admin_site.name,
         )
 
+    def get_queryset(self, request):
+        self.request = request
+        return super().get_queryset(request)
+
 
 class MenuContentAdmin(admin.ModelAdmin):
-    exclude = ["menu"]
+    # exclude = ["menu", "root"]
+    form = MenuContentForm
     list_display = ["title", "get_menuitem_link"]
+    list_display_links = ["get_menuitem_link"]
 
     def save_model(self, request, obj, form, change):
         if not change:
+            title = form.data.get("title")
             # Creating grouper object for menu content
             obj.menu = Menu.objects.create(
-                identifier=slugify(obj.title), site=get_current_site(request)
+                identifier=slugify(title), site=get_current_site(request)
             )
+            # Creating root menu item with title
+            obj.root = MenuItem.add_root(title=title, depth=1)
         super().save_model(request, obj, form, change)
 
     def get_menuitem_link(self, obj):
@@ -82,7 +91,12 @@ class MenuItemAdmin(TreeAdmin):
 
     def get_queryset(self, request):
         if hasattr(request, "menu_content_id"):
-            return MenuItem.objects.filter(menu_content=request.menu_content_id)
+            menu_content = MenuContent.objects.get(id=request.menu_content_id)
+            root_node = MenuItem.objects.filter(id=menu_content.root.id)
+
+            # django-treebeard doesnt have api that return current node and all descendants
+            # hence merging two queryset
+            return root_node | root_node[0].get_descendants()
         return self.model().get_tree()
 
     def change_view(
@@ -154,13 +168,6 @@ class MenuItemAdmin(TreeAdmin):
 
     def get_changelist(self, request, **kwargs):
         return MenuItemChangeList
-
-    def save_form(self, request, form, change):
-        if change:
-            form.instance.menu_content_id = request.menu_content_id
-        else:
-            form.cleaned_data["menu_content_id"] = request.menu_content_id
-        return super().save_form(request, form, change)
 
 
 admin.site.register(MenuItem, MenuItemAdmin)
