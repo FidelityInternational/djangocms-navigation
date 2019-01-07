@@ -1,15 +1,12 @@
 import string
 
+from cms.models import Page, PageContent, TreeNode
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
-
-from cms.models import Page, PageContent, TreeNode
-
 from djangocms_versioning.models import Version
-
 import factory
-from factory.fuzzy import FuzzyText, FuzzyChoice, FuzzyInteger
+from factory.fuzzy import FuzzyChoice, FuzzyInteger, FuzzyText
 
 from ..models import Menu, MenuContent, MenuItem
 
