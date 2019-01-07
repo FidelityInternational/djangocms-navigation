@@ -28,7 +28,8 @@ class Menu(models.Model):
 
 class MenuContent(models.Model):
     menu = models.ForeignKey(Menu, on_delete=models.PROTECT)
-    root = models.ForeignKey('djangocms_navigation.MenuItem')
+    root = models.ForeignKey(
+        'djangocms_navigation.MenuItem', on_delete=models.PROTECT)
 
     def __str__(self):
         return self.title
