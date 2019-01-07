@@ -30,7 +30,6 @@ class MenuItemChangeList(ChangeList):
 
 
 class MenuContentAdmin(admin.ModelAdmin):
-    # exclude = ["menu", "root"]
     form = MenuContentForm
     list_display = ["title", "get_menuitem_link"]
     list_display_links = ["get_menuitem_link"]
@@ -96,7 +95,8 @@ class MenuItemAdmin(TreeAdmin):
 
             # django-treebeard doesnt have api that return current node and all descendants
             # hence merging two queryset
-            return root_node | root_node[0].get_descendants()
+            if root_node:
+                return root_node | root_node[0].get_descendants()
         return self.model().get_tree()
 
     def change_view(

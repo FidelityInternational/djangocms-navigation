@@ -13,20 +13,6 @@ class NavigationPluginForm(forms.ModelForm):
         fields = ("template",)
 
 
-class Select2Mixin:
-    class Media:
-        css = {"all": ("cms/js/select2/select2.css",)}
-        js = ("cms/js/select2/select2.js", "djangocms_url_manager/js/create_url.js")
-
-
-class UrlSelectWidget(Select2Mixin, forms.Select):
-    pass
-
-
-class UrlTypeSelectWidget(Select2Mixin, forms.Select):
-    pass
-
-
 class MenuContentForm(forms.ModelForm):
     title = forms.CharField(label="Menu Title", max_length=100)
 
@@ -38,14 +24,12 @@ class MenuContentForm(forms.ModelForm):
 class MenuItemForm(MoveNodeForm):
     content_type = forms.ChoiceField(
         label=_("Content Type"),
-        widget=UrlTypeSelectWidget(
-            attrs={"data-placeholder": _("Select Content Type")}
-        ),
+        widget=forms.Select(attrs={"data-placeholder": _("Select Content Type")}),
     )
 
     object_id = forms.ChoiceField(
         label=_("Content"),
-        widget=UrlTypeSelectWidget(attrs={"data-placeholder": _("Select Page")}),
+        widget=forms.Select(attrs={"data-placeholder": _("Select Page")}),
     )
 
     class Meta:
