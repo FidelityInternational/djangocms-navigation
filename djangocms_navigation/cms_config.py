@@ -27,5 +27,4 @@ class NavigationCMSExtension(CMSAppExtension):
 
 class CoreCMSAppConfig(CMSAppConfig):
     djangocms_navigation_enabled = True
-    # Todo: Register core model to navigation
-    navigation_models = [PageContent]
+    navigation_models = [PageContent, ]
