@@ -94,7 +94,7 @@ class MenuItemAdmin(TreeAdmin):
 
     def get_queryset(self, request):
         if hasattr(request, "menu_content_id"):
-            menu_content = MenuContent.objects.get(id=request.menu_content_id)
+            menu_content = MenuContent._base_manager.get(id=request.menu_content_id)
             return MenuItem.get_tree(menu_content.root)
         return self.model().get_tree()
 
