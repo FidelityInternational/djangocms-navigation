@@ -14,7 +14,7 @@ class NavigationPluginForm(forms.ModelForm):
 
 
 class MenuContentForm(forms.ModelForm):
-    title = forms.CharField(label="Menu Title", max_length=100)
+    title = forms.CharField(label=_("Menu Title"), max_length=100)
 
     class Meta:
         model = MenuContent

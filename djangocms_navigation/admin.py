@@ -16,23 +16,27 @@ from .forms import MenuItemForm, MenuContentForm
 
 
 class MenuItemChangeList(ChangeList):
+    def __init__(self, request, *args, **kwargs):
+        self.menu_content_id = request.menu_content_id
+        super().__init__(request, *args, **kwargs)
+
     def url_for_result(self, result):
         pk = getattr(result, self.pk_attname)
         return reverse(
             "admin:%s_%s_change" % (self.opts.app_label, self.opts.model_name),
-            args=(self.request.menu_content_id, quote(pk)),
+            args=(self.menu_content_id, quote(pk)),
             current_app=self.model_admin.admin_site.name,
         )
 
-    def get_queryset(self, request):
-        self.request = request
-        return super().get_queryset(request)
+    # def get_queryset(self, request):
+    #     self.request = request
+    #     return super().get_queryset(request)
 
 
 class MenuContentAdmin(admin.ModelAdmin):
     form = MenuContentForm
     list_display = ["title", "get_menuitem_link"]
-    list_display_links = ["get_menuitem_link"]
+    list_display_links = None
 
     def save_model(self, request, obj, form, change):
         if not change:
@@ -42,7 +46,7 @@ class MenuContentAdmin(admin.ModelAdmin):
                 identifier=slugify(title), site=get_current_site(request)
             )
             # Creating root menu item with title
-            obj.root = MenuItem.add_root(title=title, depth=1)
+            obj.root = MenuItem.add_root(title=title)
         super().save_model(request, obj, form, change)
 
     def get_menuitem_link(self, obj):
@@ -91,12 +95,7 @@ class MenuItemAdmin(TreeAdmin):
     def get_queryset(self, request):
         if hasattr(request, "menu_content_id"):
             menu_content = MenuContent.objects.get(id=request.menu_content_id)
-            root_node = MenuItem.objects.filter(id=menu_content.root.id)
-
-            # django-treebeard doesnt have api that return current node and all descendants
-            # hence merging two queryset
-            if root_node:
-                return root_node | root_node[0].get_descendants()
+            return MenuItem.get_tree(menu_content.root)
         return self.model().get_tree()
 
     def change_view(
