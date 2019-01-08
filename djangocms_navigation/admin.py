@@ -177,16 +177,14 @@ class MenuItemAdmin(TreeAdmin):
         return super().move_node(request)
 
     def has_add_permission(self, request):
-        if hasattr(request, "menu_content_id"):
-            return True
-        return False
+        if not hasattr(request, "menu_content_id"):
+            return False
+        return super().has_add_permission(request)
 
     def has_change_permission(self, request, obj=None):
-        if hasattr(request, "menu_content_id"):
-            return True
-        if obj is not None:
-            return True
-        return False
+        if not hasattr(request, "menu_content_id"):
+            return False
+        return super().has_change_permission(request, obj)
 
     def get_changelist(self, request, **kwargs):
         return MenuItemChangeList
