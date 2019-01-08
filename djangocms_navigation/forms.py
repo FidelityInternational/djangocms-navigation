@@ -3,7 +3,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
 from treebeard.forms import MoveNodeForm, _get_exclude_for_model
-from .models import NavigationPlugin, MenuItem, MenuContent
+
+from .models import MenuContent, MenuItem, NavigationPlugin
 from .utils import supported_models
 
 

@@ -5,16 +5,15 @@ from django.contrib.admin.views.main import ChangeList
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import reverse
-from django.views.i18n import JavaScriptCatalog
-
-from django.utils.text import slugify
 from django.utils.html import format_html
+from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
+from django.views.i18n import JavaScriptCatalog
 
 from treebeard.admin import TreeAdmin
 
+from .forms import MenuContentForm, MenuItemForm
 from .models import Menu, MenuContent, MenuItem
-from .forms import MenuItemForm, MenuContentForm
 
 
 class MenuItemChangeList(ChangeList):

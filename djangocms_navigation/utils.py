@@ -7,7 +7,8 @@ from django.apps import apps
 def supported_models():
     try:
         app_config = apps.get_app_config("djangocms_navigation")
-        extension = app_config.cms_extension
-        return extension.navigation_apps_models
     except LookupError:
         return []
+    else:
+        extension = app_config.cms_extension
+        return extension.navigation_apps_models
