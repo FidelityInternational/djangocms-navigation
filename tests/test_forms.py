@@ -15,5 +15,6 @@ class MenuContentFormTestCase(CMSTestCase):
             "numchild": 1,
             "link_targe": "_self",
         }
+        # print(data)
         form = MenuItemForm(data)
         self.assertFalse(form.is_valid())
