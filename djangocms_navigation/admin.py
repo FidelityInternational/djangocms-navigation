@@ -94,7 +94,7 @@ class MenuItemAdmin(TreeAdmin):
     def response_change(self, request, obj):
         url = reverse(
             "admin:djangocms_navigation_menuitem_list",
-            kwargs={"menu_content_id": getattr(request, "menu_content_id", 0)},
+            kwargs={"menu_content_id": request.menu_content_id},
         )
         return HttpResponseRedirect(url)
 

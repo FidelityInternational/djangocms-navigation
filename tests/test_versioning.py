@@ -109,5 +109,14 @@ class CopyFunctionTestCase(TestCase):
 
         new_version = original_version.copy(self.user)
 
-        new_tree = MenuItem.get_tree(new_version.content.root)
-        #~ import ipdb; ipdb.set_trace()
+        # TODO: Not a great way of testing this really
+        root_path = new_version.content.root.path
+        expected_paths = [
+            root_path + item.path[4:]
+            for item in MenuItem.get_tree(original_version.content.root)
+        ]
+        new_paths = [
+            item.path
+            for item in MenuItem.get_tree(new_version.content.root)
+        ]
+        self.assertListEqual(new_paths, expected_paths)

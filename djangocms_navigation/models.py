@@ -49,7 +49,7 @@ class MenuItem(MP_Node):
     content = GenericForeignKey("content_type", "object_id")
 
     def __str__(self):
-        return self.title + str(self.pk)
+        return self.title
 
 
 class NavigationPlugin(CMSPlugin):
