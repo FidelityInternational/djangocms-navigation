@@ -105,7 +105,6 @@ class CopyFunctionTestCase(TestCase):
         original_item21 = original_item2.add_child(title='21')
         original_item22 = factories.SiblingMenuItemFactory(
             sibling=original_item21)
-        original_tree = MenuItem.get_tree(original_version.content.root)
 
         new_version = original_version.copy(self.user)
 
