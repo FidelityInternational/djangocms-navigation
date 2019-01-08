@@ -1,11 +1,11 @@
-from django.test import TestCase
-from django.test import RequestFactory
+from django.test import RequestFactory, TestCase
+
 from cms.test_utils.testcases import CMSTestCase
 
-from djangocms_navigation.models import Menu, MenuContent, MenuItem
-from djangocms_navigation.test_utils import factories
 from djangocms_navigation.admin import MenuContentAdmin
 from djangocms_navigation.forms import MenuContentForm
+from djangocms_navigation.models import Menu, MenuContent, MenuItem
+from djangocms_navigation.test_utils import factories
 
 
 class MenuContentModelTestCase(CMSTestCase):

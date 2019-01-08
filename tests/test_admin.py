@@ -1,6 +1,6 @@
 from django.contrib import admin
-from django.test import RequestFactory
 from django.shortcuts import reverse
+from django.test import RequestFactory
 
 from cms.test_utils.testcases import CMSTestCase
 
