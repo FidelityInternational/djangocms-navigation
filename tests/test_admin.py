@@ -26,9 +26,11 @@ class MenuItemChangelistTestCase(CMSTestCase):
     def test_for_result(self):
         menu_content = factories.MenuContentFactory(root__title="My Title")
         url = reverse(
-            "admin:%s_%s_change" % (menu_content._meta.app_label, menu_content.root._meta.model_name),
+            "admin:%s_%s_change"
+            % (menu_content._meta.app_label, menu_content.root._meta.model_name),
             args=(menu_content.id, menu_content.root.id),
-
         )
-        expected_url = '/en/admin/djangocms_navigation/menuitem/{}/{}/change/'.format(menu_content.id, menu_content.root.id)
+        expected_url = "/en/admin/djangocms_navigation/menuitem/{}/{}/change/".format(
+            menu_content.id, menu_content.root.id
+        )
         self.assertEqual(url, expected_url)
