@@ -47,37 +47,9 @@ class MenuItem(MP_Node):
         ContentType, on_delete=models.PROTECT, null=True)
     object_id = models.PositiveIntegerField(null=True)
     content = GenericForeignKey("content_type", "object_id")
-    # Override path field from treebeard so it is not unique. We're adding
-    # a unique_together constraint per each menu content object instead.
-    # Versioning needs to be able to duplicate menu items and we can't
-    # really do that if path is unique per whole menu item table.
-    path = models.CharField(max_length=255, unique=False)
-
-    class Meta:
-        unique_together = ('path', 'menu_content')
 
     def __str__(self):
         return self.title + str(self.pk)
-
-    def get_parent(self, update=False):
-        """Overrides treebeard's implementation to account for our
-        meddlings with unique constraints on the path field.
-        """
-        depth = int(len(self.path) / self.steplen)
-        if depth <= 1:
-            return
-        try:
-            if update:
-                del self._cached_parent_obj
-            else:
-                return self._cached_parent_obj
-        except AttributeError:
-            pass
-        parentpath = self._get_basepath(self.path, depth - 1)
-        # This get needs to be aware of menu_content as path is not unique
-        self._cached_parent_obj = MenuItem.objects.get(
-            path=parentpath, menu_content=self.menu_content)
-        return self._cached_parent_obj
 
 
 class NavigationPlugin(CMSPlugin):

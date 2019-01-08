@@ -33,26 +33,35 @@ def copy_menu_content(original_content):
     menu items. Don't copy the primary key
     because we are creating a new obj.
     """
-    # Copy content object
+    # Copy root menu item
+    original_root = original_content.root
+    root_fields = {
+        field.name: getattr(original_root, field.name)
+        for field in MenuItem._meta.fields
+        if field.name not in [MenuItem._meta.pk.name, 'path', 'depth']
+    }
+    new_root = MenuItem.add_root(**root_fields)
+
+    # Copy MenuContent object
     content_fields = {
         field.name: getattr(original_content, field.name)
         for field in MenuContent._meta.fields
-        if field.name != MenuContent._meta.pk.name
+        if field.name not in [MenuContent._meta.pk.name, 'root']
     }
-
+    content_fields['root'] = new_root
     new_content = MenuContent.objects.create(**content_fields)
 
     # Copy menu items
     new_items = []
-    for item in MenuItem.objects.filter(menu_content=original_content):
+    for item in MenuItem.get_tree(original_root).exclude(pk=original_root.pk):
         item_fields = {
             field.name: getattr(item, field.name)
             for field in MenuItem._meta.fields
             # don't copy primary key because we're creating a new obj
             # and handle the menu_content field later
-            if field.name not in [MenuItem._meta.pk.name, 'menu_content']
+            if field.name not in [MenuItem._meta.pk.name, 'path']
         }
-        item_fields['menu_content'] = new_content
+        item_fields['path'] = new_root.path + item.path[MenuItem.steplen:]
         new_item = MenuItem.objects.create(**item_fields)
 
     return new_content

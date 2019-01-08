@@ -112,24 +112,75 @@ class MenuFactory(factory.django.DjangoModelFactory):
 
 
 class MenuItemFactory(factory.django.DjangoModelFactory):
+    """Abstract factory to use as a base for other factories that
+    set the path and depth attributes sensibly for root, child and
+    sibling nodes."""
     title = FuzzyText(length=24)
     object_id = factory.SelfAttribute('content.id')
     content_type = factory.LazyAttribute(
         lambda o: ContentType.objects.get_for_model(o.content))
     content = factory.SubFactory(PageContentWithVersionFactory)
-    # NOTE: Generating path and depth this way is probably not a good
-    # idea. Might need to be changed.
-    depth = 0
-    path = FuzzyText(length=8, chars=string.digits)
 
     class Meta:
         model = MenuItem
+        abstract = True
+
+
+class RootMenuItemFactory(MenuItemFactory):
+    object_id = None
+    content_type = None
+    content = None
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        """Make sure this is the root of a tree"""
+        return model_class.add_root(*args, **kwargs)
+
+
+class ChildMenuItemFactory(MenuItemFactory):
+    # A child node needs to have a parent node. This will automatically
+    # generate the parent, but you can also supply your own.
+    parent = factory.SubFactory(RootMenuItemFactory)
+
+    class Meta:
+        model = MenuItem
+        inline_args = ('parent',)
+
+    @classmethod
+    def _create(cls, model_class, parent, *args, **kwargs):
+        """Make sure this is the child of a parent node"""
+        return parent.add_child(*args, **kwargs)
+
+
+class SiblingMenuItemFactory(MenuItemFactory):
+    # A sibling node needs to have a sibling node of course.
+    # This will automatically generate a new child node as the sibling,
+    # but you can also supply an existing node with the sibling arg.
+    sibling = factory.SubFactory(ChildMenuItemFactory)
+    # Siblings need to be positioned against their sibling nodes.
+    # A position will be randomly chosen from this list or you can
+    # supply your own with the position arg.
+    _SIBLING_POSITIONS = [
+        'first-sibling',
+        'left',
+        'right',
+        'last-sibling',
+    ]
+    position = FuzzyChoice(_SIBLING_POSITIONS)
+
+    class Meta:
+        model = MenuItem
+        inline_args = ('sibling', 'position')
+
+    @classmethod
+    def _create(cls, model_class, sibling, position, *args, **kwargs):
+        """Make sure this is the sibling of the supplied node"""
+        return sibling.add_sibling(pos=position, **kwargs)
 
 
 class MenuContentFactory(factory.django.DjangoModelFactory):
     menu = factory.SubFactory(MenuFactory)
-    root = factory.SubFactory(
-        MenuItemFactory, object_id=None, content_type=None)
+    root = factory.SubFactory(RootMenuItemFactory)
 
     class Meta:
         model = MenuContent
