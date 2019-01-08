@@ -1,5 +1,6 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
+from django.apps import apps
 from django.core.exceptions import ImproperlyConfigured
 
 from cms import app_registration
@@ -67,3 +68,14 @@ class NavigationIntegrationTestCase(TestCase):
         expected_models = [TestModel1, TestModel2, TestModel3, TestModel4, PageContent]
 
         self.assertCountEqual(registered_models, expected_models)
+
+    def test_supported_models_is_cached(self):
+        models = [TestModel1, TestModel2, TestModel3, TestModel4, PageContent]
+        app_config = Mock(
+            spec=[], cms_extension=Mock(spec=[], navigation_apps_models=models)
+        )
+        with patch.object(apps, "get_app_config", return_value=app_config):
+            supported_models()
+        with patch.object(apps, "get_app_config") as mock:
+            supported_models()
+            mock.assert_not_called()
