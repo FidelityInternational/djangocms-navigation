@@ -112,24 +112,35 @@ class MenuFactory(factory.django.DjangoModelFactory):
 
 
 class MenuItemFactory(factory.django.DjangoModelFactory):
+    """Abstract factory to use as a base for other factories that
+    set the path and depth attributes sensibly for root, child and
+    sibling nodes."""
     title = FuzzyText(length=24)
     object_id = factory.SelfAttribute("content.id")
     content_type = factory.LazyAttribute(
         lambda o: ContentType.objects.get_for_model(o.content)
     )
     content = factory.SubFactory(PageContentWithVersionFactory)
-    # NOTE: Generating path and depth this way is probably not a good
-    # idea. Might need to be changed.
-    depth = 0
-    path = FuzzyText(length=8, chars=string.digits)
 
     class Meta:
         model = MenuItem
+        abstract = True
+
+
+class RootMenuItemFactory(MenuItemFactory):
+    object_id = None
+    content_type = None
+    content = None
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        """Make sure this is the root of a tree"""
+        return model_class.add_root(*args, **kwargs)
 
 
 class MenuContentFactory(factory.django.DjangoModelFactory):
     menu = factory.SubFactory(MenuFactory)
-    root = factory.SubFactory(MenuItemFactory, object_id=None, content_type=None)
+    root = factory.SubFactory(RootMenuItemFactory)
 
     class Meta:
         model = MenuContent
