@@ -1,9 +1,7 @@
-from django.test import TestCase
-from django.shortcuts import reverse
 from django.contrib import admin
 
 from cms.test_utils.testcases import CMSTestCase
-from djangocms_navigation.models import Menu, MenuItem, MenuContent
+from djangocms_navigation.models import Menu, MenuItem
 from djangocms_navigation.test_utils import factories
 from djangocms_navigation.admin import MenuItemChangeList, MenuItemAdmin
 from django.test import RequestFactory

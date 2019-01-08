@@ -66,7 +66,7 @@ class MenuItemForm(MoveNodeForm):
         data = super().clean()
         data["content_type"] = ContentType.objects.get(id=data["content_type"])
         if data['_ref_node_id'] == 0:
-            raise forms.ValidationError("Adding root menuitem is not allowed")
+            raise forms.ValidationError(_("Adding root menuitem is not allowed"))
         return data
 
     def save(self, **kwargs):
