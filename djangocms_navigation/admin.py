@@ -28,10 +28,6 @@ class MenuItemChangeList(ChangeList):
             current_app=self.model_admin.admin_site.name,
         )
 
-    # def get_queryset(self, request):
-    #     self.request = request
-    #     return super().get_queryset(request)
-
 
 class MenuContentAdmin(admin.ModelAdmin):
     form = MenuContentForm

@@ -4,6 +4,7 @@ from django.apps import apps
 from django.core.exceptions import ImproperlyConfigured
 
 from cms import app_registration
+from cms.models import PageContent
 from cms.utils.setup import setup_cms_apps
 
 from djangocms_navigation.cms_config import NavigationCMSExtension
@@ -66,6 +67,6 @@ class NavigationIntegrationTestCase(TestCase):
         navigation_config = apps.get_app_config("djangocms_navigation")
         registered_models = navigation_config.cms_extension.navigation_apps_models
 
-        expected_models = [TestModel1, TestModel2, TestModel3, TestModel4]
+        expected_models = [TestModel1, TestModel2, TestModel3, TestModel4, PageContent]
 
         self.assertCountEqual(registered_models, expected_models)
