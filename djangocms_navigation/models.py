@@ -28,7 +28,7 @@ class Menu(models.Model):
 
 class MenuContent(models.Model):
     menu = models.ForeignKey(Menu, on_delete=models.PROTECT)
-    root = models.ForeignKey('djangocms_navigation.MenuItem')
+    root = models.ForeignKey("djangocms_navigation.MenuItem", on_delete=models.PROTECT)
 
     def __str__(self):
         return self.title
@@ -40,11 +40,9 @@ class MenuContent(models.Model):
 
 class MenuItem(MP_Node):
     title = models.CharField(verbose_name=_("title"), max_length=100)
-    link_target = models.CharField(
-        choices=TARGETS, default="_self", max_length=20)
+    link_target = models.CharField(choices=TARGETS, default="_self", max_length=20)
     # Allow null for content as the root menu item won't have a link
-    content_type = models.ForeignKey(
-        ContentType, on_delete=models.PROTECT, null=True)
+    content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT, null=True)
     object_id = models.PositiveIntegerField(null=True)
     content = GenericForeignKey("content_type", "object_id")
 
