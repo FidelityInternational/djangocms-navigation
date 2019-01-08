@@ -36,7 +36,7 @@ class MenuContentAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         if not change:
-            title = form.data.get("title")
+            title = form.cleaned_data.get("title")
             # Creating grouper object for menu content
             obj.menu = Menu.objects.create(
                 identifier=slugify(title), site=get_current_site(request)
