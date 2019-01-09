@@ -188,11 +188,16 @@ class MenuItemAdmin(TreeAdmin):
     def get_changelist(self, request, **kwargs):
         return MenuItemChangeList
 
-    # sending request to form
     def get_form(self, request, obj=None, **kwargs):
-        form = super(MenuItemAdmin, self).get_form(request, obj=obj, **kwargs)
-        form.menu_content_id = request.menu_content_id
-        return form
+        form_class = super().get_form(request, obj, **kwargs)
+        menu_root = MenuContent.objects.get(id=request.menu_content_id).root
+
+        class Form(form_class):
+            def __new__(cls, *args, **kwargs):
+                kwargs['menu_root'] = menu_root
+                return form_class(*args, **kwargs)
+
+        return Form
 
 
 admin.site.register(MenuItem, MenuItemAdmin)

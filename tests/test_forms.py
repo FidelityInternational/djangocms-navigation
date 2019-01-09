@@ -111,7 +111,6 @@ class MenuContentFormTestCase(CMSTestCase):
         form.fields['object_id'].choices = [(1, 'Object')]
 
         is_valid = form.is_valid()
-
         self.assertTrue(is_valid)
 
     def test_valid_if_changing_existing_child_node(self):
