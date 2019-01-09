@@ -104,7 +104,7 @@ class MenuItemForm(MoveNodeForm):
         """ Creates a tree-like list of choices for root node """
         options = [(0, _("-- root --"))]
         if for_node:
-            for node in for_node.get_tree():
+            for node in model.get_tree(for_node):
                 options.append(
                     (node.pk, mark_safe(cls.mk_indent(node.get_depth()) + escape(node)))
                 )
