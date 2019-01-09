@@ -1,4 +1,7 @@
+from cms.models import Page
 from cms.test_utils.testcases import CMSTestCase
+
+from django.contrib.contenttypes.models import ContentType
 
 from djangocms_navigation.forms import MenuItemForm
 from djangocms_navigation.test_utils import factories
@@ -9,12 +12,14 @@ class MenuContentFormTestCase(CMSTestCase):
 
     def setUp(self):
         self.menu_root = factories.RootMenuItemFactory()
+        self.page_content = factories.PageContentFactory()
+        self.page_ct = ContentType.objects.get_for_model(Page)
 
     def test_valid_if_adding_child_of_existing_root_node(self):
         data = {
             "title": "My new Title",
-            "content_type": 1,
-            "object_id": 1,
+            "content_type": self.page_ct.pk,
+            "object_id": self.page_content.page.pk,
             "_ref_node_id": self.menu_root.id,
             "numchild": 1,
             "link_target": "_self",
@@ -33,8 +38,8 @@ class MenuContentFormTestCase(CMSTestCase):
         item = factories.ChildMenuItemFactory(parent=self.menu_root)
         data = {
             "title": "My new Title",
-            "content_type": 1,
-            "object_id": 1,
+            "content_type": self.page_ct.pk,
+            "object_id": self.page_content.page.pk,
             "_ref_node_id": item.id,
             "numchild": 1,
             "link_target": "_self",
@@ -53,8 +58,8 @@ class MenuContentFormTestCase(CMSTestCase):
         item = factories.ChildMenuItemFactory(parent=self.menu_root)
         data = {
             "title": "My new Title",
-            "content_type": 1,
-            "object_id": 1,
+            "content_type": self.page_ct.pk,
+            "object_id": self.page_content.page.pk,
             "_ref_node_id": item.id,
             "numchild": 1,
             "link_target": "_self",
@@ -73,8 +78,8 @@ class MenuContentFormTestCase(CMSTestCase):
         item = factories.ChildMenuItemFactory(parent=self.menu_root)
         data = {
             "title": "My new Title",
-            "content_type": 1,
-            "object_id": 1,
+            "content_type": self.page_ct.pk,
+            "object_id": self.page_content.page.pk,
             "_ref_node_id": item.id,
             "numchild": 1,
             "link_target": "_self",
@@ -92,8 +97,8 @@ class MenuContentFormTestCase(CMSTestCase):
     def test_valid_if_changing_existing_root_node(self):
         data = {
             "title": "My new Title",
-            "content_type": 1,
-            "object_id": 1,
+            "content_type": self.page_ct.pk,
+            "object_id": self.page_content.page.pk,
             "_ref_node_id": self.menu_root.id,
             "numchild": 1,
             "link_target": "_self",
@@ -113,8 +118,8 @@ class MenuContentFormTestCase(CMSTestCase):
         item = factories.ChildMenuItemFactory(parent=self.menu_root)
         data = {
             "title": "My new Title",
-            "content_type": 1,
-            "object_id": 1,
+            "content_type": self.page_ct.pk,
+            "object_id": self.page_content.page.pk,
             "_ref_node_id": item.id,
             "numchild": 1,
             "link_target": "_self",
@@ -133,8 +138,8 @@ class MenuContentFormTestCase(CMSTestCase):
     def test_invalid_if_no_relative_node_specified_and_child_position(self):
         data = {
             "title": "My new Title",
-            "content_type": 1,
-            "object_id": 1,
+            "content_type": self.page_ct.pk,
+            "object_id": self.page_content.page.pk,
             "_ref_node_id": 0,
             "numchild": 1,
             "link_target": "_self",
@@ -159,8 +164,8 @@ class MenuContentFormTestCase(CMSTestCase):
     def test_invalid_if_no_relative_node_specified_and_left_position(self):
         data = {
             "title": "My new Title",
-            "content_type": 1,
-            "object_id": 1,
+            "content_type": self.page_ct.pk,
+            "object_id": self.page_content.page.pk,
             "_ref_node_id": 0,
             "numchild": 1,
             "link_target": "_self",
@@ -185,8 +190,8 @@ class MenuContentFormTestCase(CMSTestCase):
     def test_invalid_if_no_relative_node_specified_and_right_position(self):
         data = {
             "title": "My new Title",
-            "content_type": 1,
-            "object_id": 1,
+            "content_type": self.page_ct.pk,
+            "object_id": self.page_content.page.pk,
             "_ref_node_id": 0,
             "numchild": 1,
             "link_target": "_self",
@@ -211,8 +216,8 @@ class MenuContentFormTestCase(CMSTestCase):
     def test_invalid_if_trying_to_add_right_sibling_of_existing_root_node(self):
         data = {
             "title": "My new Title",
-            "content_type": 1,
-            "object_id": 1,
+            "content_type": self.page_ct.pk,
+            "object_id": self.page_content.page.pk,
             "_ref_node_id": self.menu_root.id,
             "numchild": 1,
             "link_target": "_self",
@@ -237,8 +242,8 @@ class MenuContentFormTestCase(CMSTestCase):
     def test_invalid_if_trying_to_add_left_sibling_of_existing_root_node(self):
         data = {
             "title": "My new Title",
-            "content_type": 1,
-            "object_id": 1,
+            "content_type": self.page_ct.pk,
+            "object_id": self.page_content.page.pk,
             "_ref_node_id": self.menu_root.id,
             "numchild": 1,
             "link_target": "_self",
