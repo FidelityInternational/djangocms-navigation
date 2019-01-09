@@ -7,9 +7,8 @@ from djangocms_navigation.test_utils import factories
 class MenuContentFormTestCase(CMSTestCase):
     # Todo: add more test while change object field to autocomplete
 
-    @classmethod
-    def setUpTestData(cls):
-        cls.menu_root = factories.RootMenuItemFactory()
+    def setUp(self):
+        self.menu_root = factories.RootMenuItemFactory()
 
     def test_valid_if_adding_child_of_existing_root_node(self):
         data = {
