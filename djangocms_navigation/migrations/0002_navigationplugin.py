@@ -11,21 +11,40 @@ from djangocms_navigation.constants import get_templates
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('cms', '0034_remove_pagecontent_placeholders'),
-        ('djangocms_navigation', '0001_initial'),
+        ("cms", "0034_remove_pagecontent_placeholders"),
+        ("djangocms_navigation", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='NavigationPlugin',
+            name="NavigationPlugin",
             fields=[
-                ('cmsplugin_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, related_name='djangocms_navigation_navigationplugin', serialize=False, to='cms.CMSPlugin')),
-                ('template', models.CharField(choices=get_templates(), default=get_templates()[0][0], max_length=255, verbose_name='Template')),
+                (
+                    "cmsplugin_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        related_name="djangocms_navigation_navigationplugin",
+                        serialize=False,
+                        to="cms.CMSPlugin",
+                    ),
+                ),
+                (
+                    "template",
+                    models.CharField(
+                        choices=get_templates(),
+                        default=get_templates()[0][0],
+                        max_length=255,
+                        verbose_name="Template",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'navigation plugin model',
-                'verbose_name_plural': 'navigation plugin models',
+                "verbose_name": "navigation plugin model",
+                "verbose_name_plural": "navigation plugin models",
             },
-            bases=('cms.cmsplugin',),
-        ),
+            bases=("cms.cmsplugin",),
+        )
     ]

@@ -17,7 +17,6 @@ class MenuContentModelTestCase(TestCase):
 
 
 class MenuItemTestCase(CMSTestCase):
-
     def test_has_add_permission_with_invalid_request(self):
         """
         has_add_permission returns False for request which doesnt contain

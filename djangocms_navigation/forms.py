@@ -40,11 +40,16 @@ class MenuItemForm(MoveNodeForm):
         exclude = _get_exclude_for_model(model, None)
 
     def __init__(self, *args, **kwargs):
-        self.menu_root = kwargs.pop('menu_root')
+        self.menu_root = kwargs.pop("menu_root")
         super().__init__(*args, **kwargs)
 
         self.fields["content_type"].queryset = ContentType.objects.filter(
-            pk__in=[ct.pk for ct in ContentType.objects.get_for_models(*supported_models()).values()]
+            pk__in=[
+                ct.pk
+                for ct in ContentType.objects.get_for_models(
+                    *supported_models()
+                ).values()
+            ]
         )
 
         opts = self._meta
@@ -56,7 +61,9 @@ class MenuItemForm(MoveNodeForm):
 
         self.fields["object_id"].choices = content_choices
 
-        node_choices = self.mk_dropdown_tree(opts.model, for_node=self.menu_root.get_root())
+        node_choices = self.mk_dropdown_tree(
+            opts.model, for_node=self.menu_root.get_root()
+        )
         self.fields["_ref_node_id"].choices = node_choices
         if self.instance:
             self.fields["object_id"].initial = self.instance.object_id
