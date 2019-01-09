@@ -53,8 +53,20 @@ class MenuItemForm(MoveNodeForm):
 
     def clean(self):
         data = super().clean()
+        try:
+            node = MenuItem.objects.get(id=data["_ref_node_id"])
+        except MenuItem.DoesNotExist:
+            node = None
+
+        if not node:
+            raise forms.ValidationError({'_ref_node_id': "You must specify a relative menu item"})
+
         if data["_ref_node_id"] == 0:
-            raise forms.ValidationError(_("Adding root menuitem is not allowed"))
+            raise forms.ValidationError("Adding root menuitem is not allowed")
+
+        if node.is_root() and data["_position"] in ["left", "right"]:
+            raise forms.ValidationError({'_ref_node_id': ["You cannot add a sibling for this menu item"]})
+
         return data
 
     def save(self, **kwargs):

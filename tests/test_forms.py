@@ -42,7 +42,6 @@ class MenuContentFormTestCase(CMSTestCase):
         # TODO: This will need to be modified when autocomplete is added
         form.fields['object_id'].choices = [(1, 'Object')]
 
-
         is_valid = form.is_valid()
 
         self.assertFalse(is_valid)
@@ -66,7 +65,6 @@ class MenuContentFormTestCase(CMSTestCase):
         # Hack the form so there's a valid choice for object_id
         # TODO: This will need to be modified when autocomplete is added
         form.fields['object_id'].choices = [(1, 'Object')]
-
 
         is_valid = form.is_valid()
 
@@ -95,7 +93,6 @@ class MenuContentFormTestCase(CMSTestCase):
         # TODO: This will need to be modified when autocomplete is added
         form.fields['object_id'].choices = [(1, 'Object')]
 
-
         is_valid = form.is_valid()
 
         self.assertFalse(is_valid)
@@ -122,7 +119,6 @@ class MenuContentFormTestCase(CMSTestCase):
         # Hack the form so there's a valid choice for object_id
         # TODO: This will need to be modified when autocomplete is added
         form.fields['object_id'].choices = [(1, 'Object')]
-
 
         is_valid = form.is_valid()
 
