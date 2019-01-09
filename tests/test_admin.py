@@ -14,23 +14,30 @@ class MenuItemChangelistTestCase(CMSTestCase):
         self.site = admin.AdminSite()
         self.site.register(MenuItem, MenuItemAdmin)
 
+    def _get_changelist_instance(self, menu_content):
+        """Helper to instantiate a MenuItemChangeList simply"""
+        request = RequestFactory().get("/admin/djangocms_navigation/")
+        request.menu_content_id = menu_content.pk
+        model_admin = self.site._registry[MenuItem]
+        return MenuItemChangeList(
+            request, MenuItem, None, None, None, None, None, None, 100,
+            250, None, model_admin
+        )
+
     def test_menuitem_changelist(self):
-        menu_content = factories.MenuContentFactory(root__title="My Title")
+        request = RequestFactory().get("/admin/djangocms_navigation/menuitem/36/")
         self.assertEqual(
-            self.site._registry[MenuItem].get_changelist(
-                RequestFactory().get("/admin/menuitem/{}/".format(menu_content.root.id))
-            ),
+            self.site._registry[MenuItem].get_changelist(request),
             MenuItemChangeList,
         )
 
-    def test_for_result(self):
+    def test_for_url_for_result(self):
         menu_content = factories.MenuContentFactory(root__title="My Title")
-        url = reverse(
-            "admin:%s_%s_change"
-            % (menu_content._meta.app_label, menu_content.root._meta.model_name),
-            args=(menu_content.id, menu_content.root.id),
-        )
+        changelist = self._get_changelist_instance(menu_content)
+
+        url = changelist.url_for_result(menu_content.root)
+
         expected_url = "/en/admin/djangocms_navigation/menuitem/{}/{}/change/".format(
-            menu_content.id, menu_content.root.id
+            menu_content.pk, menu_content.root.pk
         )
         self.assertEqual(url, expected_url)
