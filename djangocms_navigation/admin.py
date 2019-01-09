@@ -190,9 +190,15 @@ class MenuItemAdmin(TreeAdmin):
 
     # sending request to form
     def get_form(self, request, obj=None, **kwargs):
-        form = super(MenuItemAdmin, self).get_form(request, obj=obj, **kwargs)
-        form.menu_content_id = request.menu_content_id
-        return form
+        model_form = super(MenuItemAdmin, self).get_form(request, obj=obj, **kwargs)
+
+        class ModelFormMetaClass(model_form):
+            def __new__(cls, *args, **kwargs):
+                kwargs['menu_root'] = MenuItem.objects.get(pk=request.menu_content_id)
+                return model_form(*args, **kwargs)
+
+        return ModelFormMetaClass
+
 
 
 admin.site.register(MenuItem, MenuItemAdmin)
