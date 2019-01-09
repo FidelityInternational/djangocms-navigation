@@ -138,6 +138,21 @@ class RootMenuItemFactory(MenuItemFactory):
         return model_class.add_root(*args, **kwargs)
 
 
+class ChildMenuItemFactory(MenuItemFactory):
+    # A child node needs to have a parent node. This will automatically
+    # generate the parent, but you can also supply your own.
+    parent = factory.SubFactory(RootMenuItemFactory)
+
+    class Meta:
+        model = MenuItem
+        inline_args = ('parent',)
+
+    @classmethod
+    def _create(cls, model_class, parent, *args, **kwargs):
+        """Make sure this is the child of a parent node"""
+        return parent.add_child(*args, **kwargs)
+
+
 class MenuContentFactory(factory.django.DjangoModelFactory):
     menu = factory.SubFactory(MenuFactory)
     root = factory.SubFactory(RootMenuItemFactory)
