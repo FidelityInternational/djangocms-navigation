@@ -194,7 +194,7 @@ class MenuItemAdmin(TreeAdmin):
 
         class Form(form_class):
             def __new__(cls, *args, **kwargs):
-                kwargs['menu_root'] = menu_root
+                kwargs["menu_root"] = menu_root
                 return form_class(*args, **kwargs)
 
         return Form
