@@ -89,6 +89,47 @@ class MenuContentFormTestCase(CMSTestCase):
 
         self.assertTrue(is_valid)
 
+    def test_valid_if_changing_existing_root_node(self):
+        data = {
+            "title": "My new Title",
+            "content_type": 1,
+            "object_id": 1,
+            "_ref_node_id": self.menu_root.id,
+            "numchild": 1,
+            "link_target": "_self",
+            "_position": "first-child",
+        }
+        form = MenuItemForm(
+            menu_root=self.menu_root, data=data, instance=self.menu_root)
+        # Hack the form so there's a valid choice for object_id
+        # TODO: This will need to be modified when autocomplete is added
+        form.fields['object_id'].choices = [(1, 'Object')]
+
+        is_valid = form.is_valid()
+
+        self.assertTrue(is_valid)
+
+    def test_valid_if_changing_existing_child_node(self):
+        item = factories.ChildMenuItemFactory(parent=self.menu_root)
+        data = {
+            "title": "My new Title",
+            "content_type": 1,
+            "object_id": 1,
+            "_ref_node_id": item.id,
+            "numchild": 1,
+            "link_target": "_self",
+            "_position": "first-child",
+        }
+        form = MenuItemForm(
+            menu_root=self.menu_root, data=data, instance=item)
+        # Hack the form so there's a valid choice for object_id
+        # TODO: This will need to be modified when autocomplete is added
+        form.fields['object_id'].choices = [(1, 'Object')]
+
+        is_valid = form.is_valid()
+
+        self.assertTrue(is_valid)
+
     def test_invalid_if_no_relative_node_specified_and_child_position(self):
         data = {
             "title": "My new Title",
