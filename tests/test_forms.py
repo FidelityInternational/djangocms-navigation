@@ -290,7 +290,7 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertNotIn(root2.pk, menu_item_ids)
         self.assertNotIn(child_of_root2.pk, menu_item_ids)
         # And the general count is correct
-        # TODO: If --root-- is removed then this should be 2 not 1
+        # TODO: If --root-- is removed then this should be 3 not 2
         self.assertEqual(len(form.fields["_ref_node_id"].choices), 3)
 
     # Todo: To fix following test while doing form autofield
