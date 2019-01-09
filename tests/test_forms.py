@@ -264,14 +264,14 @@ class MenuContentFormTestCase(CMSTestCase):
             ["You cannot add a sibling for this menu item"],
         )
 
-    def test_doesnt_throw_500_errors_if_ref_node_id_missing_from_post(self):
+    def test_doesnt_throw_500_errors_if_data_missing_from_post(self):
         data = {"title": "Armadillos"}
         form = MenuItemForm(menu_root=self.menu_root, data=data)
 
         try:
             form.is_valid()
         except Exception as e:
-            self.fail("Should display a form error, not %s" % str(e))
+            self.fail(str(e))
 
     def test_only_display_node_tree_of_current_root(self):
         child = factories.ChildMenuItemFactory(parent=self.menu_root)

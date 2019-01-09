@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.shortcuts import reverse
 from django.test import RequestFactory, TestCase
@@ -53,7 +54,7 @@ class MenuItemChangelistTestCase(TestCase):
         self.assertEqual(url, expected_url)
 
 
-class MenuContentAdminTestCase(CMSTestCase):
+class MenuContentAdminViewTestCase(CMSTestCase):
     def test_menucontent_add_view(self):
         self.client.force_login(self.get_superuser())
         add_url = reverse("admin:djangocms_navigation_menucontent_add")
@@ -95,3 +96,110 @@ class MenuContentAdminTestCase(CMSTestCase):
         self.assertNotEqual(menu.identifier, "my-title")
         root = MenuItem.objects.get()
         self.assertNotEqual(root.title, "My Title")
+
+
+class MenuItemModelAdminTestCase(TestCase):
+
+    def setUp(self):
+        self.site = admin.AdminSite()
+        self.site.register(MenuItem, MenuItemAdmin)
+        self.model_admin = self.site._registry[MenuItem]
+
+    def test_get_queryset_filters_by_content_id(self):
+        # Multiple menu contents, only the root item of one should be
+        # in the queryset
+        menu_contents = factories.MenuContentFactory.create_batch(3)
+        # This child menu item should be in the queryset
+        child_item = factories.ChildMenuItemFactory(parent=menu_contents[0].root)
+        # This one should not
+        factories.ChildMenuItemFactory(parent=menu_contents[1].root)
+        request = RequestFactory().get('/admin/')
+        request.menu_content_id = menu_contents[0].pk
+
+        queryset = self.model_admin.get_queryset(request)
+
+        self.assertQuerysetEqual(
+            queryset, [menu_contents[0].root.pk, child_item.pk], lambda o: o.pk)
+
+
+class MenuItemAdminViewTestCase(CMSTestCase):
+
+    def test_menuitem_change_view(self):
+        self.client.force_login(self.get_superuser())
+        menu_content = factories.MenuContentFactory()
+        item = factories.ChildMenuItemFactory(parent=menu_content.root)
+        change_url = reverse(
+            "admin:djangocms_navigation_menuitem_change",
+            kwargs={'menu_content_id': menu_content.pk, 'object_id': item.pk}
+        )
+        content_type = ContentType.objects.get(app_label='cms', model='page')
+        page = factories.PageContentFactory().page
+        data = {
+            "title": "My new Title",
+            "content_type": content_type.pk,
+            "object_id": page.pk,
+            "_ref_node_id": menu_content.root.id,
+            "numchild": 1,
+            "link_target": "_blank",
+            "_position": "first-child",
+        }
+
+        response = self.client.post(change_url, data)
+
+        # Redirect happened
+        redirect_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(menu_content.pk,))
+        self.assertRedirects(response, redirect_url)
+        # No menu, menu content or menu item objects were added
+        self.assertEqual(
+            Menu.objects.exclude(pk=menu_content.menu.pk).count(), 0)
+        self.assertEqual(
+            MenuContent.objects.exclude(pk=menu_content.pk).count(), 0)
+        self.assertEqual(
+            MenuItem.objects.exclude(pk__in=[menu_content.root.pk, item.pk]).count(), 0)
+        # Menu object didn't change
+        menu = Menu.objects.get()
+        self.assertEqual(menu.identifier, menu_content.menu.identifier)
+        # Root menu item was changed as per POST data
+        item.refresh_from_db()
+        self.assertEqual(item.title, 'My new Title')
+        self.assertEqual(item.content_type, content_type)
+        self.assertEqual(item.object_id, page.pk)
+        self.assertEqual(item.link_target, '_blank')
+        self.assertTrue(item.is_child_of(menu_content.root))
+
+    def test_menuitem_add_view(self):
+        self.client.force_login(self.get_superuser())
+        menu_content = factories.MenuContentFactory()
+        add_url = reverse(
+            "admin:djangocms_navigation_menuitem_add", args=(menu_content.id,))
+        content_type = ContentType.objects.get(app_label='cms', model='page')
+        page = factories.PageContentFactory().page
+        data = {
+            "title": "My new Title",
+            "content_type": content_type.pk,
+            "object_id": page.pk,
+            "_ref_node_id": menu_content.root.id,
+            "numchild": 1,
+            "link_target": "_blank",
+            "_position": "first-child",
+        }
+
+        response = self.client.post(add_url, data)
+
+        self.assertRedirects(
+            response,
+            reverse("admin:djangocms_navigation_menuitem_list", args=(menu_content.id,))
+        )
+        # No menu or menu content objects were added
+        self.assertEqual(
+            Menu.objects.exclude(pk=menu_content.menu.pk).count(), 0)
+        self.assertEqual(
+            MenuContent.objects.exclude(pk=menu_content.pk).count(), 0)
+        # A child menu item object was added
+        new_child = MenuItem.objects.exclude(pk=menu_content.root.pk).get()
+        self.assertEqual(new_child.title, 'My new Title')
+        self.assertEqual(new_child.content_type, content_type)
+        self.assertEqual(new_child.object_id, page.pk)
+        self.assertEqual(new_child.link_target, '_blank')
+        self.assertTrue(new_child.is_child_of(menu_content.root))
