@@ -6,7 +6,7 @@ from django.test import RequestFactory, TestCase
 from cms.test_utils.testcases import CMSTestCase
 
 from djangocms_navigation.admin import MenuItemAdmin, MenuItemChangeList
-from djangocms_navigation.models import MenuItem, MenuContent, Menu
+from djangocms_navigation.models import Menu, MenuContent, MenuItem
 from djangocms_navigation.test_utils import factories
 
 

@@ -191,7 +191,7 @@ class MenuItemAdmin(TreeAdmin):
     # sending request to form
     def get_form(self, request, obj=None, **kwargs):
         form = super(MenuItemAdmin, self).get_form(request, obj=obj, **kwargs)
-        form.request = request
+        form.menu_content_id = request.menu_content_id
         return form
 
 

@@ -42,7 +42,7 @@ class MenuItemForm(MoveNodeForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         opts = self._meta
-        menu_root = MenuContent.objects.get(id=self.request.menu_content_id).root
+        menu_root = MenuContent.objects.get(id=self.menu_content_id).root
 
         # Todo: optimisation
         content_choices = []
@@ -87,8 +87,9 @@ class MenuItemForm(MoveNodeForm):
     def mk_dropdown_tree(cls, model, for_node=None):
         """ Creates a tree-like list of choices for root node """
         options = [(0, _("-- root --"))]
-        for node in for_node.get_descendants():
-            options.append(
-                (node.pk, mark_safe(cls.mk_indent(node.get_depth()) + escape(node)))
-            )
+        if for_node:
+            for node in for_node.get_descendants():
+                options.append(
+                    (node.pk, mark_safe(cls.mk_indent(node.get_depth()) + escape(node)))
+                )
         return options
