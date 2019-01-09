@@ -1,11 +1,10 @@
 from django.contrib.admin.sites import AdminSite
-from django.shortcuts import reverse
 from django.test import TestCase
 
 from cms.test_utils.testcases import CMSTestCase
 
 from djangocms_navigation.admin import MenuItemAdmin
-from djangocms_navigation.models import Menu, MenuContent, MenuItem
+from djangocms_navigation.models import MenuItem
 from djangocms_navigation.test_utils import factories
 
 from .utils import MockRequest
