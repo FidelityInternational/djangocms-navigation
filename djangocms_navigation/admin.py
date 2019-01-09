@@ -46,16 +46,16 @@ class MenuContentAdmin(admin.ModelAdmin):
             obj.root = MenuItem.add_root(title=title)
         super().save_model(request, obj, form, change)
 
-    def change_view(
-        self, request, object_id, form_url="", extra_context=None
-    ):
+    def change_view(self, request, object_id, form_url="", extra_context=None):
         meta = MenuItem._meta
-        return HttpResponseRedirect(reverse(
-            "admin:{app}_{model}_list".format(
-                app=meta.app_label, model=meta.model_name
-            ),
-            args=[object_id],
-        ))
+        return HttpResponseRedirect(
+            reverse(
+                "admin:{app}_{model}_list".format(
+                    app=meta.app_label, model=meta.model_name
+                ),
+                args=[object_id],
+            )
+        )
 
     def get_menuitem_link(self, obj):
         object_preview_url = reverse(
@@ -104,7 +104,7 @@ class MenuItemAdmin(TreeAdmin):
             ),
             url(
                 r"^(?P<menu_content_id>\d+)/jsi18n/$",
-                JavaScriptCatalog.as_view(packages=['treebeard']),
+                JavaScriptCatalog.as_view(packages=["treebeard"]),
             ),
         ]
 
@@ -136,7 +136,6 @@ class MenuItemAdmin(TreeAdmin):
                 "admin:djangocms_navigation_menuitem_list",
                 kwargs={"menu_content_id": menu_content_id},
             )
-
         return super().add_view(request, form_url=form_url, extra_context=extra_context)
 
     def changelist_view(self, request, menu_content_id=None, extra_context=None):
@@ -170,8 +169,8 @@ class MenuItemAdmin(TreeAdmin):
         return HttpResponseRedirect(url)
 
     def move_node(self, request, menu_content_id):
-        if request.POST.get('parent_id') == '0':
-            message = _('Cannot move a node outside of root menu node')
+        if request.POST.get("parent_id") == "0":
+            message = _("Cannot move a node outside of root menu node")
             messages.error(request, message)
             return HttpResponseBadRequest(message)
         return super().move_node(request)
@@ -188,6 +187,12 @@ class MenuItemAdmin(TreeAdmin):
 
     def get_changelist(self, request, **kwargs):
         return MenuItemChangeList
+
+    # sending request to form
+    def get_form(self, request, obj=None, **kwargs):
+        form = super(MenuItemAdmin, self).get_form(request, obj=obj, **kwargs)
+        form.request = request
+        return form
 
 
 admin.site.register(MenuItem, MenuItemAdmin)

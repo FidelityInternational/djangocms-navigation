@@ -1,5 +1,7 @@
 from django import forms
 from django.contrib.contenttypes.models import ContentType
+from django.utils.html import escape
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from treebeard.forms import MoveNodeForm, _get_exclude_for_model
@@ -39,6 +41,8 @@ class MenuItemForm(MoveNodeForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        opts = self._meta
+        menu_root = MenuContent.objects.get(id=self.request.menu_content_id).root
 
         # Todo: optimisation
         content_choices = []
@@ -47,9 +51,10 @@ class MenuItemForm(MoveNodeForm):
 
         self.fields["object_id"].choices = content_choices
 
+        node_choices = self.mk_dropdown_tree(opts.model, for_node=menu_root.get_root())
+        self.fields["_ref_node_id"].choices = node_choices
         if self.instance:
-            if self.instance.content_type_id:
-                self.fields["object_id"].initial = self.instance.object_id
+            self.fields["object_id"].initial = self.instance.object_id
 
     def clean(self):
         data = super().clean()
@@ -59,13 +64,17 @@ class MenuItemForm(MoveNodeForm):
             node = None
 
         if not node:
-            raise forms.ValidationError({'_ref_node_id': "You must specify a relative menu item"})
+            raise forms.ValidationError(
+                {"_ref_node_id": "You must specify a relative menu item"}
+            )
 
         if data["_ref_node_id"] == 0:
             raise forms.ValidationError("Adding root menuitem is not allowed")
 
         if node.is_root() and data["_position"] in ["left", "right"]:
-            raise forms.ValidationError({'_ref_node_id': ["You cannot add a sibling for this menu item"]})
+            raise forms.ValidationError(
+                {"_ref_node_id": ["You cannot add a sibling for this menu item"]}
+            )
 
         return data
 
@@ -73,3 +82,13 @@ class MenuItemForm(MoveNodeForm):
         self.instance.object_id = self.cleaned_data["object_id"]
         self.instance.content_type = self.cleaned_data["content_type"]
         return super().save(**kwargs)
+
+    @classmethod
+    def mk_dropdown_tree(cls, model, for_node=None):
+        """ Creates a tree-like list of choices for root node """
+        options = [(0, _("-- root --"))]
+        for node in for_node.get_descendants():
+            options.append(
+                (node.pk, mark_safe(cls.mk_indent(node.get_depth()) + escape(node)))
+            )
+        return options

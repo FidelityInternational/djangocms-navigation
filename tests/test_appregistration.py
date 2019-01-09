@@ -1,6 +1,5 @@
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
-from django.apps import apps
 from django.core.exceptions import ImproperlyConfigured
 
 from cms import app_registration
