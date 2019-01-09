@@ -200,6 +200,5 @@ class MenuItemAdmin(TreeAdmin):
         return ModelFormMetaClass
 
 
-
 admin.site.register(MenuItem, MenuItemAdmin)
 admin.site.register(MenuContent, MenuContentAdmin)
