@@ -1,15 +1,16 @@
 from django.contrib import admin
+from django.contrib.sites.models import Site
 from django.shortcuts import reverse
-from django.test import RequestFactory
+from django.test import RequestFactory, TestCase
 
 from cms.test_utils.testcases import CMSTestCase
 
 from djangocms_navigation.admin import MenuItemAdmin, MenuItemChangeList
-from djangocms_navigation.models import MenuItem
+from djangocms_navigation.models import MenuItem, MenuContent, Menu
 from djangocms_navigation.test_utils import factories
 
 
-class MenuItemChangelistTestCase(CMSTestCase):
+class MenuItemChangelistTestCase(TestCase):
     def setUp(self):
         self.site = admin.AdminSite()
         self.site.register(MenuItem, MenuItemAdmin)
@@ -41,3 +42,49 @@ class MenuItemChangelistTestCase(CMSTestCase):
             menu_content.pk, menu_content.root.pk
         )
         self.assertEqual(url, expected_url)
+
+
+class MenuContentAdminTestCase(CMSTestCase):
+
+    def test_menucontent_add_view(self):
+        self.client.force_login(self.get_superuser())
+        add_url = reverse("admin:djangocms_navigation_menucontent_add")
+
+        response = self.client.post(add_url, {"title": "My Title"})
+
+        self.assertRedirects(
+            response, reverse("admin:djangocms_navigation_menucontent_changelist")
+        )
+        menu = Menu.objects.get()
+        self.assertEqual(menu.identifier, 'my-title')
+        self.assertEqual(menu.site, Site.objects.get())
+        menu_content = MenuContent.objects.get()
+        self.assertEqual(menu_content.menu, menu)
+        self.assertEqual(menu_content.root.title, 'My Title')
+        self.assertIsNone(menu_content.root.content_type)
+        self.assertIsNone(menu_content.root.object_id)
+
+    def test_menucontent_change_view(self):
+        self.client.force_login(self.get_superuser())
+        menu_content = factories.MenuContentFactory()
+        change_url = reverse(
+            "admin:djangocms_navigation_menucontent_change", args=(menu_content.pk,))
+
+        response = self.client.post(change_url, {"title": "My Title"})
+
+        # Redirect happened
+        redirect_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(menu_content.pk,))
+        self.assertRedirects(response, redirect_url)
+        # No menu objects were added
+        self.assertEqual(
+            Menu.objects.exclude(pk=menu_content.menu.pk).count(), 0)
+        self.assertEqual(
+            MenuContent.objects.exclude(pk=menu_content.pk).count(), 0)
+        self.assertEqual(
+            MenuItem.objects.exclude(pk=menu_content.root.pk).count(), 0)
+        # The data sent in POST did not change any values
+        menu = Menu.objects.get()
+        self.assertNotEqual(menu.identifier, 'my-title')
+        root = MenuItem.objects.get()
+        self.assertNotEqual(root.title, 'My Title')
