@@ -1,11 +1,13 @@
 import string
 
-from cms.models import Page, PageContent, TreeNode
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
-from djangocms_versioning.models import Version
+
+from cms.models import Page, PageContent, TreeNode
+
 import factory
+from djangocms_versioning.models import Version
 from factory.fuzzy import FuzzyChoice, FuzzyInteger, FuzzyText
 
 from ..models import Menu, MenuContent, MenuItem
@@ -13,10 +15,11 @@ from ..models import Menu, MenuContent, MenuItem
 
 class UserFactory(factory.django.DjangoModelFactory):
     username = FuzzyText(length=12)
-    first_name = factory.Faker('first_name')
-    last_name = factory.Faker('last_name')
+    first_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")
     email = factory.LazyAttribute(
-        lambda u: "%s.%s@example.com" % (u.first_name.lower(), u.last_name.lower()))
+        lambda u: "%s.%s@example.com" % (u.first_name.lower(), u.last_name.lower())
+    )
 
     class Meta:
         model = User
@@ -30,13 +33,14 @@ class UserFactory(factory.django.DjangoModelFactory):
 
 
 class AbstractVersionFactory(factory.DjangoModelFactory):
-    object_id = factory.SelfAttribute('content.id')
+    object_id = factory.SelfAttribute("content.id")
     content_type = factory.LazyAttribute(
-        lambda o: ContentType.objects.get_for_model(o.content))
+        lambda o: ContentType.objects.get_for_model(o.content)
+    )
     created_by = factory.SubFactory(UserFactory)
 
     class Meta:
-        exclude = ['content']
+        exclude = ["content"]
         abstract = True
 
 
@@ -63,7 +67,7 @@ class PageFactory(factory.django.DjangoModelFactory):
 
 class PageContentFactory(factory.django.DjangoModelFactory):
     page = factory.SubFactory(PageFactory)
-    language = FuzzyChoice(['en', 'fr', 'it'])
+    language = FuzzyChoice(["en", "fr", "it"])
     title = FuzzyText(length=12)
     page_title = FuzzyText(length=12)
     menu_title = FuzzyText(length=12)
@@ -89,7 +93,6 @@ class PageVersionFactory(AbstractVersionFactory):
 
 
 class PageContentWithVersionFactory(PageContentFactory):
-
     @factory.post_generation
     def version(self, create, extracted, **kwargs):
         # NOTE: Use this method as below to define version attributes:
@@ -109,24 +112,51 @@ class MenuFactory(factory.django.DjangoModelFactory):
 
 
 class MenuItemFactory(factory.django.DjangoModelFactory):
+    """Abstract factory to use as a base for other factories that
+    set the path and depth attributes sensibly for root, child and
+    sibling nodes."""
+
     title = FuzzyText(length=24)
-    object_id = factory.SelfAttribute('content.id')
+    object_id = factory.SelfAttribute("content.id")
     content_type = factory.LazyAttribute(
-        lambda o: ContentType.objects.get_for_model(o.content))
+        lambda o: ContentType.objects.get_for_model(o.content)
+    )
     content = factory.SubFactory(PageContentWithVersionFactory)
-    # NOTE: Generating path and depth this way is probably not a good
-    # idea. Might need to be changed.
-    depth = 0
-    path = FuzzyText(length=8, chars=string.digits)
 
     class Meta:
         model = MenuItem
+        abstract = True
+
+
+class RootMenuItemFactory(MenuItemFactory):
+    object_id = None
+    content_type = None
+    content = None
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        """Make sure this is the root of a tree"""
+        return model_class.add_root(*args, **kwargs)
+
+
+class ChildMenuItemFactory(MenuItemFactory):
+    # A child node needs to have a parent node. This will automatically
+    # generate the parent, but you can also supply your own.
+    parent = factory.SubFactory(RootMenuItemFactory)
+
+    class Meta:
+        model = MenuItem
+        inline_args = ("parent",)
+
+    @classmethod
+    def _create(cls, model_class, parent, *args, **kwargs):
+        """Make sure this is the child of a parent node"""
+        return parent.add_child(*args, **kwargs)
 
 
 class MenuContentFactory(factory.django.DjangoModelFactory):
     menu = factory.SubFactory(MenuFactory)
-    root = factory.SubFactory(
-        MenuItemFactory, object_id=None, content_type=None)
+    root = factory.SubFactory(RootMenuItemFactory)
 
     class Meta:
         model = MenuContent

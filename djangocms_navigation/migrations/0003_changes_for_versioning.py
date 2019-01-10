@@ -8,33 +8,33 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('djangocms_navigation', '0002_navigationplugin'),
-    ]
+    dependencies = [("djangocms_navigation", "0002_navigationplugin")]
 
     operations = [
-        migrations.RemoveField(
-            model_name='menucontent',
-            name='title',
-        ),
-        migrations.RemoveField(
-            model_name='menuitem',
-            name='menu_content',
-        ),
+        migrations.RemoveField(model_name="menucontent", name="title"),
+        migrations.RemoveField(model_name="menuitem", name="menu_content"),
         migrations.AddField(
-            model_name='menucontent',
-            name='root',
-            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to='djangocms_navigation.MenuItem'),
+            model_name="menucontent",
+            name="root",
+            field=models.ForeignKey(
+                default=None,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="djangocms_navigation.MenuItem",
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='menuitem',
-            name='content_type',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, to='contenttypes.ContentType'),
+            model_name="menuitem",
+            name="content_type",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                to="contenttypes.ContentType",
+            ),
         ),
         migrations.AlterField(
-            model_name='menuitem',
-            name='object_id',
+            model_name="menuitem",
+            name="object_id",
             field=models.PositiveIntegerField(null=True),
         ),
     ]

@@ -1,4 +1,5 @@
 from cms.app_base import CMSAppConfig
+
 from .models import TestModel1, TestModel2
 
 
