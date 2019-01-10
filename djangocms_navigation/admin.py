@@ -101,6 +101,7 @@ class MenuItemAdmin(TreeAdmin):
             url(
                 r"^(?P<menu_content_id>\d+)/move/$",
                 self.admin_site.admin_view(self.move_node),
+                name="{}_{}_move_node".format(*info),
             ),
             url(
                 r"^(?P<menu_content_id>\d+)/jsi18n/$",
@@ -170,7 +171,7 @@ class MenuItemAdmin(TreeAdmin):
 
     def move_node(self, request, menu_content_id):
         if request.POST.get("parent_id") == "0":
-            message = _("Cannot move a node outside of root menu node")
+            message = _("Cannot move a node outside of the root menu node")
             messages.error(request, message)
             return HttpResponseBadRequest(message)
         return super().move_node(request)

@@ -1,3 +1,5 @@
+from mock import patch
+
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
@@ -215,6 +217,42 @@ class MenuItemAdminViewTestCase(CMSTestCase):
         # Just a smoke test
         self.assertEqual(response.status_code, 200)
 
+    def test_menuitem_move_node_smoke_test(self):
+        menu_content = factories.MenuContentFactory()
+        child = factories.ChildMenuItemFactory(parent=menu_content.root)
+        child_of_child = factories.ChildMenuItemFactory(parent=child)
+        move_url = reverse(
+            "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,))
+        data = {
+            'node_id': child.pk,
+            'sibling_id': menu_content.root.pk,
+            'as_child': 1,
+        }
+
+        response = self.client.post(move_url, data=data)
+
+        self.assertEqual(response.status_code, 200)
+
+    @patch('django.contrib.messages.error')
+    def test_menuitem_move_node_cant_move_outside_of_root(self, mocked_messages):
+        menu_content = factories.MenuContentFactory()
+        child = factories.ChildMenuItemFactory(parent=menu_content.root)
+        move_url = reverse(
+            "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,))
+        data = {
+            'node_id': child.pk,
+            'parent_id': 0,
+        }
+
+        response = self.client.post(move_url, data=data)
+
+        self.assertEqual(response.status_code, 400)
+        mocked_messages.assert_called_once()
+        self.assertEqual(
+            mocked_messages.call_args[0][1],
+            'Cannot move a node outside of the root menu node'
+        )
+
 
 class MenuItemPermissionTestCase(CMSTestCase):
     def test_change_view_redirects_to_login_if_anonymous_user(self):
@@ -351,7 +389,49 @@ class MenuItemPermissionTestCase(CMSTestCase):
 
         response = self.client.get(list_url)
 
-        redirect_url = reverse("admin:login") + '?next=' + list_url
+    def test_move_node_view_redirects_to_login_if_anonymous_user(self):
+        menu_content = factories.MenuContentFactory()
+        child = factories.ChildMenuItemFactory(parent=menu_content.root)
+        child_of_child = factories.ChildMenuItemFactory(parent=child)
+        move_url = reverse(
+            "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,))
+        data = {
+            'node_id': child.pk,
+            'sibling_id': menu_content.root.pk,
+            'as_child': 1,
+        }
+
+        # For POST
+        response = self.client.post(move_url, data=data)
+        redirect_url = reverse("admin:login") + '?next=' + move_url
+        self.assertRedirects(response, redirect_url)
+
+        # For GET
+        response = self.client.get(move_url)
+        self.assertRedirects(response, redirect_url)
+
+    def test_move_node_view_redirects_to_login_if_non_staff_user(self):
+        user = factories.UserFactory(is_superuser=False, is_staff=False)
+        self.client.force_login(user)
+
+        menu_content = factories.MenuContentFactory()
+        child = factories.ChildMenuItemFactory(parent=menu_content.root)
+        child_of_child = factories.ChildMenuItemFactory(parent=child)
+        move_url = reverse(
+            "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,))
+        data = {
+            'node_id': child.pk,
+            'sibling_id': menu_content.root.pk,
+            'as_child': 1,
+        }
+
+        # For POST
+        response = self.client.post(move_url, data=data)
+        redirect_url = reverse("admin:login") + '?next=' + move_url
+        self.assertRedirects(response, redirect_url)
+
+        # For GET
+        response = self.client.get(move_url)
         self.assertRedirects(response, redirect_url)
 
     def test_has_add_permission_returns_false_for_invalid_request(self):
