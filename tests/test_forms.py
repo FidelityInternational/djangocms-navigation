@@ -1,7 +1,7 @@
+from django.contrib.contenttypes.models import ContentType
+
 from cms.models import Page
 from cms.test_utils.testcases import CMSTestCase
-
-from django.contrib.contenttypes.models import ContentType
 
 from djangocms_navigation.forms import MenuItemForm
 from djangocms_navigation.test_utils import factories

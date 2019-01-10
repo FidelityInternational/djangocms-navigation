@@ -1,5 +1,4 @@
 from django import forms
-from django.contrib.contenttypes.models import ContentType
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -7,7 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from treebeard.forms import MoveNodeForm, _get_exclude_for_model
 
 from .models import MenuContent, MenuItem, NavigationPlugin
-from .utils import supported_models, supported_content_type_pks
+from .utils import supported_content_type_pks, supported_models
 
 
 class NavigationPluginForm(forms.ModelForm):

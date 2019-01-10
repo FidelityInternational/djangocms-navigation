@@ -8,7 +8,10 @@ from cms.models import Page
 
 from djangocms_navigation.test_utils.app_1.models import TestModel1, TestModel2
 from djangocms_navigation.test_utils.app_2.models import TestModel3, TestModel4
-from djangocms_navigation.utils import supported_content_type_pks, supported_models
+from djangocms_navigation.utils import (
+    supported_content_type_pks,
+    supported_models,
+)
 
 
 class SupportedModelsTestCase(TestCase):

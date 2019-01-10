@@ -224,7 +224,7 @@ class MenuItemAdminViewTestCase(CMSTestCase):
         move_url = reverse(
             "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,))
         data = {
-            'node_id': child.pk,
+            'node_id': child_of_child.pk,
             'sibling_id': menu_content.root.pk,
             'as_child': 1,
         }
@@ -389,6 +389,9 @@ class MenuItemPermissionTestCase(CMSTestCase):
 
         response = self.client.get(list_url)
 
+        redirect_url = reverse("admin:login") + '?next=' + list_url
+        self.assertRedirects(response, redirect_url)
+
     def test_move_node_view_redirects_to_login_if_anonymous_user(self):
         menu_content = factories.MenuContentFactory()
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
@@ -396,7 +399,7 @@ class MenuItemPermissionTestCase(CMSTestCase):
         move_url = reverse(
             "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,))
         data = {
-            'node_id': child.pk,
+            'node_id': child_of_child.pk,
             'sibling_id': menu_content.root.pk,
             'as_child': 1,
         }
@@ -420,7 +423,7 @@ class MenuItemPermissionTestCase(CMSTestCase):
         move_url = reverse(
             "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,))
         data = {
-            'node_id': child.pk,
+            'node_id': child_of_child.pk,
             'sibling_id': menu_content.root.pk,
             'as_child': 1,
         }
