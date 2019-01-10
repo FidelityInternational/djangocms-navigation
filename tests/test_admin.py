@@ -123,9 +123,10 @@ class MenuItemModelAdminTestCase(TestCase):
 
 
 class MenuItemAdminViewTestCase(CMSTestCase):
+    def setUp(self):
+        self.client.force_login(self.get_superuser())
 
     def test_menuitem_change_view(self):
-        self.client.force_login(self.get_superuser())
         menu_content = factories.MenuContentFactory()
         item = factories.ChildMenuItemFactory(parent=menu_content.root)
         change_url = reverse(
@@ -169,7 +170,6 @@ class MenuItemAdminViewTestCase(CMSTestCase):
         self.assertTrue(item.is_child_of(menu_content.root))
 
     def test_menuitem_add_view(self):
-        self.client.force_login(self.get_superuser())
         menu_content = factories.MenuContentFactory()
         add_url = reverse(
             "admin:djangocms_navigation_menuitem_add", args=(menu_content.id,))
@@ -203,3 +203,173 @@ class MenuItemAdminViewTestCase(CMSTestCase):
         self.assertEqual(new_child.object_id, page.pk)
         self.assertEqual(new_child.link_target, '_blank')
         self.assertTrue(new_child.is_child_of(menu_content.root))
+
+    def test_menuitem_changelist(self):
+        menu_content = factories.MenuContentFactory()
+        factories.ChildMenuItemFactory.create_batch(5, parent=menu_content.root)
+        list_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,))
+
+        response = self.client.get(list_url)
+
+        # Just a smoke test
+        self.assertEqual(response.status_code, 200)
+
+
+class MenuItemPermissionTestCase(CMSTestCase):
+    def test_change_view_redirects_to_login_if_anonymous_user(self):
+        menu_content = factories.MenuContentFactory()
+        item = factories.ChildMenuItemFactory(parent=menu_content.root)
+        change_url = reverse(
+            "admin:djangocms_navigation_menuitem_change",
+            kwargs={'menu_content_id': menu_content.pk, 'object_id': item.pk}
+        )
+        content_type = ContentType.objects.get(app_label='cms', model='page')
+        page = factories.PageContentFactory().page
+        data = {
+            "title": "My new Title",
+            "content_type": content_type.pk,
+            "object_id": page.pk,
+            "_ref_node_id": menu_content.root.id,
+            "numchild": 1,
+            "link_target": "_blank",
+            "_position": "first-child",
+        }
+
+        # For POST
+        response = self.client.post(change_url, data)
+        redirect_url = reverse("admin:login") + '?next=' + change_url
+        self.assertRedirects(response, redirect_url)
+
+        # For GET
+        response = self.client.get(change_url)
+        self.assertRedirects(response, redirect_url)
+
+    def test_change_view_redirects_to_login_if_non_staff_user(self):
+        user = factories.UserFactory(is_superuser=False, is_staff=False)
+        self.client.force_login(user)
+
+        menu_content = factories.MenuContentFactory()
+        item = factories.ChildMenuItemFactory(parent=menu_content.root)
+        change_url = reverse(
+            "admin:djangocms_navigation_menuitem_change",
+            kwargs={'menu_content_id': menu_content.pk, 'object_id': item.pk}
+        )
+        content_type = ContentType.objects.get(app_label='cms', model='page')
+        page = factories.PageContentFactory().page
+        data = {
+            "title": "My new Title",
+            "content_type": content_type.pk,
+            "object_id": page.pk,
+            "_ref_node_id": menu_content.root.id,
+            "numchild": 1,
+            "link_target": "_blank",
+            "_position": "first-child",
+        }
+
+        # For POST
+        response = self.client.post(change_url, data)
+        redirect_url = reverse("admin:login") + '?next=' + change_url
+        self.assertRedirects(response, redirect_url)
+
+        # For GET
+        response = self.client.get(change_url)
+        self.assertRedirects(response, redirect_url)
+
+    def test_add_view_redirects_to_login_if_anonymous_user(self):
+        menu_content = factories.MenuContentFactory()
+        add_url = reverse(
+            "admin:djangocms_navigation_menuitem_add", args=(menu_content.id,))
+        content_type = ContentType.objects.get(app_label='cms', model='page')
+        page = factories.PageContentFactory().page
+        data = {
+            "title": "My new Title",
+            "content_type": content_type.pk,
+            "object_id": page.pk,
+            "_ref_node_id": menu_content.root.id,
+            "numchild": 1,
+            "link_target": "_blank",
+            "_position": "first-child",
+        }
+
+        # For POST
+        response = self.client.post(add_url, data)
+        redirect_url = reverse("admin:login") + '?next=' + add_url
+        self.assertRedirects(response, redirect_url)
+
+        # For GET
+        response = self.client.get(add_url)
+        self.assertRedirects(response, redirect_url)
+
+    def test_add_view_redirects_to_login_if_non_staff_user(self):
+        user = factories.UserFactory(is_superuser=False, is_staff=False)
+        self.client.force_login(user)
+
+        menu_content = factories.MenuContentFactory()
+        add_url = reverse(
+            "admin:djangocms_navigation_menuitem_add", args=(menu_content.id,))
+        content_type = ContentType.objects.get(app_label='cms', model='page')
+        page = factories.PageContentFactory().page
+        data = {
+            "title": "My new Title",
+            "content_type": content_type.pk,
+            "object_id": page.pk,
+            "_ref_node_id": menu_content.root.id,
+            "numchild": 1,
+            "link_target": "_blank",
+            "_position": "first-child",
+        }
+
+        # For POST
+        response = self.client.post(add_url, data)
+        redirect_url = reverse("admin:login") + '?next=' + add_url
+        self.assertRedirects(response, redirect_url)
+
+        # For GET
+        response = self.client.get(add_url)
+        self.assertRedirects(response, redirect_url)
+
+    def test_changelist_view_redirects_to_login_if_anonymous_user(self):
+        menu_content = factories.MenuContentFactory()
+        factories.ChildMenuItemFactory.create_batch(5, parent=menu_content.root)
+        list_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,))
+
+        response = self.client.get(list_url)
+
+        redirect_url = reverse("admin:login") + '?next=' + list_url
+        self.assertRedirects(response, redirect_url)
+
+    def test_changelist_view_redirects_to_login_if_non_staff_user(self):
+        user = factories.UserFactory(is_superuser=False, is_staff=False)
+        self.client.force_login(user)
+
+        menu_content = factories.MenuContentFactory()
+        factories.ChildMenuItemFactory.create_batch(5, parent=menu_content.root)
+        list_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,))
+
+        response = self.client.get(list_url)
+
+        redirect_url = reverse("admin:login") + '?next=' + list_url
+        self.assertRedirects(response, redirect_url)
+
+    def test_has_add_permission_returns_false_for_invalid_request(self):
+        """
+        has_add_permission returns False for request which doesnt contain
+        menu_content_id
+        """
+        model_admin = MenuItemAdmin(MenuItem, admin.AdminSite())
+        request = RequestFactory().get('/admin')
+        request.user = self.get_superuser()
+        self.assertFalse(model_admin.has_add_permission(request))
+
+    def test_has_change_permission_returns_false_for_invalid_request(self):
+        """
+        has_change_permission returns False for request which doesnt contain
+        menu_content_id
+        """
+        model_admin = MenuItemAdmin(MenuItem, admin.AdminSite())
+        request = RequestFactory().get('/admin')
+        request.user = self.get_superuser()
+        self.assertFalse(model_admin.has_change_permission(request))

@@ -265,9 +265,7 @@ class MenuContentFormTestCase(CMSTestCase):
         )
 
     def test_doesnt_throw_500_errors_if_data_missing_from_post(self):
-        data = {"title": "Armadillos"}
-        form = MenuItemForm(menu_root=self.menu_root, data=data)
-
+        form = MenuItemForm(menu_root=self.menu_root, data={})
         try:
             form.is_valid()
         except Exception as e:
