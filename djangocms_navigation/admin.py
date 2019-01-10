@@ -1,16 +1,10 @@
 from django.conf.urls import url
 from django.contrib import admin, messages
-from django.contrib.admin import helpers
-from django.contrib.admin.exceptions import DisallowedModelAdminToField
-from django.contrib.admin.options import TO_FIELD_VAR, IS_POPUP_VAR
-from django.contrib.admin.utils import quote, unquote
+from django.contrib.admin.utils import quote
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.exceptions import PermissionDenied
-from django.forms.formsets import all_valid
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import reverse
-from django.utils.encoding import force_text
 from django.utils.html import format_html
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
