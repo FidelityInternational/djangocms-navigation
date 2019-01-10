@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from treebeard.forms import MoveNodeForm, _get_exclude_for_model
 
 from .models import MenuContent, MenuItem, NavigationPlugin
-from .utils import supported_models
+from .utils import supported_models, supported_content_type_pks
 
 
 class NavigationPluginForm(forms.ModelForm):
@@ -25,15 +25,7 @@ class MenuContentForm(forms.ModelForm):
 
 
 class MenuItemForm(MoveNodeForm):
-    content_type = forms.ModelChoiceField(
-        label=_("Content Type"), queryset=ContentType.objects.all()
-    )
-
     # Todo: use autocomplete to select page object
-    object_id = forms.ChoiceField(
-        label=_("Content"),
-        widget=forms.Select(attrs={"data-placeholder": _("Select Page")}),
-    )
 
     class Meta:
         model = MenuItem
@@ -43,61 +35,53 @@ class MenuItemForm(MoveNodeForm):
         self.menu_root = kwargs.pop("menu_root")
         super().__init__(*args, **kwargs)
 
-        self.fields["content_type"].queryset = ContentType.objects.filter(
-            pk__in=[
-                ct.pk
-                for ct in ContentType.objects.get_for_models(
-                    *supported_models()
-                ).values()
-            ]
+        self.fields['object_id'].widget = forms.Select(
+            attrs={"data-placeholder": _("Select Page")})
+        self.fields['object_id'].label = ("Content")
+
+        self.fields["content_type"].queryset = self.fields[
+            "content_type"].queryset.filter(pk__in=supported_content_type_pks())
+
+        self.fields["_ref_node_id"].choices = self.mk_dropdown_tree(
+            MenuItem, for_node=self.menu_root.get_root()
         )
 
-        opts = self._meta
-
-        # Todo: optimisation
+        # Todo: change when autocomplete implemented, tests for this field
         content_choices = []
         for model in supported_models():
             content_choices.extend([(obj.id, obj) for obj in model.objects.all()])
-
         self.fields["object_id"].choices = content_choices
 
-        node_choices = self.mk_dropdown_tree(
-            opts.model, for_node=self.menu_root.get_root()
-        )
-        self.fields["_ref_node_id"].choices = node_choices
+        # TODO: If this initial still needed after autocomplete changes
+        # then don't forget to write tests for this
         if self.instance:
             self.fields["object_id"].initial = self.instance.object_id
 
     def clean(self):
-        data = super().clean()
+        cleaned_data = super().clean()
 
         if self.errors:
-            return data
+            return cleaned_data
 
         try:
-            node = MenuItem.objects.get(id=data["_ref_node_id"])
+            node = MenuItem.objects.get(id=cleaned_data["_ref_node_id"])
         except MenuItem.DoesNotExist:
             node = None
 
-        if not node:
+        # Check we're not trying to modify the root node cause some
+        # validation will not apply
+        changing_root = self.instance.pk and self.instance.is_root()
+        if not node and not changing_root:
             raise forms.ValidationError(
                 {"_ref_node_id": "You must specify a relative menu item"}
             )
 
-        if data["_ref_node_id"] == 0:
-            raise forms.ValidationError("Adding root menuitem is not allowed")
-
-        if node.is_root() and data["_position"] in ["left", "right"]:
+        if node and node.is_root() and cleaned_data["_position"] in ["left", "right"]:
             raise forms.ValidationError(
                 {"_ref_node_id": ["You cannot add a sibling for this menu item"]}
             )
 
-        return data
-
-    def save(self, **kwargs):
-        self.instance.object_id = self.cleaned_data["object_id"]
-        self.instance.content_type = self.cleaned_data["content_type"]
-        return super().save(**kwargs)
+        return cleaned_data
 
     @classmethod
     def mk_dropdown_tree(cls, model, for_node=None):

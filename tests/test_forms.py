@@ -5,10 +5,11 @@ from django.contrib.contenttypes.models import ContentType
 
 from djangocms_navigation.forms import MenuItemForm
 from djangocms_navigation.test_utils import factories
+from djangocms_navigation.test_utils.app_1.models import TestModel1, TestModel2
+from djangocms_navigation.test_utils.app_2.models import TestModel3, TestModel4
 
 
 class MenuContentFormTestCase(CMSTestCase):
-    # Todo: add more test while change object field to autocomplete
 
     def setUp(self):
         self.menu_root = factories.RootMenuItemFactory()
@@ -26,9 +27,6 @@ class MenuContentFormTestCase(CMSTestCase):
             "_position": "first-child",
         }
         form = MenuItemForm(menu_root=self.menu_root, data=data)
-        # Hack the form so there's a valid choice for object_id
-        # TODO: This will need to be modified when autocomplete is added
-        form.fields["object_id"].choices = [(1, "Object")]
 
         is_valid = form.is_valid()
 
@@ -46,9 +44,6 @@ class MenuContentFormTestCase(CMSTestCase):
             "_position": "first-child",
         }
         form = MenuItemForm(menu_root=self.menu_root, data=data)
-        # Hack the form so there's a valid choice for object_id
-        # TODO: This will need to be modified when autocomplete is added
-        form.fields["object_id"].choices = [(1, "Object")]
 
         is_valid = form.is_valid()
 
@@ -66,9 +61,6 @@ class MenuContentFormTestCase(CMSTestCase):
             "_position": "right",
         }
         form = MenuItemForm(menu_root=self.menu_root, data=data)
-        # Hack the form so there's a valid choice for object_id
-        # TODO: This will need to be modified when autocomplete is added
-        form.fields["object_id"].choices = [(1, "Object")]
 
         is_valid = form.is_valid()
 
@@ -86,9 +78,6 @@ class MenuContentFormTestCase(CMSTestCase):
             "_position": "left",
         }
         form = MenuItemForm(menu_root=self.menu_root, data=data)
-        # Hack the form so there's a valid choice for object_id
-        # TODO: This will need to be modified when autocomplete is added
-        form.fields["object_id"].choices = [(1, "Object")]
 
         is_valid = form.is_valid()
 
@@ -99,7 +88,7 @@ class MenuContentFormTestCase(CMSTestCase):
             "title": "My new Title",
             "content_type": self.page_ct.pk,
             "object_id": self.page_content.page.pk,
-            "_ref_node_id": self.menu_root.id,
+            "_ref_node_id": 0,
             "numchild": 1,
             "link_target": "_self",
             "_position": "first-child",
@@ -107,11 +96,9 @@ class MenuContentFormTestCase(CMSTestCase):
         form = MenuItemForm(
             menu_root=self.menu_root, data=data, instance=self.menu_root
         )
-        # Hack the form so there's a valid choice for object_id
-        # TODO: This will need to be modified when autocomplete is added
-        form.fields["object_id"].choices = [(1, "Object")]
 
         is_valid = form.is_valid()
+
         self.assertTrue(is_valid)
 
     def test_valid_if_changing_existing_child_node(self):
@@ -126,9 +113,6 @@ class MenuContentFormTestCase(CMSTestCase):
             "_position": "first-child",
         }
         form = MenuItemForm(menu_root=self.menu_root, data=data, instance=item)
-        # Hack the form so there's a valid choice for object_id
-        # TODO: This will need to be modified when autocomplete is added
-        form.fields["object_id"].choices = [(1, "Object")]
 
         is_valid = form.is_valid()
 
@@ -145,9 +129,6 @@ class MenuContentFormTestCase(CMSTestCase):
             "_position": "first-child",
         }
         form = MenuItemForm(menu_root=self.menu_root, data=data)
-        # Hack the form so there's a valid choice for object_id
-        # TODO: This will need to be modified when autocomplete is added
-        form.fields["object_id"].choices = [(1, "Object")]
 
         is_valid = form.is_valid()
 
@@ -155,8 +136,6 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertIn("_ref_node_id", form.errors)
         self.assertListEqual(
             form.errors["_ref_node_id"],
-            # TODO: This could be any other message, so if
-            # there's a default like This field is required then that's fine too.
             ["You must specify a relative menu item"],
         )
 
@@ -171,9 +150,6 @@ class MenuContentFormTestCase(CMSTestCase):
             "_position": "left",
         }
         form = MenuItemForm(menu_root=self.menu_root, data=data)
-        # Hack the form so there's a valid choice for object_id
-        # TODO: This will need to be modified when autocomplete is added
-        form.fields["object_id"].choices = [(1, "Object")]
 
         is_valid = form.is_valid()
 
@@ -181,8 +157,6 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertIn("_ref_node_id", form.errors)
         self.assertListEqual(
             form.errors["_ref_node_id"],
-            # TODO: This could be any other message, so if
-            # there's a default like This field is required then that's fine too.
             ["You must specify a relative menu item"],
         )
 
@@ -197,9 +171,6 @@ class MenuContentFormTestCase(CMSTestCase):
             "_position": "right",
         }
         form = MenuItemForm(menu_root=self.menu_root, data=data)
-        # Hack the form so there's a valid choice for object_id
-        # TODO: This will need to be modified when autocomplete is added
-        form.fields["object_id"].choices = [(1, "Object")]
 
         is_valid = form.is_valid()
 
@@ -207,8 +178,6 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertIn("_ref_node_id", form.errors)
         self.assertListEqual(
             form.errors["_ref_node_id"],
-            # TODO: This could be any other message, so if
-            # there's a default like This field is required then that's fine too.
             ["You must specify a relative menu item"],
         )
 
@@ -223,9 +192,6 @@ class MenuContentFormTestCase(CMSTestCase):
             "_position": "right",
         }
         form = MenuItemForm(menu_root=self.menu_root, data=data)
-        # Hack the form so there's a valid choice for object_id
-        # TODO: This will need to be modified when autocomplete is added
-        form.fields["object_id"].choices = [(1, "Object")]
 
         is_valid = form.is_valid()
 
@@ -233,8 +199,6 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertIn("_ref_node_id", form.errors)
         self.assertListEqual(
             form.errors["_ref_node_id"],
-            # TODO: This could be any other message, so if
-            # there's some other default then that's fine too.
             ["You cannot add a sibling for this menu item"],
         )
 
@@ -249,9 +213,6 @@ class MenuContentFormTestCase(CMSTestCase):
             "_position": "left",
         }
         form = MenuItemForm(menu_root=self.menu_root, data=data)
-        # Hack the form so there's a valid choice for object_id
-        # TODO: This will need to be modified when autocomplete is added
-        form.fields["object_id"].choices = [(1, "Object")]
 
         is_valid = form.is_valid()
 
@@ -259,10 +220,77 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertIn("_ref_node_id", form.errors)
         self.assertListEqual(
             form.errors["_ref_node_id"],
-            # TODO: This could be any other message, so if
-            # there's some other default then that's fine too.
             ["You cannot add a sibling for this menu item"],
         )
+
+    def test_invalid_if_relative_node_id_points_to_non_existing_node(self):
+        data = {
+            "title": "My new Title",
+            "content_type": self.page_ct.pk,
+            "object_id": self.page_content.page.pk,
+            "_ref_node_id": 167,  # node does not exist
+            "numchild": 1,
+            "link_target": "_self",
+            "_position": "first-child",
+        }
+        form = MenuItemForm(menu_root=self.menu_root, data=data)
+
+        is_valid = form.is_valid()
+
+        self.assertFalse(is_valid)
+        self.assertIn("_ref_node_id", form.errors)
+        self.assertListEqual(
+            form.errors["_ref_node_id"],
+            ["Select a valid choice. 167 is not one of the available choices."],
+        )
+
+    def test_title_is_required(self):
+        data = {
+            "title": "",
+            "content_type": self.page_ct.pk,
+            "object_id": self.page_content.page.pk,
+            "_ref_node_id": self.menu_root.id,
+            "numchild": 1,
+            "link_target": "_self",
+            "_position": "first-child",
+        }
+        form = MenuItemForm(menu_root=self.menu_root, data=data)
+
+        is_valid = form.is_valid()
+
+        self.assertFalse(is_valid)
+        self.assertIn('title', form.errors)
+        self.assertIn('This field is required.', form.errors['title'])
+
+    def test_content_type_is_optional(self):
+        data = {
+            "title": "My new Title",
+            "object_id": self.page_content.page.pk,
+            "_ref_node_id": self.menu_root.id,
+            "numchild": 1,
+            "link_target": "_self",
+            "_position": "first-child",
+        }
+        form = MenuItemForm(menu_root=self.menu_root, data=data)
+
+        is_valid = form.is_valid()
+
+        self.assertTrue(is_valid)
+
+    def test_object_id_is_optional(self):
+        data = {
+            "title": "My new Title",
+            "content_type": self.page_ct.pk,
+            "_ref_node_id": self.menu_root.id,
+            "numchild": 1,
+            "link_target": "_self",
+            "_position": "first-child",
+        }
+        form = MenuItemForm(menu_root=self.menu_root, data=data)
+
+        is_valid = form.is_valid()
+
+        self.assertTrue(is_valid)
 
     def test_doesnt_throw_500_errors_if_data_missing_from_post(self):
         form = MenuItemForm(menu_root=self.menu_root, data={})
@@ -288,13 +316,14 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertNotIn(root2.pk, menu_item_ids)
         self.assertNotIn(child_of_root2.pk, menu_item_ids)
         # And the general count is correct
-        # TODO: If --root-- is removed then this should be 3 not 2
         self.assertEqual(len(form.fields["_ref_node_id"].choices), 3)
 
-    # Todo: To fix following test while doing form autofield
-    # def test_do_not_display_root_option_in_relative_field(self):
-    #     form = MenuItemForm(menu_root=self.menu_root)
-    #     menu_item_ids = [
-    #         choice[0] for choice in form.declared_fields["_ref_node_id"].choices
-    #     ]
-    #     self.assertNotIn(0, menu_item_ids)
+    def test_only_display_supported_content_types(self):
+        content_types = ContentType.objects.get_for_models(
+            Page, TestModel1, TestModel2, TestModel3, TestModel4)
+        form = MenuItemForm(menu_root=self.menu_root)
+
+        queryset = form.fields['content_type'].queryset
+
+        expected_content_type_pks = [ct.pk for ct in content_types.values()]
+        self.assertQuerysetEqual(queryset, expected_content_type_pks, lambda o: o.pk, ordered=False)
