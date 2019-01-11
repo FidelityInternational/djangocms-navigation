@@ -11,23 +11,20 @@ from .models import MenuItem
 class CMSMenu(Menu):
     def get_roots(self, request):
         return MenuItem.get_root_nodes().filter(
-            menucontent__menu__site=get_current_site())
+            menucontent__menu__site=get_current_site()
+        )
 
     def get_menu_nodes(self, roots):
         root_paths = roots.values_list("path", flat=True)
         path_q = Q()
         for path in root_paths:
             path_q |= Q(path__startswith=path) & ~Q(path=path)
-        return (
-            MenuItem.get_tree()
-            .filter(path_q)
-            .order_by("path")
-        )
+        return MenuItem.get_tree().filter(path_q).order_by("path")
 
     def get_navigation_nodes(self, nodes, root_ids):
         for node in nodes:
             parent = node.get_parent()
-            url = node.content.get_absolute_url() if node.content else ''
+            url = node.content.get_absolute_url() if node.content else ""
             if parent.id in root_ids:
                 parent_id = root_ids[parent.id]
             else:
@@ -46,9 +43,7 @@ class CMSMenu(Menu):
         root_ids = {}
         for navigation in navigations:
             identifier = "root-{}".format(navigation.menucontent.menu.identifier)
-            node = NavigationNode(
-                title="", url="", id=identifier,
-            )
+            node = NavigationNode(title="", url="", id=identifier)
             root_navigation_nodes.append(node)
             root_ids[navigation.pk] = identifier
         menu_nodes = self.get_menu_nodes(navigations)

@@ -8,24 +8,30 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('djangocms_navigation', '0003_changes_for_versioning'),
-    ]
+    dependencies = [("djangocms_navigation", "0003_changes_for_versioning")]
 
     operations = [
         migrations.AlterField(
-            model_name='menucontent',
-            name='root',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.PROTECT, to='djangocms_navigation.MenuItem'),
+            model_name="menucontent",
+            name="root",
+            field=models.OneToOneField(
+                on_delete=django.db.models.deletion.PROTECT,
+                to="djangocms_navigation.MenuItem",
+            ),
         ),
         migrations.AlterField(
-            model_name='menuitem',
-            name='content_type',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, to='contenttypes.ContentType'),
+            model_name="menuitem",
+            name="content_type",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                to="contenttypes.ContentType",
+            ),
         ),
         migrations.AlterField(
-            model_name='menuitem',
-            name='object_id',
+            model_name="menuitem",
+            name="object_id",
             field=models.PositiveIntegerField(blank=True, null=True),
         ),
     ]
