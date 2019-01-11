@@ -1,4 +1,4 @@
-from cms.cms_menus import CMSMenu
+from cms.cms_menus import CMSMenu as OriginalCMSMenu
 from cms.utils import get_current_site
 from menus.base import Menu, Modifier, NavigationNode
 from menus.menu_pool import menu_pool
@@ -6,7 +6,7 @@ from menus.menu_pool import menu_pool
 from .models import Menu as MenuModel, MenuItem
 
 
-class NavigationMenu(Menu):
+class CMSMenu(Menu):
     def get_roots(self, request):
         return MenuModel.objects.filter(site=get_current_site())
 
@@ -74,6 +74,6 @@ class NavigationSelector(Modifier):
         return node
 
 
-menu_pool.menus.pop(CMSMenu.__name__)
-menu_pool.register_menu(NavigationMenu)
+menu_pool.menus.pop(OriginalCMSMenu.__name__)
+menu_pool.register_menu(CMSMenu)
 menu_pool.register_modifier(NavigationSelector)

@@ -4,7 +4,8 @@ HELPER_SETTINGS = {
         "djangocms_navigation.test_utils.app_1",
         "djangocms_navigation.test_utils.app_2",
         "djangocms_versioning",
-    ]
+    ],
+    "DJANGOCMS_VERSIONING_ENABLE_MENU_REGISTRATION": False,
 }
 
 

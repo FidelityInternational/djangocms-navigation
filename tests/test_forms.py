@@ -10,7 +10,6 @@ from djangocms_navigation.test_utils.app_2.models import TestModel3, TestModel4
 
 
 class MenuContentFormTestCase(CMSTestCase):
-
     def setUp(self):
         self.menu_root = factories.RootMenuItemFactory()
         self.page_content = factories.PageContentFactory()
@@ -135,8 +134,7 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertFalse(is_valid)
         self.assertIn("_ref_node_id", form.errors)
         self.assertListEqual(
-            form.errors["_ref_node_id"],
-            ["You must specify a relative menu item"],
+            form.errors["_ref_node_id"], ["You must specify a relative menu item"]
         )
 
     def test_invalid_if_no_relative_node_specified_and_left_position(self):
@@ -156,8 +154,7 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertFalse(is_valid)
         self.assertIn("_ref_node_id", form.errors)
         self.assertListEqual(
-            form.errors["_ref_node_id"],
-            ["You must specify a relative menu item"],
+            form.errors["_ref_node_id"], ["You must specify a relative menu item"]
         )
 
     def test_invalid_if_no_relative_node_specified_and_right_position(self):
@@ -177,8 +174,7 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertFalse(is_valid)
         self.assertIn("_ref_node_id", form.errors)
         self.assertListEqual(
-            form.errors["_ref_node_id"],
-            ["You must specify a relative menu item"],
+            form.errors["_ref_node_id"], ["You must specify a relative menu item"]
         )
 
     def test_invalid_if_trying_to_add_right_sibling_of_existing_root_node(self):
@@ -198,8 +194,7 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertFalse(is_valid)
         self.assertIn("_ref_node_id", form.errors)
         self.assertListEqual(
-            form.errors["_ref_node_id"],
-            ["You cannot add a sibling for this menu item"],
+            form.errors["_ref_node_id"], ["You cannot add a sibling for this menu item"]
         )
 
     def test_invalid_if_trying_to_add_left_sibling_of_existing_root_node(self):
@@ -219,8 +214,7 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertFalse(is_valid)
         self.assertIn("_ref_node_id", form.errors)
         self.assertListEqual(
-            form.errors["_ref_node_id"],
-            ["You cannot add a sibling for this menu item"],
+            form.errors["_ref_node_id"], ["You cannot add a sibling for this menu item"]
         )
 
     def test_invalid_if_relative_node_id_points_to_non_existing_node(self):
@@ -259,8 +253,8 @@ class MenuContentFormTestCase(CMSTestCase):
         is_valid = form.is_valid()
 
         self.assertFalse(is_valid)
-        self.assertIn('title', form.errors)
-        self.assertIn('This field is required.', form.errors['title'])
+        self.assertIn("title", form.errors)
+        self.assertIn("This field is required.", form.errors["title"])
 
     def test_content_type_is_optional(self):
         data = {
@@ -305,9 +299,7 @@ class MenuContentFormTestCase(CMSTestCase):
         child_of_root2 = factories.ChildMenuItemFactory(parent=root2)
         form = MenuItemForm(menu_root=self.menu_root)
 
-        menu_item_ids = [
-            choice[0] for choice in form.fields["_ref_node_id"].choices
-        ]
+        menu_item_ids = [choice[0] for choice in form.fields["_ref_node_id"].choices]
 
         # The menu items that should be in choices are indeed there
         self.assertIn(self.menu_root.pk, menu_item_ids)
@@ -320,10 +312,13 @@ class MenuContentFormTestCase(CMSTestCase):
 
     def test_only_display_supported_content_types(self):
         content_types = ContentType.objects.get_for_models(
-            Page, TestModel1, TestModel2, TestModel3, TestModel4)
+            Page, TestModel1, TestModel2, TestModel3, TestModel4
+        )
         form = MenuItemForm(menu_root=self.menu_root)
 
-        queryset = form.fields['content_type'].queryset
+        queryset = form.fields["content_type"].queryset
 
         expected_content_type_pks = [ct.pk for ct in content_types.values()]
-        self.assertQuerysetEqual(queryset, expected_content_type_pks, lambda o: o.pk, ordered=False)
+        self.assertQuerysetEqual(
+            queryset, expected_content_type_pks, lambda o: o.pk, ordered=False
+        )

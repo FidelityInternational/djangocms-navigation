@@ -43,7 +43,8 @@ class MenuItem(MP_Node):
     link_target = models.CharField(choices=TARGETS, default="_self", max_length=20)
     # Allow null for content as the root menu item won't have a link
     content_type = models.ForeignKey(
-        ContentType, on_delete=models.PROTECT, null=True, blank=True)
+        ContentType, on_delete=models.PROTECT, null=True, blank=True
+    )
     object_id = models.PositiveIntegerField(null=True, blank=True)
     content = GenericForeignKey("content_type", "object_id")
 

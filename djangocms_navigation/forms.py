@@ -34,12 +34,14 @@ class MenuItemForm(MoveNodeForm):
         self.menu_root = kwargs.pop("menu_root")
         super().__init__(*args, **kwargs)
 
-        self.fields['object_id'].widget = forms.Select(
-            attrs={"data-placeholder": _("Select Page")})
-        self.fields['object_id'].label = ("Content")
+        self.fields["object_id"].widget = forms.Select(
+            attrs={"data-placeholder": _("Select Page")}
+        )
+        self.fields["object_id"].label = "Content"
 
         self.fields["content_type"].queryset = self.fields[
-            "content_type"].queryset.filter(pk__in=supported_content_type_pks())
+            "content_type"
+        ].queryset.filter(pk__in=supported_content_type_pks())
 
         self.fields["_ref_node_id"].choices = self.mk_dropdown_tree(
             MenuItem, for_node=self.menu_root.get_root()
