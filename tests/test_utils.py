@@ -8,10 +8,7 @@ from cms.models import Page
 
 from djangocms_navigation.test_utils.app_1.models import TestModel1, TestModel2
 from djangocms_navigation.test_utils.app_2.models import TestModel3, TestModel4
-from djangocms_navigation.utils import (
-    supported_content_type_pks,
-    supported_models,
-)
+from djangocms_navigation.utils import supported_content_type_pks, supported_models
 
 
 class SupportedModelsTestCase(TestCase):
@@ -54,10 +51,10 @@ class SupportedContentTypePksTestCase(TestCase):
 
     def test_supported_content_types(self):
         expected_content_types = ContentType.objects.get_for_models(
-            Page, TestModel1, TestModel2, TestModel3, TestModel4)
+            Page, TestModel1, TestModel2, TestModel3, TestModel4
+        )
         expected_pks = [ct.pk for ct in expected_content_types.values()]
-        self.assertSetEqual(
-            set(supported_content_type_pks()), set(expected_pks))
+        self.assertSetEqual(set(supported_content_type_pks()), set(expected_pks))
 
     def test_supported_content_types_is_cached(self):
-        self.assertTrue(hasattr(supported_content_type_pks, 'cache_info'))
+        self.assertTrue(hasattr(supported_content_type_pks, "cache_info"))
