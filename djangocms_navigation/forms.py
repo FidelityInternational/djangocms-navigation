@@ -51,7 +51,7 @@ class MenuItemForm(MoveNodeForm):
         content_choices = []
         for model in supported_models():
             content_choices.extend([(obj.id, obj) for obj in model.objects.all()])
-        self.fields["object_id"].choices = content_choices
+        self.fields["object_id"].widget.choices = content_choices
 
         # TODO: If this initial still needed after autocomplete changes
         # then don't forget to write tests for this
