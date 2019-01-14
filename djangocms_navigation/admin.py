@@ -191,7 +191,7 @@ class MenuItemAdmin(TreeAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form_class = super().get_form(request, obj, **kwargs)
-        menu_root = MenuContent.objects.get(id=request.menu_content_id).root
+        menu_root = MenuItem.objects.get(menucontent=request.menu_content_id)
 
         class Form(form_class):
             def __new__(cls, *args, **kwargs):

@@ -1,4 +1,4 @@
-from mock import patch
+from unittest.mock import patch
 
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
@@ -69,7 +69,7 @@ class MenuContentAdminViewTestCase(CMSTestCase):
         menu = Menu.objects.get()
         self.assertEqual(menu.identifier, "my-title")
         self.assertEqual(menu.site, Site.objects.get())
-        menu_content = MenuContent.objects.get()
+        menu_content = MenuContent._base_manager.get()
         self.assertEqual(menu_content.menu, menu)
         self.assertEqual(menu_content.root.title, "My Title")
         self.assertIsNone(menu_content.root.content_type)

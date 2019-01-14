@@ -177,7 +177,9 @@ class SiblingMenuItemFactory(MenuItemFactory):
     @classmethod
     def _create(cls, model_class, sibling, position, *args, **kwargs):
         """Make sure this is the sibling of the supplied node"""
-        return sibling.add_sibling(pos=position, **kwargs)
+        new_sibling = sibling.add_sibling(pos=position, **kwargs)
+        sibling.refresh_from_db()
+        return new_sibling
 
 
 class MenuContentFactory(factory.django.DjangoModelFactory):

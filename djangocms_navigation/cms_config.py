@@ -68,6 +68,7 @@ def copy_menu_content(original_content):
 
 
 class NavigationCMSAppConfig(CMSAppConfig):
+    djangocms_navigation_enabled = True
     djangocms_versioning_enabled = True  # TODO: Make this a setting
     navigation_models = [Page]
     versioning = [

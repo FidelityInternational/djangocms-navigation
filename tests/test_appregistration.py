@@ -65,5 +65,4 @@ class NavigationIntegrationTestCase(TestCase):
         registered_models = supported_models()
 
         expected_models = [TestModel1, TestModel2, TestModel3, TestModel4, Page]
-
         self.assertCountEqual(registered_models, expected_models)
