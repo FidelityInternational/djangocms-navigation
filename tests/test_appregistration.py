@@ -1,15 +1,15 @@
 from unittest.mock import Mock
 
-from django.apps import apps
 from django.core.exceptions import ImproperlyConfigured
 
 from cms import app_registration
-from cms.models import PageContent
+from cms.models import Page
 from cms.utils.setup import setup_cms_apps
 
 from djangocms_navigation.cms_config import NavigationCMSExtension
 from djangocms_navigation.test_utils.app_1.models import TestModel1, TestModel2
 from djangocms_navigation.test_utils.app_2.models import TestModel3, TestModel4
+from djangocms_navigation.utils import supported_models
 
 from .utils import TestCase
 
@@ -60,11 +60,10 @@ class NavigationIntegrationTestCase(TestCase):
         app_registration.get_cms_extension_apps.cache_clear()
         app_registration.get_cms_config_apps.cache_clear()
 
-    def test_config_with_two_apps(self):
+    def test_config_with_multiple_apps(self):
         setup_cms_apps()
-        navigation_config = apps.get_app_config("djangocms_navigation")
-        registered_models = navigation_config.cms_extension.navigation_apps_models
+        registered_models = supported_models()
 
-        expected_models = [TestModel1, TestModel2, TestModel3, TestModel4, PageContent]
+        expected_models = [TestModel1, TestModel2, TestModel3, TestModel4, Page]
 
         self.assertCountEqual(registered_models, expected_models)

@@ -1,18 +1,19 @@
 from django.conf.urls import url
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.contrib.admin.utils import quote
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.sites.shortcuts import get_current_site
+from django.http import HttpResponseBadRequest
 from django.shortcuts import reverse, HttpResponseRedirect
-from django.contrib.admin.utils import quote
-
-from django.utils.text import slugify
 from django.utils.html import format_html
+from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
+from django.views.i18n import JavaScriptCatalog
 
 from treebeard.admin import TreeAdmin
 
+from .forms import MenuContentForm, MenuItemForm
 from .models import Menu, MenuContent, MenuItem
-from .forms import MenuItemForm, MenuContentForm
 
 
 class MenuItemChangeList(ChangeList):
@@ -45,6 +46,17 @@ class MenuContentAdmin(admin.ModelAdmin):
             obj.root = MenuItem.add_root(title=title)
         super().save_model(request, obj, form, change)
 
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        meta = MenuItem._meta
+        return HttpResponseRedirect(
+            reverse(
+                "admin:{app}_{model}_list".format(
+                    app=meta.app_label, model=meta.model_name
+                ),
+                args=[object_id],
+            )
+        )
+
     def get_menuitem_link(self, obj):
         object_preview_url = reverse(
             "admin:{app}_{model}_list".format(
@@ -66,27 +78,36 @@ class MenuContentAdmin(admin.ModelAdmin):
 
 class MenuItemAdmin(TreeAdmin):
     form = MenuItemForm
-    change_list_template = "/admin/djangocms_navigation/menuitem/change_list.html"
+    change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
 
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
         return [
             url(
-                r"^(?P<menu_content_id>\d+)/list/",
+                r"^(?P<menu_content_id>\d+)/$",
                 self.admin_site.admin_view(self.changelist_view),
                 name="{}_{}_list".format(*info),
             ),
             url(
-                r"^(?P<menu_content_id>\d+)/add/",
+                r"^(?P<menu_content_id>\d+)/add/$",
                 self.admin_site.admin_view(self.add_view),
                 name="{}_{}_add".format(*info),
             ),
             url(
-                r"^(?P<menu_content_id>\d+)/(?P<object_id>\d+)/change/",
+                r"^(?P<menu_content_id>\d+)/(?P<object_id>\d+)/change/$",
                 self.admin_site.admin_view(self.change_view),
                 name="{}_{}_change".format(*info),
             ),
-        ] + super().get_urls()
+            url(
+                r"^(?P<menu_content_id>\d+)/move/$",
+                self.admin_site.admin_view(self.move_node),
+                name="{}_{}_move_node".format(*info),
+            ),
+            url(
+                r"^(?P<menu_content_id>\d+)/jsi18n/$",
+                JavaScriptCatalog.as_view(packages=["treebeard"]),
+            ),
+        ]
 
     def get_queryset(self, request):
         if hasattr(request, "menu_content_id"):
@@ -116,7 +137,6 @@ class MenuItemAdmin(TreeAdmin):
                 "admin:djangocms_navigation_menuitem_list",
                 kwargs={"menu_content_id": menu_content_id},
             )
-
         return super().add_view(request, form_url=form_url, extra_context=extra_context)
 
     def changelist_view(self, request, menu_content_id=None, extra_context=None):
@@ -149,20 +169,36 @@ class MenuItemAdmin(TreeAdmin):
         )
         return HttpResponseRedirect(url)
 
+    def move_node(self, request, menu_content_id):
+        if request.POST.get("parent_id") == "0":
+            message = _("Cannot move a node outside of the root menu node")
+            messages.error(request, message)
+            return HttpResponseBadRequest(message)
+        return super().move_node(request)
+
     def has_add_permission(self, request):
-        if hasattr(request, "menu_content_id"):
-            return True
-        return False
+        if not hasattr(request, "menu_content_id"):
+            return False
+        return super().has_add_permission(request)
 
     def has_change_permission(self, request, obj=None):
-        if hasattr(request, "menu_content_id"):
-            return True
-        if obj is not None:
-            return True
-        return False
+        if not hasattr(request, "menu_content_id"):
+            return False
+        return super().has_change_permission(request, obj)
 
     def get_changelist(self, request, **kwargs):
         return MenuItemChangeList
+
+    def get_form(self, request, obj=None, **kwargs):
+        form_class = super().get_form(request, obj, **kwargs)
+        menu_root = MenuContent.objects.get(id=request.menu_content_id).root
+
+        class Form(form_class):
+            def __new__(cls, *args, **kwargs):
+                kwargs["menu_root"] = menu_root
+                return form_class(*args, **kwargs)
+
+        return Form
 
 
 admin.site.register(MenuItem, MenuItemAdmin)

@@ -3,7 +3,7 @@ from collections import Iterable
 from django.core.exceptions import ImproperlyConfigured
 
 from cms.app_base import CMSAppConfig, CMSAppExtension
-from cms.models import PageContent
+from cms.models import Page
 
 from djangocms_versioning.datastructures import VersionableItem
 
@@ -68,9 +68,8 @@ def copy_menu_content(original_content):
 
 
 class NavigationCMSAppConfig(CMSAppConfig):
-    djangocms_navigation_enabled = True
     djangocms_versioning_enabled = True  # TODO: Make this a setting
-    navigation_models = [PageContent, ]
+    navigation_models = [Page]
     versioning = [
         VersionableItem(
             content_model=MenuContent,

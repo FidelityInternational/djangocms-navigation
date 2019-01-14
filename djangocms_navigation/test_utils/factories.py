@@ -1,11 +1,13 @@
 import string
 
-from cms.models import Page, PageContent, TreeNode
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
-from djangocms_versioning.models import Version
+
+from cms.models import Page, PageContent, TreeNode
+
 import factory
+from djangocms_versioning.models import Version
 from factory.fuzzy import FuzzyChoice, FuzzyInteger, FuzzyText
 
 from ..models import Menu, MenuContent, MenuItem
@@ -113,6 +115,7 @@ class MenuItemFactory(factory.django.DjangoModelFactory):
     """Abstract factory to use as a base for other factories that
     set the path and depth attributes sensibly for root, child and
     sibling nodes."""
+
     title = FuzzyText(length=24)
     object_id = factory.SelfAttribute("content.id")
     content_type = factory.LazyAttribute(
@@ -143,7 +146,7 @@ class ChildMenuItemFactory(MenuItemFactory):
 
     class Meta:
         model = MenuItem
-        inline_args = ('parent',)
+        inline_args = ("parent",)
 
     @classmethod
     def _create(cls, model_class, parent, *args, **kwargs):

@@ -1,32 +1,37 @@
-from cms.cms_menus import CMSMenu
+from django.db.models import Q
+
+from cms.cms_menus import CMSMenu as OriginalCMSMenu
 from cms.utils import get_current_site
 from menus.base import Menu, Modifier, NavigationNode
 from menus.menu_pool import menu_pool
 
-from .models import Menu as MenuModel, MenuItem
+from .models import MenuItem
 
 
-class NavigationMenu(Menu):
+class CMSMenu(Menu):
     def get_roots(self, request):
-        return MenuModel.objects.filter(site=get_current_site())
-
-    def get_menu_nodes(self, roots):
-        return (
-            MenuItem.get_tree()
-            .filter(menu_content__in=roots.values("menucontent"))
-            .order_by("menu_content", "path")
+        return MenuItem.get_root_nodes().filter(
+            menucontent__menu__site=get_current_site()
         )
 
-    def get_navigation_nodes(self, nodes, root_nodes):
+    def get_menu_nodes(self, roots):
+        root_paths = roots.values_list("path", flat=True)
+        path_q = Q()
+        for path in root_paths:
+            path_q |= Q(path__startswith=path) & ~Q(path=path)
+        return MenuItem.get_tree().filter(path_q).order_by("path")
+
+    def get_navigation_nodes(self, nodes, root_ids):
         for node in nodes:
             parent = node.get_parent()
-            if parent:
-                parent_id = parent.id
+            url = node.content.get_absolute_url() if node.content else ""
+            if parent.id in root_ids:
+                parent_id = root_ids[parent.id]
             else:
-                parent_id = root_nodes[node.menu_content_id].id
+                parent_id = parent.id
             yield NavigationNode(
                 title=node.title,
-                url=node.content.get_absolute_url(),
+                url=url,
                 id=node.pk,
                 parent_id=parent_id,
                 attr={"link_target": node.link_target},
@@ -34,17 +39,16 @@ class NavigationMenu(Menu):
 
     def get_nodes(self, request):
         navigations = self.get_roots(request)
-        root_nodes = {}
         root_navigation_nodes = []
+        root_ids = {}
         for navigation in navigations:
-            node = NavigationNode(
-                title="", url="", id="root-{}".format(navigation.identifier)
-            )
+            identifier = "root-{}".format(navigation.menucontent.menu.identifier)
+            node = NavigationNode(title="", url="", id=identifier)
             root_navigation_nodes.append(node)
-            root_nodes[navigation.pk] = node
+            root_ids[navigation.pk] = identifier
         menu_nodes = self.get_menu_nodes(navigations)
         return root_navigation_nodes + list(
-            self.get_navigation_nodes(menu_nodes, root_nodes)
+            self.get_navigation_nodes(menu_nodes, root_ids)
         )
 
 
@@ -74,6 +78,6 @@ class NavigationSelector(Modifier):
         return node
 
 
-menu_pool.menus.pop(CMSMenu.__name__)
-menu_pool.register_menu(NavigationMenu)
+menu_pool.menus.pop(OriginalCMSMenu.__name__)
+menu_pool.register_menu(CMSMenu)
 menu_pool.register_modifier(NavigationSelector)
