@@ -72,7 +72,9 @@ class NavigationCMSAppConfig(CMSAppConfig):
     djangocms_navigation_enabled = getattr(
         settings, "NAVIGATION_CMS_MODELS_ENABLED", True
     )
-    djangocms_versioning_enabled = True  # TODO: Make this a setting
+    djangocms_versioning_enabled = getattr(
+        settings, "NAVIGATION_VERSIONING_ENABLED", True
+    )
     navigation_models = [Page]
     versioning = [
         VersionableItem(
