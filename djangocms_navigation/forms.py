@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.contenttypes.models import ContentType
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -92,6 +93,30 @@ class MenuItemForm(MoveNodeForm):
             raise forms.ValidationError(
                 {"_ref_node_id": ["You cannot add a sibling for this menu item"]}
             )
+
+        if cleaned_data["content_type"]:
+            ct = ContentType.objects.get(pk=cleaned_data["content_type"].pk)
+            if ct and ct.id not in supported_content_type_pks():
+                raise forms.ValidationError(
+                    {
+                        "content_type": [
+                            "{} is not registered to use for navigation menu".format(
+                                cleaned_data["content_type"]
+                            )
+                        ]
+                    }
+                )
+
+        if cleaned_data["content_type"] and cleaned_data["object_id"]:
+            try:
+                obj = cleaned_data["content_type"].__class__.objects.get(
+                    pk=cleaned_data["object_id"]
+                )
+            except cleaned_data["content_type"].__class__.DoesNotExist:
+                obj = None
+
+            if not obj:
+                raise forms.ValidationError({"object_id": ["Invalid object"]})
 
         return cleaned_data
 

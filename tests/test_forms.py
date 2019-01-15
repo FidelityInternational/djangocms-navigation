@@ -287,6 +287,44 @@ class MenuContentFormTestCase(CMSTestCase):
 
         self.assertTrue(is_valid)
 
+    def test_invalid_object_id(self):
+        data = {
+            "title": "My new Title",
+            "content_type": self.page_ct.pk,
+            "_ref_node_id": self.menu_root.id,
+            "object_id": 99,
+            "numchild": 1,
+            "link_target": "_self",
+            "_position": "first-child",
+        }
+        form = MenuItemForm(menu_root=self.menu_root, data=data)
+
+        is_valid = form.is_valid()
+
+        self.assertFalse(is_valid)
+        self.assertIn("object_id", form.errors)
+        self.assertListEqual(form.errors["object_id"], ["Invalid object"])
+
+    def test_invalid_content_type_id(self):
+        data = {
+            "title": "My new Title",
+            "content_type": self.get_superuser().pk,
+            "_ref_node_id": self.menu_root.id,
+            "object_id": 1,
+            "numchild": 1,
+            "link_target": "_self",
+            "_position": "first-child",
+        }
+        form = MenuItemForm(menu_root=self.menu_root, data=data)
+        is_valid = form.is_valid()
+
+        self.assertFalse(is_valid)
+        self.assertIn("content_type", form.errors)
+        self.assertListEqual(
+            form.errors["content_type"],
+            ["Select a valid choice. That choice is not one of the available choices."],
+        )
+
     def test_doesnt_throw_500_errors_if_data_missing_from_post(self):
         form = MenuItemForm(menu_root=self.menu_root, data={})
         try:
