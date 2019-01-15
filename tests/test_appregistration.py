@@ -9,6 +9,7 @@ from cms.utils.setup import setup_cms_apps
 from djangocms_navigation.cms_config import NavigationCMSExtension
 from djangocms_navigation.test_utils.app_1.models import TestModel1, TestModel2
 from djangocms_navigation.test_utils.app_2.models import TestModel3, TestModel4
+from djangocms_navigation.test_utils.polls.models import PollContent
 from djangocms_navigation.utils import supported_models
 
 from .utils import TestCase
@@ -39,14 +40,19 @@ class AppRegistrationTestCase(TestCase):
         extensions = NavigationCMSExtension()
         cms_config = Mock(
             djangocms_navigation_enabled=True,
-            navigation_models=[TestModel1, TestModel2, TestModel3, TestModel4],
+            navigation_models={
+                TestModel1: [],
+                TestModel2: [],
+                TestModel3: [],
+                TestModel4: [],
+            },
             app_config=Mock(label="blah_cms_config"),
         )
 
         with self.assertNotRaises(ImproperlyConfigured):
             extensions.configure_app(cms_config)
             register_model = []
-            for model in extensions.navigation_apps_models:
+            for model in extensions.navigation_apps_models.keys():
                 register_model.append(model)
 
             self.assertTrue(TestModel1 in register_model)
@@ -64,6 +70,13 @@ class NavigationIntegrationTestCase(TestCase):
         setup_cms_apps()
         registered_models = supported_models()
 
-        expected_models = [TestModel1, TestModel2, TestModel3, TestModel4, Page]
+        expected_models = [
+            TestModel1,
+            TestModel2,
+            TestModel3,
+            TestModel4,
+            Page,
+            PollContent,
+        ]
 
         self.assertCountEqual(registered_models, expected_models)

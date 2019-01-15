@@ -3,10 +3,13 @@ from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
+from cms.utils.urlutils import admin_reverse
+
 from treebeard.forms import MoveNodeForm, _get_exclude_for_model
 
+from .constants import SELECT2_CONTENT_OBJECT_URL_NAME
 from .models import MenuContent, MenuItem, NavigationPlugin
-from .utils import supported_content_type_pks, supported_models
+from .utils import supported_content_type_pks
 
 
 class NavigationPluginForm(forms.ModelForm):
@@ -23,9 +26,25 @@ class MenuContentForm(forms.ModelForm):
         fields = ["title"]
 
 
-class MenuItemForm(MoveNodeForm):
-    # Todo: use autocomplete to select page object
+class Select2Mixin:
+    pass
 
+    class Media:
+        css = {"all": ("cms/js/select2/select2.css",)}
+        js = ("cms/js/select2/select2.js", "djangocms_navigation/js/create_url.js")
+
+
+class ContentTypeObjectSelectWidget(Select2Mixin, forms.TextInput):
+    def get_url(self):
+        return admin_reverse(SELECT2_CONTENT_OBJECT_URL_NAME)
+
+    def build_attrs(self, *args, **kwargs):
+        attrs = super().build_attrs(*args, **kwargs)
+        attrs.setdefault("data-select2-url", self.get_url())
+        return attrs
+
+
+class MenuItemForm(MoveNodeForm):
     class Meta:
         model = MenuItem
         exclude = _get_exclude_for_model(model, None)
@@ -34,10 +53,13 @@ class MenuItemForm(MoveNodeForm):
         self.menu_root = kwargs.pop("menu_root")
         super().__init__(*args, **kwargs)
 
-        self.fields["object_id"].widget = forms.Select(
-            attrs={"data-placeholder": _("Select Page")}
+        self.fields["object_id"] = forms.CharField(
+            label=_("Content Object"),
+            widget=ContentTypeObjectSelectWidget(
+                attrs={"data-placeholder": _("Select content object")}
+            ),
+            required=False,
         )
-        self.fields["object_id"].label = "Content"
 
         self.fields["content_type"].queryset = self.fields[
             "content_type"
@@ -46,17 +68,6 @@ class MenuItemForm(MoveNodeForm):
         self.fields["_ref_node_id"].choices = self.mk_dropdown_tree(
             MenuItem, for_node=self.menu_root.get_root()
         )
-
-        # Todo: change when autocomplete implemented, tests for this field
-        content_choices = []
-        for model in supported_models():
-            content_choices.extend([(obj.id, obj) for obj in model.objects.all()])
-        self.fields["object_id"].widget.choices = content_choices
-
-        # TODO: If this initial still needed after autocomplete changes
-        # then don't forget to write tests for this
-        if self.instance:
-            self.fields["object_id"].initial = self.instance.object_id
 
     def clean(self):
         cleaned_data = super().clean()

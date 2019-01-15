@@ -7,6 +7,7 @@ from djangocms_navigation.forms import MenuItemForm
 from djangocms_navigation.test_utils import factories
 from djangocms_navigation.test_utils.app_1.models import TestModel1, TestModel2
 from djangocms_navigation.test_utils.app_2.models import TestModel3, TestModel4
+from djangocms_navigation.test_utils.polls.models import PollContent
 
 
 class MenuContentFormTestCase(CMSTestCase):
@@ -312,7 +313,7 @@ class MenuContentFormTestCase(CMSTestCase):
 
     def test_only_display_supported_content_types(self):
         content_types = ContentType.objects.get_for_models(
-            Page, TestModel1, TestModel2, TestModel3, TestModel4
+            Page, TestModel1, TestModel2, TestModel3, TestModel4, PollContent
         )
         form = MenuItemForm(menu_root=self.menu_root)
 

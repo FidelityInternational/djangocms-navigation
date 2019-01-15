@@ -9,7 +9,7 @@ def supported_models():
     try:
         app_config = apps.get_app_config("djangocms_navigation")
     except LookupError:
-        return []
+        return {}
     else:
         extension = app_config.cms_extension
         return extension.navigation_apps_models
@@ -21,3 +21,9 @@ def supported_content_type_pks():
     models = app_config.cms_extension.navigation_apps_models
     content_type_dict = ContentType.objects.get_for_models(*models)
     return [ct.pk for ct in content_type_dict.values()]
+
+
+@lru_cache(maxsize=1)
+def is_model_supported(model):
+    """Return bool value if model is in supported_models"""
+    return model in supported_models().keys()
