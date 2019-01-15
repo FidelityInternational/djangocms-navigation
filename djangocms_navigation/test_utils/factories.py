@@ -162,17 +162,12 @@ class SiblingMenuItemFactory(MenuItemFactory):
     # Siblings need to be positioned against their sibling nodes.
     # A position will be randomly chosen from this list or you can
     # supply your own with the position arg.
-    _SIBLING_POSITIONS = [
-        'first-sibling',
-        'left',
-        'right',
-        'last-sibling',
-    ]
+    _SIBLING_POSITIONS = ["first-sibling", "left", "right", "last-sibling"]
     position = FuzzyChoice(_SIBLING_POSITIONS)
 
     class Meta:
         model = MenuItem
-        inline_args = ('sibling', 'position')
+        inline_args = ("sibling", "position")
 
     @classmethod
     def _create(cls, model_class, sibling, position, *args, **kwargs):

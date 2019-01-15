@@ -1,5 +1,6 @@
 from collections import Iterable
 
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 from cms.app_base import CMSAppConfig, CMSAppExtension
@@ -39,7 +40,7 @@ def copy_menu_content(original_content):
     root_fields = {
         field.name: getattr(original_root, field.name)
         for field in MenuItem._meta.fields
-        if field.name not in [MenuItem._meta.pk.name, 'path', 'depth']
+        if field.name not in [MenuItem._meta.pk.name, "path", "depth"]
     }
     new_root = MenuItem.add_root(**root_fields)
 
@@ -47,9 +48,9 @@ def copy_menu_content(original_content):
     content_fields = {
         field.name: getattr(original_content, field.name)
         for field in MenuContent._meta.fields
-        if field.name not in [MenuContent._meta.pk.name, 'root']
+        if field.name not in [MenuContent._meta.pk.name, "root"]
     }
-    content_fields['root'] = new_root
+    content_fields["root"] = new_root
     new_content = MenuContent.objects.create(**content_fields)
 
     # Copy menu items
@@ -59,22 +60,24 @@ def copy_menu_content(original_content):
             for field in MenuItem._meta.fields
             # don't copy primary key because we're creating a new obj
             # and handle the menu_content field later
-            if field.name not in [MenuItem._meta.pk.name, 'path']
+            if field.name not in [MenuItem._meta.pk.name, "path"]
         }
-        item_fields['path'] = new_root.path + item.path[MenuItem.steplen:]
+        item_fields["path"] = new_root.path + item.path[MenuItem.steplen :]
         MenuItem.objects.create(**item_fields)
 
     return new_content
 
 
 class NavigationCMSAppConfig(CMSAppConfig):
-    djangocms_navigation_enabled = True
+    djangocms_navigation_enabled = getattr(
+        settings, "NAVIGATION_CMS_MODELS_ENABLED", True
+    )
     djangocms_versioning_enabled = True  # TODO: Make this a setting
     navigation_models = [Page]
     versioning = [
         VersionableItem(
             content_model=MenuContent,
-            grouper_field_name='menu',
+            grouper_field_name="menu",
             copy_function=copy_menu_content,
-        ),
+        )
     ]
