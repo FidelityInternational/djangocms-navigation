@@ -32,7 +32,7 @@ class ContentObjectSelect2View(ListView):
     def get_queryset(self):
         content_type_id = self.request.GET.get("content_type_id", None)
 
-        query = self.request.GET.get("search_text", None)
+        query = self.request.GET.get("query", None)
         site = self.request.GET.get("site")
         try:
             content_object = ContentType.objects.get_for_id(content_type_id)

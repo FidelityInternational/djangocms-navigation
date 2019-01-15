@@ -27,7 +27,7 @@
                                 .closest('fieldset')
                                 .find('.field-content_type select')
                                 .val(),
-                            search_text: term,
+                            query: term,
                         };
                     },
                     results: function(data, page) {
