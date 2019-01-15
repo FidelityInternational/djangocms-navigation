@@ -13,7 +13,7 @@ class NavigationCMSExtension(CMSAppExtension):
     def configure_app(self, cms_config):
         if hasattr(cms_config, "navigation_models"):
             navigation_app_models = getattr(cms_config, "navigation_models")
-            if isinstance(navigation_app_models, Iterable):
+            if isinstance(navigation_app_models, dict):
                 self.navigation_apps_models.update(navigation_app_models)
             else:
                 raise ImproperlyConfigured(
