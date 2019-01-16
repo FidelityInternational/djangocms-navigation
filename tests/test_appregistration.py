@@ -1,3 +1,4 @@
+import imp
 from unittest.mock import Mock
 
 from django.apps import apps
@@ -8,7 +9,7 @@ from cms import app_registration
 from cms.models import Page
 from cms.utils.setup import setup_cms_apps
 
-from djangocms_navigation.cms_config import NavigationCMSExtension, NavigationCMSAppConfig
+from djangocms_navigation import cms_config
 from djangocms_navigation.test_utils.app_1.models import TestModel1, TestModel2
 from djangocms_navigation.test_utils.app_2.models import TestModel3, TestModel4
 from djangocms_navigation.utils import supported_models
@@ -18,7 +19,7 @@ from .utils import TestCase
 
 class AppRegistrationTestCase(TestCase):
     def test_missing_cms_config(self):
-        extensions = NavigationCMSExtension()
+        extensions = cms_config.NavigationCMSExtension()
         cms_config = Mock(
             djangocms_navigation_enabled=True, app_config=Mock(label="blah_cms_config")
         )
@@ -27,7 +28,7 @@ class AppRegistrationTestCase(TestCase):
             extensions.configure_app(cms_config)
 
     def test_invalid_cms_config_parameter(self):
-        extensions = NavigationCMSExtension()
+        extensions = cms_config.NavigationCMSExtension()
         cms_config = Mock(
             djangocms_navigation_enabled=True,
             navigation_models=23234,
@@ -38,7 +39,7 @@ class AppRegistrationTestCase(TestCase):
             extensions.configure_app(cms_config)
 
     def test_valid_cms_config_parameter(self):
-        extensions = NavigationCMSExtension()
+        extensions = cms_config.NavigationCMSExtension()
         cms_config = Mock(
             djangocms_navigation_enabled=True,
             navigation_models=[TestModel1, TestModel2, TestModel3, TestModel4],
@@ -76,17 +77,20 @@ class NavigationIntegrationTestCase(TestCase):
 
 class SettingsTestCase(TestCase):
     def setUp(self):
-        self.extension = NavigationCMSExtension()
+        self.extension = cms_config.NavigationCMSExtension()
+        self.extension.navigation_apps_models = []
         self.app = apps.get_app_config('djangocms_navigation')
 
     @override_settings(NAVIGATION_CMS_MODELS_ENABLED=True)
     def test_cms_models_added_to_navigation_if_enabled(self):
-        nav_app_config = NavigationCMSAppConfig(self.app)
+        imp.reload(cms_config)
+        nav_app_config = cms_config.NavigationCMSAppConfig(self.app)
         self.extension.configure_app(nav_app_config)
         self.assertIn(Page, self.extension.navigation_apps_models)
 
     @override_settings(NAVIGATION_CMS_MODELS_ENABLED=False)
-    def test_cms_models_added_to_navigation_if_disabled(self):
-        nav_app_config = NavigationCMSAppConfig(self.app)
-        self.extension.configure_app(nav_app_config)
+    def test_cms_models_not_added_to_navigation_if_disabled(self):
+        imp.reload(cms_config)
+        nav_app_config = cms_config.NavigationCMSAppConfig(self.app)
+        import ipdb; ipdb.set_trace()
         self.assertNotIn(Page, self.extension.navigation_apps_models)
