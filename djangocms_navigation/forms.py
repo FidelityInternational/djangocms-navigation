@@ -95,8 +95,8 @@ class MenuItemForm(MoveNodeForm):
             )
 
         if cleaned_data["content_type"]:
-            ct = ContentType.objects.get(pk=cleaned_data["content_type"].pk)
-            if ct and ct.id not in supported_content_type_pks():
+            ct = cleaned_data["content_type"]
+            if ct and ct.pk not in supported_content_type_pks():
                 raise forms.ValidationError(
                     {
                         "content_type": [
@@ -109,10 +109,12 @@ class MenuItemForm(MoveNodeForm):
 
         if cleaned_data["content_type"] and cleaned_data["object_id"]:
             try:
-                obj = cleaned_data["content_type"].__class__.objects.get(
-                    pk=cleaned_data["object_id"]
+                obj = (
+                    cleaned_data["content_type"]
+                    .model_class()
+                    .objects.get(pk=cleaned_data["object_id"])
                 )
-            except cleaned_data["content_type"].__class__.DoesNotExist:
+            except cleaned_data["content_type"].model_class().DoesNotExist:
                 obj = None
 
             if not obj:

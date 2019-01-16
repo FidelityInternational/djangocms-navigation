@@ -15,7 +15,7 @@ class NavigationCMSExtension(CMSAppExtension):
                 self.navigation_apps_models.update(navigation_app_models)
             else:
                 raise ImproperlyConfigured(
-                    "navigation configuration must be a Iterable object"
+                    "navigation configuration must be a dictionary object"
                 )
         else:
             raise ImproperlyConfigured(
