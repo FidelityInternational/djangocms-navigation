@@ -1,5 +1,4 @@
 from django import forms
-from django.contrib.contenttypes.models import ContentType
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -94,7 +93,7 @@ class MenuItemForm(MoveNodeForm):
                 {"_ref_node_id": ["You cannot add a sibling for this menu item"]}
             )
 
-        if cleaned_data["content_type"]:
+        if not node.is_root() and cleaned_data["content_type"]:
             ct = cleaned_data["content_type"]
             if ct and ct.pk not in supported_content_type_pks():
                 raise forms.ValidationError(
@@ -107,7 +106,11 @@ class MenuItemForm(MoveNodeForm):
                     }
                 )
 
-        if cleaned_data["content_type"] and cleaned_data["object_id"]:
+        if (
+            not node.is_root()
+            and cleaned_data["content_type"]
+            and cleaned_data["object_id"]
+        ):
             try:
                 obj = (
                     cleaned_data["content_type"]
