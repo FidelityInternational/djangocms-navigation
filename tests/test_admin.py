@@ -248,7 +248,7 @@ class MenuItemAdminViewTestCase(CMSTestCase):
         response = self.client.post(move_url, data=data)
 
         self.assertEqual(response.status_code, 400)
-        mocked_messages.assert_called_once()
+        self.assertEqual(mocked_messages.call_count, 1)
         self.assertEqual(
             mocked_messages.call_args[0][1],
             "Cannot move a node outside of the root menu node",

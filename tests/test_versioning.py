@@ -89,10 +89,7 @@ class CopyFunctionTestCase(TestCase):
         original_item111 = factories.ChildMenuItemFactory(parent=original_item11)
         original_item112 = factories.ChildMenuItemFactory(parent=original_item11)
         original_item1111 = factories.ChildMenuItemFactory(parent=original_item111)
-        # TODO: This causes an inconsistent integrity error, it happens about
-        # 50-70% of the time. I thought it was the factory, but using
-        # the add_child method does the same
-        original_item21 = original_item2.add_child(title="21")
+        original_item21 = factories.ChildMenuItemFactory(parent=original_item2)
         original_item22 = factories.SiblingMenuItemFactory(sibling=original_item21)
 
         new_version = original_version.copy(self.user)
