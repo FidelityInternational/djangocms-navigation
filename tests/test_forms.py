@@ -288,10 +288,11 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertTrue(is_valid)
 
     def test_invalid_object_id(self):
+        item = factories.ChildMenuItemFactory(parent=self.menu_root)
         data = {
             "title": "My new Title",
             "content_type": self.page_ct.pk,
-            "_ref_node_id": self.menu_root.id,
+            "_ref_node_id": item.id,
             "object_id": 99,
             "numchild": 1,
             "link_target": "_self",

@@ -93,7 +93,7 @@ class MenuItemForm(MoveNodeForm):
                 {"_ref_node_id": ["You cannot add a sibling for this menu item"]}
             )
 
-        if not node.is_root() and cleaned_data["content_type"]:
+        if node and not node.is_root() and cleaned_data["content_type"]:
             ct = cleaned_data["content_type"]
             if ct and ct.pk not in supported_content_type_pks():
                 raise forms.ValidationError(
@@ -107,7 +107,8 @@ class MenuItemForm(MoveNodeForm):
                 )
 
         if (
-            not node.is_root()
+            node
+            and not node.is_root()
             and cleaned_data["content_type"]
             and cleaned_data["object_id"]
         ):
