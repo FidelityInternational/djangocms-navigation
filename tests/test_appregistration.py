@@ -92,5 +92,5 @@ class SettingsTestCase(TestCase):
     def test_cms_models_not_added_to_navigation_if_disabled(self):
         imp.reload(cms_config)
         nav_app_config = cms_config.NavigationCMSAppConfig(self.app)
-        import ipdb; ipdb.set_trace()
+        self.extension.configure_app(nav_app_config)
         self.assertNotIn(Page, self.extension.navigation_apps_models)
