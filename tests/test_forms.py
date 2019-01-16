@@ -317,11 +317,11 @@ class MenuContentFormTestCase(CMSTestCase):
             "_position": "first-child",
         }
         form = MenuItemForm(menu_root=self.menu_root, data=data)
-
         is_valid = form.is_valid()
 
-        self.assertTrue(is_valid)
-        self.assertNotIn("object_id", form.errors)
+        self.assertFalse(is_valid)
+        self.assertIn("object_id", form.errors)
+        self.assertListEqual(form.errors["object_id"], ["Invalid object"])
 
     def test_invalid_content_type_id(self):
         data = {
