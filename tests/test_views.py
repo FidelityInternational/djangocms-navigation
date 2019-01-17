@@ -2,10 +2,10 @@ from django.contrib.contenttypes.models import ContentType
 
 from cms.models import User
 
-from .base import BaseTestCase
+from .base import BaseViewTestCase
 
 
-class ContentObjectAutoFillTestCases(BaseTestCase):
+class ContentObjectAutoFillTestCases(BaseViewTestCase):
     def test_select2_view_no_content_id(self):
         with self.login_user_context(self.superuser):
             response = self.client.get(self.select2_endpoint)

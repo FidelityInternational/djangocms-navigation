@@ -11,7 +11,9 @@ from djangocms_navigation.constants import SELECT2_CONTENT_OBJECT_URL_NAME
 from djangocms_navigation.test_utils.polls.models import Poll, PollContent
 
 
-class BaseTestCase(CMSTestCase):
+class BaseViewTestCase(CMSTestCase):
+    """setup data  for view test case"""
+
     select2_endpoint = admin_reverse(SELECT2_CONTENT_OBJECT_URL_NAME)
 
     def setUp(self):

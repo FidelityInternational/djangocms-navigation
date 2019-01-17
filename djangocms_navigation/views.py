@@ -71,7 +71,7 @@ class ContentObjectSelect2View(View):
             if hasattr(model.objects, "on_site"):
                 queryset = queryset.on_site(site)
             elif hasattr(model, "site"):
-                queryset = queryset.filter(site=self.site)
+                queryset = queryset.filter(site=site)
 
         if pk:
             queryset = queryset.filter(pk=pk)
