@@ -57,8 +57,11 @@ class MenuItemChangelistTestCase(TestCase):
 
 
 class MenuContentAdminViewTestCase(CMSTestCase):
-    def test_menucontent_add_view(self):
+
+    def setUp(self):
         self.client.force_login(self.get_superuser())
+
+    def test_menucontent_add_view(self):
         add_url = reverse("admin:djangocms_navigation_menucontent_add")
 
         response = self.client.post(add_url, {"title": "My Title"})
@@ -76,13 +79,12 @@ class MenuContentAdminViewTestCase(CMSTestCase):
         self.assertIsNone(menu_content.root.object_id)
 
     def test_menucontent_change_view(self):
-        self.client.force_login(self.get_superuser())
         menu_content = factories.MenuContentFactory()
         change_url = reverse(
             "admin:djangocms_navigation_menucontent_change", args=(menu_content.pk,)
         )
 
-        response = self.client.post(change_url, {"title": "My Title"})
+        response = self.client.get(change_url)
 
         # Redirect happened
         redirect_url = reverse(
@@ -171,6 +173,26 @@ class MenuItemAdminViewTestCase(CMSTestCase):
         self.assertEqual(item.link_target, "_blank")
         self.assertTrue(item.is_child_of(menu_content.root))
 
+    def test_menuitem_change_view_throws_404_on_non_existing_menucontent_get(self):
+        change_url = reverse(
+            "admin:djangocms_navigation_menuitem_change",
+            kwargs={"menu_content_id": 93, "object_id": 91},
+        )
+
+        response = self.client.get(change_url)
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_menuitem_change_view_throws_404_on_non_existing_menucontent_post(self):
+        change_url = reverse(
+            "admin:djangocms_navigation_menuitem_change",
+            kwargs={"menu_content_id": 93, "object_id": 91},
+        )
+
+        response = self.client.post(change_url)
+
+        self.assertEqual(response.status_code, 404)
+
     def test_menuitem_add_view(self):
         menu_content = factories.MenuContentFactory()
         add_url = reverse(
@@ -207,6 +229,24 @@ class MenuItemAdminViewTestCase(CMSTestCase):
         self.assertEqual(new_child.link_target, "_blank")
         self.assertTrue(new_child.is_child_of(menu_content.root))
 
+    def test_menuitem_add_view_throws_404_on_non_existing_menucontent_get(self):
+        add_url = reverse(
+            "admin:djangocms_navigation_menuitem_add", args=(83,)
+        )
+
+        response = self.client.get(add_url)
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_menuitem_add_view_throws_404_on_non_existing_menucontent_post(self):
+        add_url = reverse(
+            "admin:djangocms_navigation_menuitem_add", args=(83,)
+        )
+
+        response = self.client.post(add_url)
+
+        self.assertEqual(response.status_code, 404)
+
     def test_menuitem_changelist(self):
         menu_content = factories.MenuContentFactory()
         factories.ChildMenuItemFactory.create_batch(5, parent=menu_content.root)
@@ -218,6 +258,15 @@ class MenuItemAdminViewTestCase(CMSTestCase):
 
         # Just a smoke test
         self.assertEqual(response.status_code, 200)
+
+    def test_menuitem_changelist_throws_404_on_non_existing_menucontent(self):
+        list_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(881,)
+        )
+
+        response = self.client.get(list_url)
+
+        self.assertEqual(response.status_code, 404)
 
     def test_menuitem_move_node_smoke_test(self):
         menu_content = factories.MenuContentFactory()

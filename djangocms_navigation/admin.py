@@ -4,7 +4,7 @@ from django.contrib.admin.utils import quote
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseBadRequest
-from django.shortcuts import reverse, HttpResponseRedirect
+from django.shortcuts import reverse, HttpResponseRedirect, get_object_or_404
 from django.utils.html import format_html
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
@@ -111,7 +111,8 @@ class MenuItemAdmin(TreeAdmin):
 
     def get_queryset(self, request):
         if hasattr(request, "menu_content_id"):
-            menu_content = MenuContent._base_manager.get(id=request.menu_content_id)
+            menu_content = get_object_or_404(
+                MenuContent._base_manager, id=request.menu_content_id)
             return MenuItem.get_tree(menu_content.root)
         return self.model().get_tree()
 
@@ -191,7 +192,7 @@ class MenuItemAdmin(TreeAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form_class = super().get_form(request, obj, **kwargs)
-        menu_root = MenuItem.objects.get(menucontent=request.menu_content_id)
+        menu_root = get_object_or_404(MenuItem, menucontent=request.menu_content_id)
 
         class Form(form_class):
             def __new__(cls, *args, **kwargs):
