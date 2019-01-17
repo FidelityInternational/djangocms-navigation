@@ -1,15 +1,16 @@
-from django.contrib import admin
+from django.test import TestCase
 
-from cms.test_utils.testcases import CMSTestCase
 from djangocms_navigation.models import Menu, MenuItem
 from djangocms_navigation.test_utils import factories
-from djangocms_navigation.admin import MenuItemChangeList, MenuItemAdmin
-from django.test import RequestFactory
 
 
-class MenuContentModelTestCase(CMSTestCase):
-    def setUp(self):
-        self.superuser = self.get_superuser()
+class MenuModelTestCase(TestCase):
+    def test_str(self):
+        menu = factories.MenuFactory(identifier='page-about-cats')
+        self.assertEqual(str(menu), 'page-about-cats')
+
+
+class MenuContentModelTestCase(TestCase):
 
     def test_title(self):
         menu_content = factories.MenuContentFactory(root__title="My Title")
@@ -26,18 +27,3 @@ class MenuContentModelTestCase(CMSTestCase):
     def test_string_representation(self):
         menu_content = factories.MenuContentFactory(root__title="My Title")
         self.assertEqual(str(menu_content), menu_content.title)
-
-
-class MenuItemChangelistTestCase(CMSTestCase):
-    def setUp(self):
-        self.site = admin.AdminSite()
-        self.site.register(MenuItem, MenuItemAdmin)
-
-    def test_menuitem_changelist(self):
-        menu_content = factories.MenuContentFactory(root__title="My Title")
-        self.assertEqual(
-            self.site._registry[MenuItem].get_changelist(
-                RequestFactory().get("/admin/menuitem/{}/".format(menu_content.root.id))
-            ),
-            MenuItemChangeList,
-        )
