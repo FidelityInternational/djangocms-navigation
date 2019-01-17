@@ -11,12 +11,13 @@ from djangocms_navigation.constants import SELECT2_CONTENT_OBJECT_URL_NAME
 from djangocms_navigation.test_utils.polls.models import Poll, PollContent
 
 
-class BaseUrlTestCase(CMSTestCase):
+class BaseTestCase(CMSTestCase):
     select2_endpoint = admin_reverse(SELECT2_CONTENT_OBJECT_URL_NAME)
 
     def setUp(self):
         self.language = "en"
         self.superuser = self.get_superuser()
+        self.user_with_no_perm = self.get_standard_user()
         self.page = self._create_page(title="test", language=self.language)
         self.placeholder = self.page.get_placeholders(self.language).get(slot="content")
         self.default_site = Site.objects.first()
@@ -46,15 +47,13 @@ class BaseUrlTestCase(CMSTestCase):
 
         from djangocms_versioning.models import Version
 
-        versions = Version.objects.filter_by_grouper(grouper).filter(
-            state=version_state
+        version = (
+            Version.objects.filter_by_grouper(grouper)
+            .filter(state=version_state)
+            .order_by("id")
+            .last()
         )
-        for version in versions:
-            if (
-                hasattr(version.content, "language")
-                and version.content.language == language
-            ):
-                return version
+        return version
 
     def _publish(self, grouper, language=None):
         from djangocms_versioning.constants import DRAFT

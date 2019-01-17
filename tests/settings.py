@@ -1,12 +1,3 @@
-import os
-
-
-ENABLE_VERSIONING = bool(os.environ.get("ENABLE_VERSIONING", False))
-EXTRA_INSTALLED_APPS = []
-if ENABLE_VERSIONING:
-    EXTRA_INSTALLED_APPS.append("djangocms_versioning")
-
-
 HELPER_SETTINGS = {
     "INSTALLED_APPS": [
         "djangocms_navigation",

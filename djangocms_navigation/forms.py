@@ -27,8 +27,6 @@ class MenuContentForm(forms.ModelForm):
 
 
 class Select2Mixin:
-    pass
-
     class Media:
         css = {"all": ("cms/js/select2/select2.css",)}
         js = ("cms/js/select2/select2.js", "djangocms_navigation/js/create_url.js")
@@ -40,11 +38,21 @@ class ContentTypeObjectSelectWidget(Select2Mixin, forms.TextInput):
 
     def build_attrs(self, *args, **kwargs):
         attrs = super().build_attrs(*args, **kwargs)
+        # import pdb; pdb.set_trace()
         attrs.setdefault("data-select2-url", self.get_url())
         return attrs
 
 
 class MenuItemForm(MoveNodeForm):
+
+    object_id = forms.CharField(
+        label=_("Content Object"),
+        widget=ContentTypeObjectSelectWidget(
+            attrs={"data-placeholder": _("Select content object")}
+        ),
+        required=False,
+    )
+
     class Meta:
         model = MenuItem
         exclude = _get_exclude_for_model(model, None)
@@ -52,14 +60,6 @@ class MenuItemForm(MoveNodeForm):
     def __init__(self, *args, **kwargs):
         self.menu_root = kwargs.pop("menu_root")
         super().__init__(*args, **kwargs)
-
-        self.fields["object_id"] = forms.CharField(
-            label=_("Content Object"),
-            widget=ContentTypeObjectSelectWidget(
-                attrs={"data-placeholder": _("Select content object")}
-            ),
-            required=False,
-        )
 
         self.fields["content_type"].queryset = self.fields[
             "content_type"

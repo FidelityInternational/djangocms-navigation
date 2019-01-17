@@ -2,25 +2,38 @@ from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import PermissionDenied
-from django.http import JsonResponse
-from django.views.generic import ListView
+from django.http import HttpResponseBadRequest, JsonResponse
+from django.views.generic import View
 
 from cms.models import Page
 
 from djangocms_navigation.utils import is_model_supported, supported_models
 
 
-class ContentObjectSelect2View(ListView):
+class ContentObjectSelect2View(View):
     def get(self, request, *args, **kwargs):
 
+        content_type_id = self.request.GET.get("content_type_id", None)
+        # Return http bad request if there is no content_type_id provided in request
+        if not content_type_id:
+            return HttpResponseBadRequest()
+
+        # return http bad request if content_type not exist in db
+        try:
+            content_object = ContentType.objects.get_for_id(content_type_id)
+        except ContentType.DoesNotExist:
+            return HttpResponseBadRequest()
+
+        # return http request if content type is not registered to use navigation app
+        model = content_object.model_class()
+        if not is_model_supported(model):
+            return HttpResponseBadRequest()
+
         self.site = get_current_site(request)
-        self.object_list = self.get_queryset()
-        context = self.get_context_data()
+        self.object_list = self.get_data()
+
         data = {
-            "results": [
-                {"text": str(obj), "id": obj.pk} for obj in context["object_list"]
-            ],
-            "more": context["page_obj"].has_next(),
+            "results": [{"text": str(obj), "id": obj.pk} for obj in self.get_data()]
         }
         return JsonResponse(data)
 
@@ -29,24 +42,17 @@ class ContentObjectSelect2View(ListView):
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
 
-    def get_queryset(self):
+    def get_data(self):
         content_type_id = self.request.GET.get("content_type_id", None)
-
         query = self.request.GET.get("query", None)
         site = self.request.GET.get("site")
+
         try:
             content_object = ContentType.objects.get_for_id(content_type_id)
         except ContentType.DoesNotExist:
-            raise ValueError(
-                "Content type with id {} does not exists.".format(content_type_id)
-            )
+            return HttpResponseBadRequest()
 
         model = content_object.model_class()
-        search_fields = supported_models().get(model)
-        if not is_model_supported(model):
-            raise ValueError(
-                "{} is not available to use, check content_id param".format(model)
-            )
 
         try:
             # If versioning is enabled then get versioning queryset for model
@@ -65,7 +71,7 @@ class ContentObjectSelect2View(ListView):
             if hasattr(model.objects, "on_site"):
                 queryset = queryset.on_site(site)
             elif hasattr(model, "site"):
-                queryset = queryset.filter(site=site)
+                queryset = queryset.filter(site=self.site)
 
         if pk:
             queryset = queryset.filter(pk=pk)
@@ -80,10 +86,11 @@ class ContentObjectSelect2View(ListView):
             else:
                 # Non page model should work using filter against field in queryset
                 options = {}
-                for field in search_fields:
-                    options[field] = query
-
-                queryset = queryset.filter(**options)
+                search_fields = supported_models().get(model)
+                if search_fields:
+                    for field in search_fields:
+                        options[field] = query
+                    queryset = queryset.filter(**options)
 
         return queryset
 

@@ -2,12 +2,19 @@ from django.contrib.contenttypes.models import ContentType
 
 from cms.models import Page
 from cms.test_utils.testcases import CMSTestCase
+from cms.utils.urlutils import admin_reverse
 
-from djangocms_navigation.forms import MenuItemForm
+from djangocms_navigation.constants import SELECT2_CONTENT_OBJECT_URL_NAME
+from djangocms_navigation.forms import (
+    ContentTypeObjectSelectWidget,
+    MenuItemForm,
+)
 from djangocms_navigation.test_utils import factories
 from djangocms_navigation.test_utils.app_1.models import TestModel1, TestModel2
 from djangocms_navigation.test_utils.app_2.models import TestModel3, TestModel4
 from djangocms_navigation.test_utils.polls.models import PollContent
+
+from .utils import WidgetTestForm
 
 
 class MenuContentFormTestCase(CMSTestCase):
@@ -379,3 +386,12 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertQuerysetEqual(
             queryset, expected_content_type_pks, lambda o: o.pk, ordered=False
         )
+
+    def test_content_type_select_widget_build_attrs(self):
+        form = WidgetTestForm()
+        form["dummy_field"].widget = ContentTypeObjectSelectWidget()
+        attrs = form["dummy_field"].widget.build_attrs({})
+        expected_url = admin_reverse(SELECT2_CONTENT_OBJECT_URL_NAME)
+
+        self.assertIn("data-select2-url", attrs)
+        self.assertEqual(attrs["data-select2-url"], expected_url)

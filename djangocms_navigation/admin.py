@@ -111,7 +111,7 @@ class MenuItemAdmin(TreeAdmin):
             ),
             url(
                 r"^select2/$",
-                ContentObjectSelect2View.as_view(),
+                self.admin_site.admin_view(ContentObjectSelect2View.as_view()),
                 name=SELECT2_CONTENT_OBJECT_URL_NAME,
             ),
         ]

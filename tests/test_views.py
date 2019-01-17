@@ -2,26 +2,36 @@ from django.contrib.contenttypes.models import ContentType
 
 from cms.models import User
 
-from .base import BaseUrlTestCase
+from .base import BaseTestCase
 
 
-class ContentObjectAutoFillTestCases(BaseUrlTestCase):
+class ContentObjectAutoFillTestCases(BaseTestCase):
     def test_select2_view_no_content_id(self):
         with self.login_user_context(self.superuser):
-            with self.assertRaises(ValueError) as err:
-                self.client.get(self.select2_endpoint)
-            self.assertEqual(
-                str(err.exception), "Content type with id None does not exists."
-            )
+            response = self.client.get(self.select2_endpoint)
+            self.assertEqual(response.status_code, 400)
 
-    def test_select2_view_no_permission(self):
+    def test_select2_view_anonymous_user(self):
+        """HTTP get shouldn't allowed for anonymous user"""
         response = self.client.get(self.select2_endpoint)
-        self.assertEqual(response.status_code, 403)
+        expected_url = "/en/admin/login/?next=" + self.select2_endpoint
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, expected_url)
 
     def test_select2_view_endpoint_post(self):
         """HTTP post shouldn't allowed on this endpoint"""
         response = self.client.post(self.select2_endpoint)
-        self.assertEqual(response.status_code, 403)
+        expected_url = "/en/admin/login/?next=" + self.select2_endpoint
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, expected_url)
+
+    def test_select2_view_endpoint_user_with_no_perm(self):
+        """HTTP get shouldn't allowed for standard non staff user"""
+        with self.login_user_context(self.user_with_no_perm):
+            response = self.client.get(self.select2_endpoint)
+            expected_url = "/en/admin/login/?next=" + self.select2_endpoint
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(response.url, expected_url)
 
     def test_return_poll_content_in_select2_view(self):
         with self.login_user_context(self.superuser):
@@ -52,13 +62,13 @@ class ContentObjectAutoFillTestCases(BaseUrlTestCase):
         self.assertEqual([p["id"] for p in response.json()["results"]], [])
 
     def test_raise_error_when_return_unregistered_user_model_in_select2_view(self):
-        """view should raise value erorr for non register model"""
+        """view should raise bad http request for non registered model"""
         with self.login_user_context(self.superuser):
-            with self.assertRaises(ValueError):
-                self.client.get(
-                    self.select2_endpoint,
-                    data={"content_id": ContentType.objects.get_for_model(User).id},
-                )
+            response = self.client.get(
+                self.select2_endpoint,
+                data={"content_type_id": ContentType.objects.get_for_model(User).id},
+            )
+            self.assertEqual(response.status_code, 400)
 
     def test_select2_view_text_page_repr(self):
         """Result should contain model repr text"""
@@ -68,7 +78,8 @@ class ContentObjectAutoFillTestCases(BaseUrlTestCase):
                 data={"content_type_id": self.page_contenttype_id},
             )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["results"][0]["text"], str(self.page))
+        expected_list = [{"text": "test", "id": 1}, {"text": "test2", "id": 2}]
+        self.assertEqual(response.json()["results"], expected_list)
 
     def test_select2_view_search_text_page(self):
         """ Both pages should appear in results for test query"""
@@ -77,6 +88,7 @@ class ContentObjectAutoFillTestCases(BaseUrlTestCase):
                 self.select2_endpoint,
                 data={"content_type_id": self.page_contenttype_id, "query": "test"},
             )
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()["results"]), 2)
 
@@ -89,9 +101,11 @@ class ContentObjectAutoFillTestCases(BaseUrlTestCase):
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()["results"]), 1)
+        # our query should be in text of resultset
+        self.assertIn("test2", response.json()["results"][0]["text"])
 
     def test_select2_view_dummy_search_text_page(self):
-        """ Both page should appear in results for dummy query"""
+        """ query which doesnt match shoul return 0 results"""
         with self.login_user_context(self.superuser):
             response = self.client.get(
                 self.select2_endpoint,
@@ -107,7 +121,11 @@ class ContentObjectAutoFillTestCases(BaseUrlTestCase):
                 data={"content_type_id": self.poll_content_contenttype_id},
             )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["results"][0]["text"], str(self.poll_content))
+        expected_result_list = [
+            {"text": "example", "id": 1},
+            {"text": "example2", "id": 2},
+        ]
+        self.assertListEqual(response.json()["results"], expected_result_list)
 
     def test_select2_poll_content_view_pk(self):
         with self.login_user_context(self.superuser):
@@ -120,6 +138,5 @@ class ContentObjectAutoFillTestCases(BaseUrlTestCase):
                 },
             )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            [a["id"] for a in response.json()["results"]], [self.poll_content.pk]
-        )
+        expected_result_list = [{"text": "example", "id": 1}]
+        self.assertListEqual(response.json()["results"], expected_result_list)
