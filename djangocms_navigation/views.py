@@ -1,7 +1,6 @@
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.views.generic import View
 
@@ -24,34 +23,23 @@ class ContentObjectSelect2View(View):
         except ContentType.DoesNotExist:
             return HttpResponseBadRequest()
 
-        # return http request if content type is not registered to use navigation app
+        # return http bad request if content type is not registered to use navigation app
         model = content_object.model_class()
         if not is_model_supported(model):
             return HttpResponseBadRequest()
 
         self.site = get_current_site(request)
-        self.object_list = self.get_data()
 
         data = {
             "results": [{"text": str(obj), "id": obj.pk} for obj in self.get_data()]
         }
         return JsonResponse(data)
 
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_staff:
-            raise PermissionDenied
-        return super().dispatch(request, *args, **kwargs)
-
     def get_data(self):
         content_type_id = self.request.GET.get("content_type_id", None)
         query = self.request.GET.get("query", None)
         site = self.request.GET.get("site")
-
-        try:
-            content_object = ContentType.objects.get_for_id(content_type_id)
-        except ContentType.DoesNotExist:
-            return HttpResponseBadRequest()
-
+        content_object = ContentType.objects.get_for_id(content_type_id)
         model = content_object.model_class()
 
         try:

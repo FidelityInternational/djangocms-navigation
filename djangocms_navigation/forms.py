@@ -38,7 +38,6 @@ class ContentTypeObjectSelectWidget(Select2Mixin, forms.TextInput):
 
     def build_attrs(self, *args, **kwargs):
         attrs = super().build_attrs(*args, **kwargs)
-        # import pdb; pdb.set_trace()
         attrs.setdefault("data-select2-url", self.get_url())
         return attrs
 
@@ -92,23 +91,6 @@ class MenuItemForm(MoveNodeForm):
             raise forms.ValidationError(
                 {"_ref_node_id": ["You cannot add a sibling for this menu item"]}
             )
-
-        if (
-            self.instance
-            and not self.instance.is_root()
-            and cleaned_data["content_type"]
-        ):
-            ct = cleaned_data["content_type"]
-            if ct and ct.pk not in supported_content_type_pks():
-                raise forms.ValidationError(
-                    {
-                        "content_type": [
-                            "{} is not registered to use for navigation menu".format(
-                                cleaned_data["content_type"]
-                            )
-                        ]
-                    }
-                )
 
         if (
             self.instance

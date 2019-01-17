@@ -30,10 +30,10 @@ App Integration
 ===============
 
 To register model to use navigation app, app should provide class in cms_config.py which inherit `CMSAppConfig`
-class. It should have `djangocms_navigation_enable` flag True which register to use djangocms_navigation and
+class. It should have `djangocms_navigation_enabled` flag True which register to use djangocms_navigation and
 provide model mapping object, `navigation_models`.
 
-Mapping object should provide Model class as key and list of model fields which can be query from UI. Example of
+Mapping object should provide Model class as key and list of model fields which will be used for autocomplete form fields. Example of
 configuration defined below.
 
 

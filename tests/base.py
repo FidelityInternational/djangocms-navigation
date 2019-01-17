@@ -2,12 +2,12 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 
-from cms.api import create_page
 from cms.models import Page
 from cms.test_utils.testcases import CMSTestCase
 from cms.utils.urlutils import admin_reverse
 
 from djangocms_navigation.constants import SELECT2_CONTENT_OBJECT_URL_NAME
+from djangocms_navigation.test_utils.factories import PageContentFactory
 from djangocms_navigation.test_utils.polls.models import Poll, PollContent
 
 
@@ -20,12 +20,16 @@ class BaseViewTestCase(CMSTestCase):
         self.language = "en"
         self.superuser = self.get_superuser()
         self.user_with_no_perm = self.get_standard_user()
-        self.page = self._create_page(title="test", language=self.language)
-        self.placeholder = self.page.get_placeholders(self.language).get(slot="content")
+        self.page = PageContentFactory(
+            title="test", menu_title="test", page_title="test", language=self.language
+        )
         self.default_site = Site.objects.first()
         self.site2 = Site.objects.create(name="foo.com", domain="foo.com")
-        self.page2 = self._create_page(
-            title="test2", language=self.language, site=self.site2
+        self.page2 = PageContentFactory(
+            title="test2",
+            menu_title="test2",
+            page_title="test2",
+            language=self.language,
         )
 
         self.poll = Poll.objects.create(name="Test poll")
@@ -56,32 +60,3 @@ class BaseViewTestCase(CMSTestCase):
             .last()
         )
         return version
-
-    def _publish(self, grouper, language=None):
-        from djangocms_versioning.constants import DRAFT
-
-        version = self._get_version(grouper, DRAFT, language)
-        version.publish(self.superuser)
-
-    def _create_page(self, title, language=None, site=None, published=True, **kwargs):
-        if language is None:
-            language = self.language
-
-        if self.is_versioning_enabled() and not kwargs.get("created_by"):
-            kwargs["created_by"] = self.superuser
-
-        page = create_page(
-            title=title,
-            language=language,
-            template="page.html",
-            menu_title="",
-            in_navigation=True,
-            limit_visibility_in_menu=None,
-            site=site,
-            **kwargs
-        )
-
-        if self.is_versioning_enabled() and published:
-            self._publish(page, language)
-
-        return page

@@ -5,6 +5,4 @@ from .models import PollContent
 
 class PollsCMSConfig(CMSAppConfig):
     djangocms_navigation_enabled = True
-    navigation_models = {
-        PollContent: ["text"]
-    }
+    navigation_models = {PollContent: ["text"]}

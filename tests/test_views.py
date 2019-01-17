@@ -105,7 +105,7 @@ class ContentObjectAutoFillTestCases(BaseViewTestCase):
         self.assertIn("test2", response.json()["results"][0]["text"])
 
     def test_select2_view_dummy_search_text_page(self):
-        """ query which doesnt match shoul return 0 results"""
+        """ query which doesnt match should return 0 results"""
         with self.login_user_context(self.superuser):
             response = self.client.get(
                 self.select2_endpoint,
@@ -121,11 +121,10 @@ class ContentObjectAutoFillTestCases(BaseViewTestCase):
                 data={"content_type_id": self.poll_content_contenttype_id},
             )
         self.assertEqual(response.status_code, 200)
-        expected_result_list = [
-            {"text": "example", "id": 1},
-            {"text": "example2", "id": 2},
-        ]
-        self.assertListEqual(response.json()["results"], expected_result_list)
+        expected_json = {
+            "results": [{"text": "example", "id": 1}, {"text": "example2", "id": 2}]
+        }
+        self.assertEqual(response.json(), expected_json)
 
     def test_select2_poll_content_view_pk(self):
         with self.login_user_context(self.superuser):
