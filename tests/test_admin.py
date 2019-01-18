@@ -11,6 +11,7 @@ from cms.test_utils.testcases import CMSTestCase
 from djangocms_navigation.admin import MenuItemAdmin, MenuItemChangeList
 from djangocms_navigation.models import Menu, MenuContent, MenuItem
 from djangocms_navigation.test_utils import factories
+from djangocms_versioning.helpers import version_list_url
 
 
 class MenuItemChangelistTestCase(TestCase):
@@ -267,6 +268,31 @@ class MenuItemAdminViewTestCase(CMSTestCase):
         response = self.client.get(list_url)
 
         self.assertEqual(response.status_code, 404)
+
+    def test_menuitem_changelist_contains_add_url(self):
+        menu_content = factories.MenuContentFactory()
+        factories.ChildMenuItemFactory.create_batch(5, parent=menu_content.root)
+        list_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
+        )
+
+        response = self.client.get(list_url)
+
+        add_url = reverse(
+            "admin:djangocms_navigation_menuitem_add", args=(menu_content.id,)
+        )
+        self.assertIn(add_url, str(response.content))
+
+    def test_menuitem_changelist_contains_version_list_url(self):
+        menu_content = factories.MenuContentFactory()
+        factories.ChildMenuItemFactory.create_batch(5, parent=menu_content.root)
+        list_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
+        )
+
+        response = self.client.get(list_url)
+
+        self.assertIn(version_list_url(menu_content), str(response.content))
 
     def test_menuitem_move_node_smoke_test(self):
         menu_content = factories.MenuContentFactory()

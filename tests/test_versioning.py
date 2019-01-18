@@ -94,7 +94,6 @@ class CopyFunctionTestCase(TestCase):
 
         new_version = original_version.copy(self.user)
 
-        # TODO: Not a great way of testing this really
         root_path = new_version.content.root.path
         expected_paths = [
             root_path + item.path[4:]

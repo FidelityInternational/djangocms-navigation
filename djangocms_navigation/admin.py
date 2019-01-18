@@ -145,14 +145,8 @@ class MenuItemAdmin(TreeAdmin):
 
         if menu_content_id:
             request.menu_content_id = menu_content_id
-            extra_context["add_url"] = reverse(
-                "admin:djangocms_navigation_menuitem_add",
-                kwargs={"menu_content_id": menu_content_id},
-            )
-            extra_context["list_url"] = reverse(
-                "admin:djangocms_navigation_menuitem_list",
-                kwargs={"menu_content_id": menu_content_id},
-            )
+            extra_context["menu_content"] = get_object_or_404(
+                MenuContent._base_manager, id=menu_content_id)
 
         return super().changelist_view(request, extra_context)
 
