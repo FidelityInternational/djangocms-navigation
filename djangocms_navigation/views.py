@@ -1,6 +1,5 @@
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.views.generic import View
 
@@ -27,8 +26,6 @@ class ContentObjectSelect2View(View):
         model = content_object.model_class()
         if not is_model_supported(model):
             return HttpResponseBadRequest()
-
-        self.site = get_current_site(request)
 
         data = {
             "results": [{"text": str(obj), "id": obj.pk} for obj in self.get_data()]
@@ -68,10 +65,7 @@ class ContentObjectSelect2View(View):
             # For Page model loop through all title objects to exclude the
             # object which doesnt match query
             if model == Page:
-                # Todo: Improve filtering using title_set instead of in python
-                for item in queryset:
-                    if item.get_page_title().lower().find(query.lower()) == -1:
-                        queryset = queryset.exclude(pk=item.pk)
+                queryset = queryset.filter(pagecontent_set__title__contains=query)
             else:
                 # Non page model should work using filter against field in queryset
                 options = {}
