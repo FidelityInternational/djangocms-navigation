@@ -68,6 +68,7 @@ class ContentObjectSelect2View(View):
             # For Page model loop through all title objects to exclude the
             # object which doesnt match query
             if model == Page:
+                # Todo: Improve filtering using title_set instead of in python
                 for item in queryset:
                     if item.get_page_title().lower().find(query.lower()) == -1:
                         queryset = queryset.exclude(pk=item.pk)

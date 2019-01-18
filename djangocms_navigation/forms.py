@@ -103,11 +103,8 @@ class MenuItemForm(MoveNodeForm):
                     cleaned_data["content_type"]
                     .model_class()
                     .objects.get(pk=cleaned_data["object_id"])
-                )
+                ) # flake8: noqa
             except cleaned_data["content_type"].model_class().DoesNotExist:
-                obj = None
-
-            if not obj:
                 raise forms.ValidationError({"object_id": ["Invalid object"]})
 
         return cleaned_data
