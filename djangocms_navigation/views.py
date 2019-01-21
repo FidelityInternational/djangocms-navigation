@@ -62,8 +62,8 @@ class ContentObjectSelect2View(View):
             queryset = queryset.filter(pk=pk)
 
         if query:
-            # For Page model loop through all title objects to exclude the
-            # object which doesnt match query
+            # TODO: filter by language and publish state
+            # For Page model filter query by pagecontent title
             if model == Page:
                 queryset = queryset.filter(pagecontent_set__title__contains=query)
             else:
@@ -76,6 +76,3 @@ class ContentObjectSelect2View(View):
                     queryset = queryset.filter(**options)
 
         return queryset
-
-    def get_paginate_by(self, queryset):
-        return self.request.GET.get("limit", 30)
