@@ -12,8 +12,10 @@ from django.views.i18n import JavaScriptCatalog
 
 from treebeard.admin import TreeAdmin
 
+from .constants import SELECT2_CONTENT_OBJECT_URL_NAME
 from .forms import MenuContentForm, MenuItemForm
 from .models import Menu, MenuContent, MenuItem
+from .views import ContentObjectSelect2View
 
 
 class MenuItemChangeList(ChangeList):
@@ -106,6 +108,11 @@ class MenuItemAdmin(TreeAdmin):
             url(
                 r"^(?P<menu_content_id>\d+)/jsi18n/$",
                 JavaScriptCatalog.as_view(packages=["treebeard"]),
+            ),
+            url(
+                r"^select2/$",
+                self.admin_site.admin_view(ContentObjectSelect2View.as_view()),
+                name=SELECT2_CONTENT_OBJECT_URL_NAME,
             ),
         ]
 

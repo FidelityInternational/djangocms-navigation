@@ -1,12 +1,19 @@
+from django import forms
 from django.contrib.contenttypes.models import ContentType
 
 from cms.models import Page
 from cms.test_utils.testcases import CMSTestCase
+from cms.utils.urlutils import admin_reverse
 
-from djangocms_navigation.forms import MenuItemForm
+from djangocms_navigation.constants import SELECT2_CONTENT_OBJECT_URL_NAME
+from djangocms_navigation.forms import (
+    ContentTypeObjectSelectWidget,
+    MenuItemForm,
+)
 from djangocms_navigation.test_utils import factories
 from djangocms_navigation.test_utils.app_1.models import TestModel1, TestModel2
 from djangocms_navigation.test_utils.app_2.models import TestModel3, TestModel4
+from djangocms_navigation.test_utils.polls.models import PollContent
 
 
 class MenuContentFormTestCase(CMSTestCase):
@@ -286,6 +293,62 @@ class MenuContentFormTestCase(CMSTestCase):
 
         self.assertTrue(is_valid)
 
+    def test_invalid_object_id(self):
+        item = factories.ChildMenuItemFactory(parent=self.menu_root)
+        data = {
+            "title": "My new Title",
+            "content_type": self.page_ct.pk,
+            "_ref_node_id": item.id,
+            "object_id": 99,
+            "numchild": 1,
+            "link_target": "_self",
+            "_position": "first-child",
+        }
+        form = MenuItemForm(menu_root=self.menu_root, data=data)
+
+        is_valid = form.is_valid()
+
+        self.assertFalse(is_valid)
+        self.assertIn("object_id", form.errors)
+        self.assertListEqual(form.errors["object_id"], ["Invalid object"])
+
+    def test_skipping_validation_for_object_id_for_root_menuitem(self):
+        data = {
+            "title": "My new Title",
+            "content_type": self.page_ct.pk,
+            "_ref_node_id": self.menu_root.id,
+            "object_id": 99,
+            "numchild": 1,
+            "link_target": "_self",
+            "_position": "first-child",
+        }
+        form = MenuItemForm(menu_root=self.menu_root, data=data)
+        is_valid = form.is_valid()
+
+        self.assertFalse(is_valid)
+        self.assertIn("object_id", form.errors)
+        self.assertListEqual(form.errors["object_id"], ["Invalid object"])
+
+    def test_invalid_content_type_id(self):
+        data = {
+            "title": "My new Title",
+            "content_type": self.get_superuser().pk,
+            "_ref_node_id": self.menu_root.id,
+            "object_id": 1,
+            "numchild": 1,
+            "link_target": "_self",
+            "_position": "first-child",
+        }
+        form = MenuItemForm(menu_root=self.menu_root, data=data)
+        is_valid = form.is_valid()
+
+        self.assertFalse(is_valid)
+        self.assertIn("content_type", form.errors)
+        self.assertListEqual(
+            form.errors["content_type"],
+            ["Select a valid choice. That choice is not one of the available choices."],
+        )
+
     def test_doesnt_throw_500_errors_if_data_missing_from_post(self):
         form = MenuItemForm(menu_root=self.menu_root, data={})
         try:
@@ -312,7 +375,7 @@ class MenuContentFormTestCase(CMSTestCase):
 
     def test_only_display_supported_content_types(self):
         content_types = ContentType.objects.get_for_models(
-            Page, TestModel1, TestModel2, TestModel3, TestModel4
+            Page, TestModel1, TestModel2, TestModel3, TestModel4, PollContent
         )
         form = MenuItemForm(menu_root=self.menu_root)
 
@@ -322,3 +385,20 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertQuerysetEqual(
             queryset, expected_content_type_pks, lambda o: o.pk, ordered=False
         )
+
+    def test_content_type_select_widget_build_attrs(self):
+        class TestForm(forms.Form):
+            dummy_field = forms.CharField(label="dummy", required=False)
+
+        form = TestForm()
+
+        # check widget is not already attached to dummy_field
+        self.assertFalse(hasattr(form["dummy_field"], "widget"))
+
+        form["dummy_field"].widget = ContentTypeObjectSelectWidget()
+        attrs = form["dummy_field"].widget.build_attrs({})
+        expected_url = admin_reverse(SELECT2_CONTENT_OBJECT_URL_NAME)
+
+        self.assertTrue(hasattr(form["dummy_field"], "widget"))
+        self.assertIn("data-select2-url", attrs)
+        self.assertEqual(attrs["data-select2-url"], expected_url)
