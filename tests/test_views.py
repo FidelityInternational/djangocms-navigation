@@ -14,7 +14,6 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
     def setUp(self):
         self.select2_endpoint = admin_reverse(SELECT2_CONTENT_OBJECT_URL_NAME)
         self.superuser = self.get_superuser()
-        self.language = "en"
 
     def test_select2_view_no_content_id(self):
         with self.login_user_context(self.superuser):
@@ -50,7 +49,7 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
         poll = Poll.objects.create(name="Test poll")
 
         poll_content = PollContent.objects.create(
-            poll=poll, language=self.language, text="example"
+            poll=poll, language="en", text="example"
         )
 
         with self.login_user_context(self.superuser):
@@ -156,8 +155,8 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
         poll_content_contenttype_id = ContentType.objects.get_for_model(PollContent).id
 
         poll = Poll.objects.create(name="Test poll")
-        PollContent.objects.create(poll=poll, language=self.language, text="example1")
-        PollContent.objects.create(poll=poll, language=self.language, text="example2")
+        PollContent.objects.create(poll=poll, language="en", text="example1")
+        PollContent.objects.create(poll=poll, language="en", text="example2")
 
         with self.login_user_context(self.superuser):
             response = self.client.get(
@@ -176,9 +175,8 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
         poll = Poll.objects.create(name="Test poll")
 
         poll_content = PollContent.objects.create(
-            poll=poll, language=self.language, text="example"
+            poll=poll, language="en", text="example"
         )
-
         with self.login_user_context(self.superuser):
             response = self.client.get(
                 self.select2_endpoint,
@@ -189,5 +187,5 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
                 },
             )
         self.assertEqual(response.status_code, 200)
-        expected_result_list = [{"text": "example", "id": 1}]
-        self.assertListEqual(response.json()["results"], expected_result_list)
+        expected_json = {"results": [{"text": "example", "id": 1}]}
+        self.assertEqual(response.json(), expected_json)
