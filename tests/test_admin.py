@@ -14,7 +14,7 @@ from djangocms_navigation.test_utils import factories
 from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.helpers import version_list_url
 
-from .utils import UsefulAssertsMixin
+from .utils import UsefulAssertsMixin, VersioningHelpersMixin
 
 
 class MenuItemChangelistTestCase(TestCase):
@@ -130,12 +130,12 @@ class MenuItemModelAdminTestCase(TestCase):
         )
 
 
-class MenuItemAdminViewTestCase(CMSTestCase, UsefulAssertsMixin):
+class MenuItemAdminChangeViewTestCase(CMSTestCase, UsefulAssertsMixin, VersioningHelpersMixin):
     def setUp(self):
         self.client.force_login(self.get_superuser())
 
     def test_menuitem_change_view(self):
-        menu_content = factories.MenuContentFactory()
+        menu_content = factories.MenuContentWithVersionFactory(version__state=DRAFT)
         item = factories.ChildMenuItemFactory(parent=menu_content.root)
         change_url = reverse(
             "admin:djangocms_navigation_menuitem_change",
@@ -177,6 +177,34 @@ class MenuItemAdminViewTestCase(CMSTestCase, UsefulAssertsMixin):
         self.assertEqual(item.link_target, "_blank")
         self.assertTrue(item.is_child_of(menu_content.root))
 
+    def test_menuitem_change_view_smoketest_for_versioning_disabled(self):
+        with self.disable_versioning():
+            menu_content = factories.MenuContentFactory()
+            item = factories.ChildMenuItemFactory(parent=menu_content.root)
+            change_url = reverse(
+                "admin:djangocms_navigation_menuitem_change",
+                kwargs={"menu_content_id": menu_content.pk, "object_id": item.pk},
+            )
+            content_type = ContentType.objects.get(app_label="cms", model="page")
+            page = factories.PageContentFactory().page
+            data = {
+                "title": "My new Title",
+                "content_type": content_type.pk,
+                "object_id": page.pk,
+                "_ref_node_id": menu_content.root.id,
+                "numchild": 1,
+                "link_target": "_blank",
+                "_position": "first-child",
+            }
+
+            response = self.client.post(change_url, data)
+
+            # Expected redirect happened
+            redirect_url = reverse(
+                "admin:djangocms_navigation_menuitem_list", args=(menu_content.pk,)
+            )
+            self.assertRedirects(response, redirect_url)
+
     def test_menuitem_change_view_throws_404_on_non_existing_menucontent_get(self):
         change_url = reverse(
             "admin:djangocms_navigation_menuitem_change",
@@ -212,7 +240,7 @@ class MenuItemAdminViewTestCase(CMSTestCase, UsefulAssertsMixin):
         response = self.client.get(change_url)
 
         # Redirect happened and error message displayed
-        self.assertRedirectsToVersionList(response, version)
+        self.assertRedirectsToVersionList(response, menu)
         self.assertDjangoErrorMessage(
             'Version is not in draft state', mocked_messages)
 
@@ -241,15 +269,20 @@ class MenuItemAdminViewTestCase(CMSTestCase, UsefulAssertsMixin):
         response = self.client.post(change_url, data)
 
         # Redirect happened and error message displayed
-        self.assertRedirectsToVersionList(response, version)
+        self.assertRedirectsToVersionList(response, menu)
         self.assertDjangoErrorMessage(
             'Version is not in draft state', mocked_messages)
         # Menu item object was not changed
         item.refresh_from_db()
         self.assertNotEqual(item.title, "My new Title")
 
+
+class MenuItemAdminAddViewTestCase(CMSTestCase, VersioningHelpersMixin):
+    def setUp(self):
+        self.client.force_login(self.get_superuser())
+
     def test_menuitem_add_view(self):
-        menu_content = factories.MenuContentFactory()
+        menu_content = factories.MenuContentWithVersionFactory()
         add_url = reverse(
             "admin:djangocms_navigation_menuitem_add", args=(menu_content.id,)
         )
@@ -284,6 +317,33 @@ class MenuItemAdminViewTestCase(CMSTestCase, UsefulAssertsMixin):
         self.assertEqual(new_child.link_target, "_blank")
         self.assertTrue(new_child.is_child_of(menu_content.root))
 
+    def test_menuitem_add_view_smoketest_for_versioning_disabled(self):
+        with self.disable_versioning():
+            menu_content = factories.MenuContentFactory()
+            add_url = reverse(
+                "admin:djangocms_navigation_menuitem_add", args=(menu_content.id,)
+            )
+            content_type = ContentType.objects.get(app_label="cms", model="page")
+            page = factories.PageContentFactory().page
+            data = {
+                "title": "My new Title",
+                "content_type": content_type.pk,
+                "object_id": page.pk,
+                "_ref_node_id": menu_content.root.id,
+                "numchild": 1,
+                "link_target": "_blank",
+                "_position": "first-child",
+            }
+
+            response = self.client.post(add_url, data)
+
+            self.assertRedirects(
+                response,
+                reverse(
+                    "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
+                ),
+            )
+
     def test_menuitem_add_view_throws_404_on_non_existing_menucontent_get(self):
         add_url = reverse(
             "admin:djangocms_navigation_menuitem_add", args=(83,)
@@ -302,8 +362,13 @@ class MenuItemAdminViewTestCase(CMSTestCase, UsefulAssertsMixin):
 
         self.assertEqual(response.status_code, 404)
 
+
+class MenuItemAdminChangeListViewTestCase(CMSTestCase, VersioningHelpersMixin):
+    def setUp(self):
+        self.client.force_login(self.get_superuser())
+
     def test_menuitem_changelist(self):
-        menu_content = factories.MenuContentFactory()
+        menu_content = factories.MenuContentWithVersionFactory()
         factories.ChildMenuItemFactory.create_batch(5, parent=menu_content.root)
         list_url = reverse(
             "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
@@ -313,6 +378,19 @@ class MenuItemAdminViewTestCase(CMSTestCase, UsefulAssertsMixin):
 
         # Just a smoke test
         self.assertEqual(response.status_code, 200)
+
+    def test_menuitem_changelist_view_smoketest_for_versioning_disabled(self):
+        with self.disable_versioning():
+            menu_content = factories.MenuContentFactory()
+            factories.ChildMenuItemFactory.create_batch(5, parent=menu_content.root)
+            list_url = reverse(
+                "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
+            )
+
+            response = self.client.get(list_url)
+
+            # Just a smoke test
+            self.assertEqual(response.status_code, 200)
 
     def test_menuitem_changelist_throws_404_on_non_existing_menucontent(self):
         list_url = reverse(
@@ -348,8 +426,13 @@ class MenuItemAdminViewTestCase(CMSTestCase, UsefulAssertsMixin):
 
         self.assertIn(version_list_url(menu_content), str(response.content))
 
+
+class MenuItemAdminMoveNodeViewTestCase(CMSTestCase, VersioningHelpersMixin):
+    def setUp(self):
+        self.client.force_login(self.get_superuser())
+
     def test_menuitem_move_node_smoke_test(self):
-        menu_content = factories.MenuContentFactory()
+        menu_content = factories.MenuContentWithVersionFactory()
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         child_of_child = factories.ChildMenuItemFactory(parent=child)
         move_url = reverse(
@@ -382,6 +465,24 @@ class MenuItemAdminViewTestCase(CMSTestCase, UsefulAssertsMixin):
             mocked_messages.call_args[0][1],
             "Cannot move a node outside of the root menu node",
         )
+
+    def test_menuitem_move_node_view_smoketest_for_versioning_disabled(self):
+        with self.disable_versioning():
+            menu_content = factories.MenuContentFactory()
+            child = factories.ChildMenuItemFactory(parent=menu_content.root)
+            child_of_child = factories.ChildMenuItemFactory(parent=child)
+            move_url = reverse(
+                "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,)
+            )
+            data = {
+                "node_id": child_of_child.pk,
+                "sibling_id": menu_content.root.pk,
+                "as_child": 1,
+            }
+
+            response = self.client.post(move_url, data=data)
+
+            self.assertEqual(response.status_code, 200)
 
 
 class MenuItemPermissionTestCase(CMSTestCase):

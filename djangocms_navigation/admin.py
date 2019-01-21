@@ -154,6 +154,7 @@ class MenuItemAdmin(TreeAdmin):
             request.menu_content_id = menu_content_id
             extra_context["menu_content"] = get_object_or_404(
                 MenuContent._base_manager, id=menu_content_id)
+            #~ extra_context["versioning_enabled"] = 
 
         return super().changelist_view(request, extra_context)
 

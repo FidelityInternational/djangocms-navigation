@@ -29,10 +29,7 @@ class NavigationCMSExtension(CMSAppExtension):
 
 
 def copy_menu_content(original_content):
-    """Copy the MenuContent object and deepcopy its
-    menu items. Don't copy the primary key
-    because we are creating a new obj.
-    """
+    """Copy the MenuContent object and deepcopy its menu items."""
     # Copy root menu item
     original_root = original_content.root
     root_fields = {
@@ -56,8 +53,6 @@ def copy_menu_content(original_content):
         item_fields = {
             field.name: getattr(item, field.name)
             for field in MenuItem._meta.fields
-            # don't copy primary key because we're creating a new obj
-            # and handle the menu_content field later
             if field.name not in [MenuItem._meta.pk.name, "path"]
         }
         item_fields["path"] = new_root.path + item.path[MenuItem.steplen :]

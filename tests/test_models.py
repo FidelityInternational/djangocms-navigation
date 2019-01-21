@@ -16,14 +16,6 @@ class MenuContentModelTestCase(TestCase):
         menu_content = factories.MenuContentFactory(root__title="My Title")
         self.assertEqual(menu_content.title, "My Title")
 
-    def test_grouper_menu_created(self):
-        menu_content = factories.MenuContentFactory(root__title="My Title")
-        self.assertIsInstance(menu_content.menu, Menu)
-
-    def test_root_menuitem_created(self):
-        menu_content = factories.MenuContentFactory(root__title="My Title")
-        self.assertIsInstance(menu_content.root, MenuItem)
-
     def test_string_representation(self):
         menu_content = factories.MenuContentFactory(root__title="My Title")
         self.assertEqual(str(menu_content), menu_content.title)

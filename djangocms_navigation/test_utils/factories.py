@@ -190,3 +190,12 @@ class MenuVersionFactory(AbstractVersionFactory):
 
     class Meta:
         model = Version
+
+
+class MenuContentWithVersionFactory(MenuContentFactory):
+    @factory.post_generation
+    def version(self, create, extracted, **kwargs):
+        if not create:
+            # Simple build, do nothing.
+            return
+        MenuVersionFactory(content=self, **kwargs)
