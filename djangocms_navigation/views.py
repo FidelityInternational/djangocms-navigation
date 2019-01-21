@@ -62,6 +62,7 @@ class ContentObjectSelect2View(View):
             queryset = queryset.filter(pk=pk)
 
         if query:
+
             # TODO: filter by language and publish state
             # For Page model filter query by pagecontent title
             if model == Page:
