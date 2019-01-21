@@ -393,12 +393,12 @@ class MenuContentFormTestCase(CMSTestCase):
         form = TestForm()
 
         # check widget is not already attached to dummy_field
-        self.assertNotIn("widget", dir(form["dummy_field"]))
+        self.assertFalse(hasattr(form["dummy_field"], "widget"))
 
         form["dummy_field"].widget = ContentTypeObjectSelectWidget()
         attrs = form["dummy_field"].widget.build_attrs({})
         expected_url = admin_reverse(SELECT2_CONTENT_OBJECT_URL_NAME)
 
-        self.assertIn("widget", dir(form["dummy_field"]))
+        self.assertTrue(hasattr(form["dummy_field"], "widget"))
         self.assertIn("data-select2-url", attrs)
         self.assertEqual(attrs["data-select2-url"], expected_url)
