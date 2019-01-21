@@ -1,11 +1,20 @@
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.models import Site
 
-from cms.models import User
+from cms.models import Page, User
+from cms.test_utils.testcases import CMSTestCase
+from cms.utils.urlutils import admin_reverse
 
-from .base import BaseViewTestCase
+from djangocms_navigation.constants import SELECT2_CONTENT_OBJECT_URL_NAME
+from djangocms_navigation.test_utils.factories import PageContentFactory
+from djangocms_navigation.test_utils.polls.models import Poll, PollContent
 
 
-class ContentObjectAutoFillTestCases(BaseViewTestCase):
+class ContentObjectAutoFillTestCases(CMSTestCase):
+    def setUp(self):
+        self.select2_endpoint = admin_reverse(SELECT2_CONTENT_OBJECT_URL_NAME)
+        self.superuser = self.get_superuser()
+
     def test_select2_view_no_content_id(self):
         with self.login_user_context(self.superuser):
             response = self.client.get(self.select2_endpoint)
@@ -27,36 +36,43 @@ class ContentObjectAutoFillTestCases(BaseViewTestCase):
 
     def test_select2_view_endpoint_user_with_no_perm(self):
         """HTTP get shouldn't allowed for standard non staff user"""
-        with self.login_user_context(self.user_with_no_perm):
+        user_with_no_perm = self.get_standard_user()
+
+        with self.login_user_context(user_with_no_perm):
             response = self.client.get(self.select2_endpoint)
             expected_url = "/en/admin/login/?next=" + self.select2_endpoint
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.url, expected_url)
 
     def test_return_poll_content_in_select2_view(self):
+        poll_content_contenttype_id = ContentType.objects.get_for_model(PollContent).id
+        poll = Poll.objects.create(name="Test poll")
+
+        poll_content = PollContent.objects.create(
+            poll=poll, language="en", text="example"
+        )
+
         with self.login_user_context(self.superuser):
             response = self.client.get(
                 self.select2_endpoint,
                 data={
-                    "content_type_id": self.poll_content_contenttype_id,
+                    "content_type_id": poll_content_contenttype_id,
                     "query": "example",
                 },
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            [p["id"] for p in response.json()["results"]], [self.poll_content.pk]
+            [p["id"] for p in response.json()["results"]], [poll_content.pk]
         )
 
     def test_return_empty_list_for_query_that_doesnt_match_poll_content_in_select2_view(
         self
     ):
+        poll_content_contenttype_id = ContentType.objects.get_for_model(PollContent).id
         with self.login_user_context(self.superuser):
             response = self.client.get(
                 self.select2_endpoint,
-                data={
-                    "content_type_id": self.poll_content_contenttype_id,
-                    "query": "test",
-                },
+                data={"content_type_id": poll_content_contenttype_id, "query": "test"},
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual([p["id"] for p in response.json()["results"]], [])
@@ -72,10 +88,16 @@ class ContentObjectAutoFillTestCases(BaseViewTestCase):
 
     def test_select2_view_text_page_repr(self):
         """Result should contain model repr text"""
+        page_contenttype_id = ContentType.objects.get_for_model(Page).id
+        page1 = PageContentFactory(
+            title="test", menu_title="test", page_title="test", language="en"
+        )  # flake8: noqa
+        page2 = PageContentFactory(
+            title="test2", menu_title="test2", page_title="test2", language="en"
+        )  # flake8: noqa
         with self.login_user_context(self.superuser):
             response = self.client.get(
-                self.select2_endpoint,
-                data={"content_type_id": self.page_contenttype_id},
+                self.select2_endpoint, data={"content_type_id": page_contenttype_id}
             )
         self.assertEqual(response.status_code, 200)
         expected_list = [{"text": "test", "id": 1}, {"text": "test2", "id": 2}]
@@ -83,10 +105,17 @@ class ContentObjectAutoFillTestCases(BaseViewTestCase):
 
     def test_select2_view_search_text_page(self):
         """ Both pages should appear in results for test query"""
+        page_contenttype_id = ContentType.objects.get_for_model(Page).id
+        page1 = PageContentFactory(
+            title="test", menu_title="test", page_title="test", language="en"
+        )
+        page2 = PageContentFactory(
+            title="test2", menu_title="test2", page_title="test2", language="en"
+        )
         with self.login_user_context(self.superuser):
             response = self.client.get(
                 self.select2_endpoint,
-                data={"content_type_id": self.page_contenttype_id, "query": "test"},
+                data={"content_type_id": page_contenttype_id, "query": "test"},
             )
 
         self.assertEqual(response.status_code, 200)
@@ -94,10 +123,17 @@ class ContentObjectAutoFillTestCases(BaseViewTestCase):
 
     def test_select2_view_search_exact_text_page(self):
         """ One page should appear in results for test2 exact query"""
+        page_contenttype_id = ContentType.objects.get_for_model(Page).id
+        page1 = PageContentFactory(
+            title="test", menu_title="test", page_title="test", language="en"
+        )
+        page2 = PageContentFactory(
+            title="test2", menu_title="test2", page_title="test2", language="en"
+        )
         with self.login_user_context(self.superuser):
             response = self.client.get(
                 self.select2_endpoint,
-                data={"content_type_id": self.page_contenttype_id, "query": "test2"},
+                data={"content_type_id": page_contenttype_id, "query": "test2"},
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()["results"]), 1)
@@ -106,36 +142,50 @@ class ContentObjectAutoFillTestCases(BaseViewTestCase):
 
     def test_select2_view_dummy_search_text_page(self):
         """ query which doesnt match should return 0 results"""
+        page_contenttype_id = ContentType.objects.get_for_model(Page).id
         with self.login_user_context(self.superuser):
             response = self.client.get(
                 self.select2_endpoint,
-                data={"content_type_id": self.page_contenttype_id, "query": "dummy"},
+                data={"content_type_id": page_contenttype_id, "query": "dummy"},
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()["results"]), 0)
 
     def test_select2_view_text_poll_content_repr(self):
+        poll_content_contenttype_id = ContentType.objects.get_for_model(PollContent).id
+
+        poll = Poll.objects.create(name="Test poll")
+        PollContent.objects.create(poll=poll, language="en", text="example1")
+        PollContent.objects.create(poll=poll, language="en", text="example2")
+
         with self.login_user_context(self.superuser):
             response = self.client.get(
                 self.select2_endpoint,
-                data={"content_type_id": self.poll_content_contenttype_id},
+                data={"content_type_id": poll_content_contenttype_id},
             )
         self.assertEqual(response.status_code, 200)
         expected_json = {
-            "results": [{"text": "example", "id": 1}, {"text": "example2", "id": 2}]
+            "results": [{"text": "example1", "id": 1}, {"text": "example2", "id": 2}]
         }
         self.assertEqual(response.json(), expected_json)
 
     def test_select2_poll_content_view_pk(self):
+        site = Site.objects.create(name="foo.com", domain="foo.com")
+        poll_content_contenttype_id = ContentType.objects.get_for_model(PollContent).id
+        poll = Poll.objects.create(name="Test poll")
+
+        poll_content = PollContent.objects.create(
+            poll=poll, language="en", text="example"
+        )
         with self.login_user_context(self.superuser):
             response = self.client.get(
                 self.select2_endpoint,
                 data={
-                    "content_type_id": self.poll_content_contenttype_id,
-                    "site": self.site2.pk,
-                    "pk": self.poll_content.pk,
+                    "content_type_id": poll_content_contenttype_id,
+                    "site": site.pk,
+                    "pk": poll_content.pk,
                 },
             )
         self.assertEqual(response.status_code, 200)
-        expected_result_list = [{"text": "example", "id": 1}]
-        self.assertListEqual(response.json()["results"], expected_result_list)
+        expected_json = {"results": [{"text": "example", "id": 1}]}
+        self.assertEqual(response.json(), expected_json)
