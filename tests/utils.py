@@ -32,10 +32,12 @@ class TestCase(unittest.TestCase):
 
 
 class VersioningHelpersMixin(object):
-
     @contextmanager
     def disable_versioning(self):
-        """Use with the with statement to disable versioning of navigation."""
+        """Use with the with statement to disable versioning of MenuContent.
+        This does NOT set the NAVIGATION_VERSIONING_ENABLED setting to False
+        or change djangocms_versioning_enabled in cms_config to False.
+        You will have to do that manually on your test"""
         self.versioning_ext = apps.get_app_config('djangocms_versioning').cms_extension
         self.menu_versionable = self.versioning_ext.versionables_by_content[MenuContent]
         self.versioning_ext.versionables.remove(self.menu_versionable)

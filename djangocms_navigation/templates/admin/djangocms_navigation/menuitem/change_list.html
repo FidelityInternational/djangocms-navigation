@@ -8,11 +8,11 @@
         {% blocktrans with cl.opts.verbose_name as name %}Add  {{ name }}{% endblocktrans %}
     </a>
 </li>
+{% if versioning_enabled_for_navigation %}
 <li>
-    <li>
-        <a href="{{ menu_content|url_version_list }}">
-            {% trans "Versions" %}
-        </a>
-    </li>
+    <a href="{{ menu_content|url_version_list }}">
+        {% trans "Versions" %}
+    </a>
 </li>
+{% endif %}
 {% endblock %}

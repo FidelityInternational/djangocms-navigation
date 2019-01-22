@@ -1,3 +1,4 @@
+from django.apps import apps
 from django.conf.urls import url
 from django.contrib import admin, messages
 from django.contrib.admin.utils import quote
@@ -154,7 +155,9 @@ class MenuItemAdmin(TreeAdmin):
             request.menu_content_id = menu_content_id
             extra_context["menu_content"] = get_object_or_404(
                 MenuContent._base_manager, id=menu_content_id)
-            #~ extra_context["versioning_enabled"] = 
+            is_versioned = apps.get_app_config(
+                'djangocms_navigation').cms_config.djangocms_versioning_enabled
+            extra_context["versioning_enabled_for_navigation"] = is_versioned
 
         return super().changelist_view(request, extra_context)
 
