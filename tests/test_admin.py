@@ -9,11 +9,12 @@ from django.test import RequestFactory, TestCase, override_settings
 
 from cms.test_utils.testcases import CMSTestCase
 
+from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
+from djangocms_versioning.helpers import version_list_url
+
 from djangocms_navigation.admin import MenuItemAdmin, MenuItemChangeList
 from djangocms_navigation.models import Menu, MenuContent, MenuItem
 from djangocms_navigation.test_utils import factories
-from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
-from djangocms_versioning.helpers import version_list_url
 
 from .utils import UsefulAssertsMixin, VersioningHelpersMixin
 
@@ -368,7 +369,6 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin, VersioningHe
         response = self.client.post(add_url)
 
         self.assertEqual(response.status_code, 404)
-
 
     @patch('django.contrib.messages.error')
     def test_menuitem_add_view_redirects_if_not_latest_version_get(self, mocked_messages):

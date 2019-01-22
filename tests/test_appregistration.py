@@ -7,7 +7,7 @@ from django.test import override_settings
 
 from cms import app_registration
 from cms.models import Page
-from cms.utils.setup import setup_cms_apps, configure_cms_apps
+from cms.utils.setup import configure_cms_apps, setup_cms_apps
 
 from djangocms_navigation import cms_config
 from djangocms_navigation.models import MenuContent

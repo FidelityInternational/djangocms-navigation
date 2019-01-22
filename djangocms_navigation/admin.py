@@ -5,17 +5,19 @@ from django.contrib.admin.utils import quote
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseBadRequest
-from django.shortcuts import reverse, HttpResponseRedirect, get_object_or_404
+from django.http import HttpResponseBadRequest, HttpResponseRedirect
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.views.i18n import JavaScriptCatalog
 
-from treebeard.admin import TreeAdmin
+# TODO: Possibly wrap this in try/except ImportError. But requires tests also.
 from djangocms_versioning.constants import DRAFT
 from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
+from treebeard.admin import TreeAdmin
 
 from .constants import SELECT2_CONTENT_OBJECT_URL_NAME
 from .forms import MenuContentForm, MenuItemForm

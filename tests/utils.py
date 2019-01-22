@@ -2,10 +2,10 @@ import unittest
 from contextlib import contextmanager
 
 from django.apps import apps
-from django.contrib import messages
+
+from djangocms_versioning.helpers import version_list_url_for_grouper
 
 from djangocms_navigation.models import MenuContent
-from djangocms_versioning.helpers import version_list_url_for_grouper
 
 
 class UsefulAssertsMixin(object):

@@ -1,6 +1,5 @@
 from django.test import TestCase
 
-from djangocms_navigation.models import Menu, MenuItem
 from djangocms_navigation.test_utils import factories
 
 

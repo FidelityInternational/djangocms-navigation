@@ -87,10 +87,10 @@ class CopyFunctionTestCase(TestCase):
         original_item2 = factories.SiblingMenuItemFactory(sibling=original_item1)
         original_item11 = factories.ChildMenuItemFactory(parent=original_item1)
         original_item111 = factories.ChildMenuItemFactory(parent=original_item11)
-        original_item112 = factories.ChildMenuItemFactory(parent=original_item11)
-        original_item1111 = factories.ChildMenuItemFactory(parent=original_item111)
+        factories.ChildMenuItemFactory(parent=original_item11)
+        factories.ChildMenuItemFactory(parent=original_item111)
         original_item21 = factories.ChildMenuItemFactory(parent=original_item2)
-        original_item22 = factories.SiblingMenuItemFactory(sibling=original_item21)
+        factories.SiblingMenuItemFactory(sibling=original_item21)
 
         new_version = original_version.copy(self.user)
 
