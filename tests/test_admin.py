@@ -84,7 +84,7 @@ class MenuContentAdminViewTestCase(CMSTestCase):
         self.assertIsNone(menu_content.root.object_id)
 
     def test_menucontent_change_view(self):
-        menu_content = factories.MenuContentFactory()
+        menu_content = factories.MenuContentWithVersionFactory()
         change_url = reverse(
             "admin:djangocms_navigation_menucontent_change", args=(menu_content.pk,)
         )
@@ -229,7 +229,7 @@ class MenuItemAdminChangeViewTestCase(CMSTestCase, UsefulAssertsMixin, Versionin
 
         self.assertEqual(response.status_code, 404)
 
-    @patch('django.contrib.messages.add_message')
+    @patch('django.contrib.messages.error')
     def test_menuitem_change_view_redirects_if_not_latest_version_get(self, mocked_messages):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
@@ -248,7 +248,7 @@ class MenuItemAdminChangeViewTestCase(CMSTestCase, UsefulAssertsMixin, Versionin
         self.assertDjangoErrorMessage(
             'Version is not in draft state', mocked_messages)
 
-    @patch('django.contrib.messages.add_message')
+    @patch('django.contrib.messages.error')
     def test_menuitem_change_view_redirects_if_not_latest_version_post(self, mocked_messages):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
@@ -370,7 +370,7 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin, VersioningHe
         self.assertEqual(response.status_code, 404)
 
 
-    @patch('django.contrib.messages.add_message')
+    @patch('django.contrib.messages.error')
     def test_menuitem_add_view_redirects_if_not_latest_version_get(self, mocked_messages):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
@@ -387,7 +387,7 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin, VersioningHe
         self.assertDjangoErrorMessage(
             'Version is not in draft state', mocked_messages)
 
-    @patch('django.contrib.messages.add_message')
+    @patch('django.contrib.messages.error')
     def test_menuitem_add_view_redirects_if_not_latest_version_post(self, mocked_messages):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
@@ -483,7 +483,7 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin, Versi
 
         self.assertIn(version_list_url(menu_content), str(response.content))
 
-    @patch('django.contrib.messages.add_message')
+    @patch('django.contrib.messages.error')
     def test_menuitem_changelist_redirects_if_not_latest_version(self, mocked_messages):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
@@ -527,7 +527,7 @@ class MenuItemAdminMoveNodeViewTestCase(CMSTestCase, VersioningHelpersMixin):
 
     @patch("django.contrib.messages.error")
     def test_menuitem_move_node_cant_move_outside_of_root(self, mocked_messages):
-        menu_content = factories.MenuContentFactory()
+        menu_content = factories.MenuContentWithVersionFactory()
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         move_url = reverse(
             "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,)
@@ -565,7 +565,7 @@ class MenuItemAdminMoveNodeViewTestCase(CMSTestCase, VersioningHelpersMixin):
                 self.assertEqual(response.status_code, 200)
 
     @patch('django.contrib.messages.add_message')
-    def test_menuitem_move_node_redirects_if_not_latest_version(self, mocked_messages):
+    def test_menuitem_move_node_permission_denied_if_not_latest_version(self, mocked_messages):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
         factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)

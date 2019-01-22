@@ -15,11 +15,10 @@ class UsefulAssertsMixin(object):
         self.assertRedirects(response, version_list_url)
 
     def assertDjangoErrorMessage(self, msg, mocked_messages):
-        """Mock 'django.contrib.messages.add_message' to use this assert
+        """Mock 'django.contrib.messages.error' to use this assert
         method and pass the mocked object as mocked_messages."""
         self.assertEqual(mocked_messages.call_count, 1)
-        self.assertEqual(mocked_messages.call_args[0][1], messages.ERROR)
-        self.assertEqual(mocked_messages.call_args[0][2], msg)
+        self.assertEqual(mocked_messages.call_args[0][1], msg)
 
 
 class TestCase(unittest.TestCase):
