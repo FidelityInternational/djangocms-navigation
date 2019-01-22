@@ -281,7 +281,7 @@ class MenuItemAdminChangeViewTestCase(CMSTestCase, UsefulAssertsMixin, Versionin
         self.assertNotEqual(item.title, "My new Title")
 
 
-class MenuItemAdminAddViewTestCase(CMSTestCase, VersioningHelpersMixin):
+class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin, VersioningHelpersMixin):
     def setUp(self):
         self.client.force_login(self.get_superuser())
 
@@ -370,7 +370,55 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, VersioningHelpersMixin):
         self.assertEqual(response.status_code, 404)
 
 
-class MenuItemAdminChangeListViewTestCase(CMSTestCase, VersioningHelpersMixin):
+    @patch('django.contrib.messages.add_message')
+    def test_menuitem_add_view_redirects_if_not_latest_version_get(self, mocked_messages):
+        menu = factories.MenuFactory()
+        version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
+        factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
+        factories.MenuVersionFactory(content__menu=menu, state=DRAFT)
+        add_url = reverse(
+            "admin:djangocms_navigation_menuitem_add", args=(version.content.id,)
+        )
+
+        response = self.client.get(add_url)
+
+        # Redirect happened and error message displayed
+        self.assertRedirectsToVersionList(response, menu)
+        self.assertDjangoErrorMessage(
+            'Version is not in draft state', mocked_messages)
+
+    @patch('django.contrib.messages.add_message')
+    def test_menuitem_add_view_redirects_if_not_latest_version_post(self, mocked_messages):
+        menu = factories.MenuFactory()
+        version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
+        factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
+        factories.MenuVersionFactory(content__menu=menu, state=DRAFT)
+        add_url = reverse(
+            "admin:djangocms_navigation_menuitem_add", args=(version.content.id,)
+        )
+        content_type = ContentType.objects.get(app_label="cms", model="page")
+        page = factories.PageContentFactory().page
+        data = {
+            "title": "My new Title",
+            "content_type": content_type.pk,
+            "object_id": page.pk,
+            "_ref_node_id": version.content.root.id,
+            "numchild": 1,
+            "link_target": "_blank",
+            "_position": "first-child",
+        }
+
+        response = self.client.post(add_url, data)
+
+        # Redirect happened and error message displayed
+        self.assertRedirectsToVersionList(response, menu)
+        self.assertDjangoErrorMessage(
+            'Version is not in draft state', mocked_messages)
+        # Menu item object was not added
+        self.assertEqual(MenuItem.objects.filter(title="My new Title").count(), 0)
+
+
+class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin, VersioningHelpersMixin):
     def setUp(self):
         self.client.force_login(self.get_superuser())
 
@@ -411,7 +459,7 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, VersioningHelpersMixin):
         self.assertEqual(response.status_code, 404)
 
     def test_menuitem_changelist_contains_add_url(self):
-        menu_content = factories.MenuContentFactory()
+        menu_content = factories.MenuContentWithVersionFactory()
         factories.ChildMenuItemFactory.create_batch(5, parent=menu_content.root)
         list_url = reverse(
             "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
@@ -425,7 +473,7 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, VersioningHelpersMixin):
         self.assertIn(add_url, str(response.content))
 
     def test_menuitem_changelist_contains_version_list_url(self):
-        menu_content = factories.MenuContentFactory()
+        menu_content = factories.MenuContentWithVersionFactory()
         factories.ChildMenuItemFactory.create_batch(5, parent=menu_content.root)
         list_url = reverse(
             "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
@@ -434,6 +482,23 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, VersioningHelpersMixin):
         response = self.client.get(list_url)
 
         self.assertIn(version_list_url(menu_content), str(response.content))
+
+    @patch('django.contrib.messages.add_message')
+    def test_menuitem_changelist_redirects_if_not_latest_version(self, mocked_messages):
+        menu = factories.MenuFactory()
+        version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
+        factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
+        factories.MenuVersionFactory(content__menu=menu, state=DRAFT)
+        list_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(version.content.id,)
+        )
+
+        response = self.client.get(list_url)
+
+        # Redirect happened and error message displayed
+        self.assertRedirectsToVersionList(response, menu)
+        self.assertDjangoErrorMessage(
+            'Version is not in draft state', mocked_messages)
 
 
 class MenuItemAdminMoveNodeViewTestCase(CMSTestCase, VersioningHelpersMixin):
@@ -456,6 +521,9 @@ class MenuItemAdminMoveNodeViewTestCase(CMSTestCase, VersioningHelpersMixin):
         response = self.client.post(move_url, data=data)
 
         self.assertEqual(response.status_code, 200)
+        child.refresh_from_db()
+        child_of_child.refresh_from_db()
+        self.assertTrue(child_of_child.is_sibling_of(child))
 
     @patch("django.contrib.messages.error")
     def test_menuitem_move_node_cant_move_outside_of_root(self, mocked_messages):
@@ -495,6 +563,31 @@ class MenuItemAdminMoveNodeViewTestCase(CMSTestCase, VersioningHelpersMixin):
                 response = self.client.post(move_url, data=data)
 
                 self.assertEqual(response.status_code, 200)
+
+    @patch('django.contrib.messages.add_message')
+    def test_menuitem_move_node_redirects_if_not_latest_version(self, mocked_messages):
+        menu = factories.MenuFactory()
+        version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
+        factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
+        factories.MenuVersionFactory(content__menu=menu, state=DRAFT)
+        child = factories.ChildMenuItemFactory(parent=version.content.root)
+        child_of_child = factories.ChildMenuItemFactory(parent=child)
+        move_url = reverse(
+            "admin:djangocms_navigation_menuitem_move_node", args=(version.content.id,)
+        )
+        data = {
+            "node_id": child_of_child.pk,
+            "sibling_id": version.content.root.pk,
+            "as_child": 1,
+        }
+
+        response = self.client.post(move_url, data=data)
+
+        # Permission denied and node has not been moved
+        self.assertEqual(response.status_code, 403)
+        child.refresh_from_db()
+        child_of_child.refresh_from_db()
+        self.assertFalse(child_of_child.is_sibling_of(child))
 
 
 class MenuItemPermissionTestCase(CMSTestCase):
