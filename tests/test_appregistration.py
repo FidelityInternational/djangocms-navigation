@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 from django.apps import apps
 from django.core.exceptions import ImproperlyConfigured
-from django.test import override_settings
+from django.test import override_settings, TestCase
 
 from cms import app_registration
 from cms.models import Page
@@ -16,10 +16,10 @@ from djangocms_navigation.test_utils.app_2.models import TestModel3, TestModel4
 from djangocms_navigation.test_utils.polls.models import PollContent
 from djangocms_navigation.utils import supported_models
 
-from .utils import TestCase
+from .utils import UsefulAssertsMixin
 
 
-class AppRegistrationTestCase(TestCase):
+class AppRegistrationTestCase(TestCase, UsefulAssertsMixin):
     def test_missing_cms_config(self):
         extensions = cms_config.NavigationCMSExtension()
         config = Mock(
