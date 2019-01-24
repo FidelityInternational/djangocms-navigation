@@ -4,7 +4,6 @@ from django.contrib import admin, messages
 from django.contrib.admin.utils import quote
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -14,7 +13,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.i18n import JavaScriptCatalog
 
 # TODO: Possibly wrap this in try/except ImportError. But requires tests also.
-from djangocms_versioning.constants import DRAFT
+from djangocms_versioning.exceptions import ConditionFailed
 from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
 from treebeard.admin import TreeAdmin
@@ -140,8 +139,10 @@ class MenuItemAdmin(TreeAdmin):
                 menu_content = get_object_or_404(
                     MenuContent._base_manager, id=menu_content_id)
                 version = Version.objects.get_for_content(menu_content)
-                if version.state != DRAFT:
-                    messages.error(request, _("Version is not in draft state"))
+                try:
+                    version.check_modify(request.user)
+                except ConditionFailed as error:
+                    messages.error(request, _(str(error)))
                     return HttpResponseRedirect(version_list_url(menu_content))
             extra_context["list_url"] = reverse(
                 "admin:djangocms_navigation_menuitem_list",
@@ -159,8 +160,10 @@ class MenuItemAdmin(TreeAdmin):
                 menu_content = get_object_or_404(
                     MenuContent._base_manager, id=menu_content_id)
                 version = Version.objects.get_for_content(menu_content)
-                if version.state != DRAFT:
-                    messages.error(request, _("Version is not in draft state"))
+                try:
+                    version.check_modify(request.user)
+                except ConditionFailed as error:
+                    messages.error(request, _(str(error)))
                     return HttpResponseRedirect(version_list_url(menu_content))
             extra_context["list_url"] = reverse(
                 "admin:djangocms_navigation_menuitem_list",
@@ -177,8 +180,10 @@ class MenuItemAdmin(TreeAdmin):
                 MenuContent._base_manager, id=menu_content_id)
             if self._versioning_enabled:
                 version = Version.objects.get_for_content(menu_content)
-                if version.state != DRAFT:
-                    messages.error(request, _("Version is not in draft state"))
+                try:
+                    version.check_modify(request.user)
+                except ConditionFailed as error:
+                    messages.error(request, _(str(error)))
                     return HttpResponseRedirect(version_list_url(menu_content))
             extra_context["menu_content"] = menu_content
             extra_context["versioning_enabled_for_nav"] = self._versioning_enabled
@@ -205,9 +210,12 @@ class MenuItemAdmin(TreeAdmin):
             menu_content = get_object_or_404(
                 MenuContent._base_manager, id=menu_content_id)
             version = Version.objects.get_for_content(menu_content)
-            if version.state != DRAFT:
-                # TODO: Should this be a 400 rather than 403?
-                raise PermissionDenied
+            try:
+                version.check_modify(request.user)
+            except ConditionFailed as error:
+                error_msg = _(str(error))
+                messages.error(request, error_msg)
+                return HttpResponseBadRequest(error_msg)
 
         # Disallow moving of a node outside of the menu it is part of
         if request.POST.get("parent_id") == "0":
