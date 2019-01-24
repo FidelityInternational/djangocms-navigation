@@ -61,7 +61,7 @@ class NavigationSelector(Modifier):
     """
 
     def modify(self, request, nodes, namespace, root_id, post_cut, breadcrumb):
-        if post_cut or root_id:
+        if post_cut or root_id or not nodes:
             return nodes
         if namespace:
             tree_id = namespace
