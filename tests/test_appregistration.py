@@ -113,7 +113,7 @@ class NavigationSettingTestCase(TestCase):
 
         self.assertIn(Page, self.app.cms_extension.navigation_apps_models)
 
-    @override_settings(NAVIGATION_CMS_MODELS_ENABLED=True)
+    @override_settings(DJANGOCMS_NAVIGATION_CMS_MODELS_ENABLED=True)
     def test_cms_models_added_to_navigation_if_enabled(self):
         imp.reload(cms_config)  # Reload so setting gets checked again
         # The app should have a cms config with the overridden setting
@@ -123,7 +123,7 @@ class NavigationSettingTestCase(TestCase):
 
         self.assertIn(Page, self.app.cms_extension.navigation_apps_models)
 
-    @override_settings(NAVIGATION_CMS_MODELS_ENABLED=False)
+    @override_settings(DJANGOCMS_NAVIGATION_CMS_MODELS_ENABLED=False)
     def test_cms_models_not_added_to_navigation_if_disabled(self):
         imp.reload(cms_config)  # Reload so setting gets checked again
         # The app should have a cms config with the overridden setting
@@ -164,7 +164,7 @@ class VersioningSettingTestCase(TestCase):
         self.assertEqual(len(self.versioning_app.cms_extension.versionables), 1)
         self.assertEqual(self.versioning_app.cms_extension.versionables[0].content_model, MenuContent)
 
-    @override_settings(NAVIGATION_VERSIONING_ENABLED=True)
+    @override_settings(DJANGOCMS_NAVIGATION_VERSIONING_ENABLED=True)
     def test_navigation_is_versioned_if_versioning_setting_enabled(self):
         imp.reload(cms_config)  # Reload so setting gets checked again
         # The app should have a cms config with the overridden setting
@@ -177,7 +177,7 @@ class VersioningSettingTestCase(TestCase):
         self.assertEqual(len(self.versioning_app.cms_extension.versionables), 1)
         self.assertEqual(self.versioning_app.cms_extension.versionables[0].content_model, MenuContent)
 
-    @override_settings(NAVIGATION_VERSIONING_ENABLED=False)
+    @override_settings(DJANGOCMS_NAVIGATION_VERSIONING_ENABLED=False)
     def test_navigation_is_versioned_if_versioning_setting_disabled(self):
         imp.reload(cms_config)  # Reload so setting gets checked again
         # The app should have a cms config with the overridden setting

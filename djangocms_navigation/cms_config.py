@@ -65,10 +65,10 @@ def copy_menu_content(original_content):
 
 class NavigationCMSAppConfig(CMSAppConfig):
     djangocms_navigation_enabled = getattr(
-        settings, "NAVIGATION_CMS_MODELS_ENABLED", True
+        settings, "DJANGOCMS_NAVIGATION_CMS_MODELS_ENABLED", True
     )
     djangocms_versioning_enabled = getattr(
-        settings, "NAVIGATION_VERSIONING_ENABLED", True
+        settings, "DJANGOCMS_NAVIGATION_VERSIONING_ENABLED", True
     )
     navigation_models = {
         # model_class : field(s) to search in menu item form UI
