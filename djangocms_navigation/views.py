@@ -1,11 +1,27 @@
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseBadRequest, JsonResponse
-from django.views.generic import View
+from django.shortcuts import get_object_or_404
+from django.views.generic import TemplateView, View
 
 from cms.models import Page
 
 from djangocms_navigation.utils import is_model_supported, supported_models
+
+from .models import MenuContent, MenuItem
+
+
+class MenuContentPreviewView(TemplateView):
+    template_name = "admin/djangocms_navigation/menucontent/preview.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        menu_content = get_object_or_404(
+            MenuContent._base_manager, id=self.kwargs.get("menu_content_id")
+        )
+        annotated_list = MenuItem.get_annotated_list(parent=menu_content.root)
+        context.update({"annotated_list": annotated_list})
+        return context
 
 
 class ContentObjectSelect2View(View):
