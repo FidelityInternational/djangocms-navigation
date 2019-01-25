@@ -1,13 +1,79 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
+from django.test import RequestFactory
 
 from cms.models import Page, User
 from cms.test_utils.testcases import CMSTestCase
 from cms.utils.urlutils import admin_reverse
 
 from djangocms_navigation.constants import SELECT2_CONTENT_OBJECT_URL_NAME
-from djangocms_navigation.test_utils.factories import PageContentFactory
+from djangocms_navigation.test_utils.factories import (
+    MenuContentFactory,
+    PageContentFactory,
+    UserFactory,
+)
 from djangocms_navigation.test_utils.polls.models import Poll, PollContent
+from djangocms_navigation.views import MenuContentPreviewView
+
+
+class PreviewViewTestCases(CMSTestCase):
+    def setUp(self):
+        self.menu_content = MenuContentFactory()
+        self.preview_url = admin_reverse(
+            "djangocms_navigation_menuitem_preview",
+            kwargs={"menu_content_id": self.menu_content.id},
+        )
+
+    def test_view_anonymous_user(self):
+        response = self.client.get(self.preview_url)
+        expected_url = "/en/admin/login/?next=" + self.preview_url
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, expected_url)
+
+    def test_view_standard_user(self):
+        standard_user = self.get_standard_user()
+        with self.login_user_context(standard_user):
+            response = self.client.get(self.preview_url)
+            expected_url = "/en/admin/login/?next=" + self.preview_url
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(response.url, expected_url)
+
+    def test_view_super_user(self):
+        staff_user = self.get_superuser()
+        with self.login_user_context(staff_user):
+            response = self.client.get(self.preview_url)
+            self.assertEqual(response.status_code, 200)
+
+    def test_view_context_data_with_valid_menu_content(self):
+        factory = RequestFactory()
+        request = factory.get(self.preview_url)
+        request.user = self.get_superuser()
+        view = MenuContentPreviewView()
+        view.request = request
+        view.kwargs = {"menu_content_id": self.menu_content.id}
+        response = view.get_context_data()
+        self.assertIsInstance(response["view"], MenuContentPreviewView)
+        self.assertIn("annotated_list", response)
+
+    def test_view_context_data_with_invalid_int_menu_content(self):
+        factory = RequestFactory()
+        request = factory.get(self.preview_url)
+        request.user = self.get_superuser()
+        view = MenuContentPreviewView()
+        view.request = request
+        view.kwargs = {"menu_content_id": 99}
+        response = view.get_context_data()
+        self.assertEqual(response.status_code, 400)
+
+    def test_view_context_data_with_invalid_string_menu_content(self):
+        factory = RequestFactory()
+        request = factory.get(self.preview_url)
+        request.user = self.get_superuser()
+        view = MenuContentPreviewView()
+        view.request = request
+        view.kwargs = {"menu_content_id": "dummy"}
+        response = view.get_context_data()
+        self.assertEqual(response.status_code, 400)
 
 
 class ContentObjectAutoFillTestCases(CMSTestCase):
