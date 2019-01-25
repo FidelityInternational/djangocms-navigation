@@ -25,6 +25,9 @@ class Menu(models.Model):
     class Meta:
         unique_together = (("identifier", "site"),)
 
+    def __str__(self):
+        return self.identifier
+
 
 class MenuContent(models.Model):
     menu = models.ForeignKey(Menu, on_delete=models.PROTECT)

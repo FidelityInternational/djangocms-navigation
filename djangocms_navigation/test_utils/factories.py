@@ -154,6 +154,29 @@ class ChildMenuItemFactory(MenuItemFactory):
         return parent.add_child(*args, **kwargs)
 
 
+class SiblingMenuItemFactory(MenuItemFactory):
+    # A sibling node needs to have a sibling node of course.
+    # This will automatically generate a new child node as the sibling,
+    # but you can also supply an existing node with the sibling arg.
+    sibling = factory.SubFactory(ChildMenuItemFactory)
+    # Siblings need to be positioned against their sibling nodes.
+    # A position will be randomly chosen from this list or you can
+    # supply your own with the position arg.
+    _SIBLING_POSITIONS = ["first-sibling", "left", "right", "last-sibling"]
+    position = FuzzyChoice(_SIBLING_POSITIONS)
+
+    class Meta:
+        model = MenuItem
+        inline_args = ("sibling", "position")
+
+    @classmethod
+    def _create(cls, model_class, sibling, position, *args, **kwargs):
+        """Make sure this is the sibling of the supplied node"""
+        new_sibling = sibling.add_sibling(pos=position, **kwargs)
+        sibling.refresh_from_db()
+        return new_sibling
+
+
 class MenuContentFactory(factory.django.DjangoModelFactory):
     menu = factory.SubFactory(MenuFactory)
     root = factory.SubFactory(RootMenuItemFactory)
@@ -167,3 +190,12 @@ class MenuVersionFactory(AbstractVersionFactory):
 
     class Meta:
         model = Version
+
+
+class MenuContentWithVersionFactory(MenuContentFactory):
+    @factory.post_generation
+    def version(self, create, extracted, **kwargs):
+        if not create:
+            # Simple build, do nothing.
+            return
+        MenuVersionFactory(content=self, **kwargs)

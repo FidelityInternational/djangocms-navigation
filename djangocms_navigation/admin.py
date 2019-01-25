@@ -1,15 +1,21 @@
+from django.apps import apps
 from django.conf.urls import url
 from django.contrib import admin, messages
 from django.contrib.admin.utils import quote
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
-from django.shortcuts import reverse
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.views.i18n import JavaScriptCatalog
 
+# TODO: Possibly wrap this in try/except ImportError. But requires tests also.
+from djangocms_versioning.exceptions import ConditionFailed
+from djangocms_versioning.helpers import version_list_url
+from djangocms_versioning.models import Version
 from treebeard.admin import TreeAdmin
 
 from .constants import SELECT2_CONTENT_OBJECT_URL_NAME
@@ -118,7 +124,8 @@ class MenuItemAdmin(TreeAdmin):
 
     def get_queryset(self, request):
         if hasattr(request, "menu_content_id"):
-            menu_content = MenuContent._base_manager.get(id=request.menu_content_id)
+            menu_content = get_object_or_404(
+                MenuContent._base_manager, id=request.menu_content_id)
             return MenuItem.get_tree(menu_content.root)
         return self.model().get_tree()
 
@@ -128,6 +135,15 @@ class MenuItemAdmin(TreeAdmin):
         extra_context = extra_context or {}
         if menu_content_id:
             request.menu_content_id = menu_content_id
+            if self._versioning_enabled:
+                menu_content = get_object_or_404(
+                    MenuContent._base_manager, id=menu_content_id)
+                version = Version.objects.get_for_content(menu_content)
+                try:
+                    version.check_modify(request.user)
+                except ConditionFailed as error:
+                    messages.error(request, str(error))
+                    return HttpResponseRedirect(version_list_url(menu_content))
             extra_context["list_url"] = reverse(
                 "admin:djangocms_navigation_menuitem_list",
                 kwargs={"menu_content_id": menu_content_id},
@@ -140,6 +156,15 @@ class MenuItemAdmin(TreeAdmin):
         extra_context = extra_context or {}
         if menu_content_id:
             request.menu_content_id = menu_content_id
+            if self._versioning_enabled:
+                menu_content = get_object_or_404(
+                    MenuContent._base_manager, id=menu_content_id)
+                version = Version.objects.get_for_content(menu_content)
+                try:
+                    version.check_modify(request.user)
+                except ConditionFailed as error:
+                    messages.error(request, str(error))
+                    return HttpResponseRedirect(version_list_url(menu_content))
             extra_context["list_url"] = reverse(
                 "admin:djangocms_navigation_menuitem_list",
                 kwargs={"menu_content_id": menu_content_id},
@@ -151,14 +176,17 @@ class MenuItemAdmin(TreeAdmin):
 
         if menu_content_id:
             request.menu_content_id = menu_content_id
-            extra_context["add_url"] = reverse(
-                "admin:djangocms_navigation_menuitem_add",
-                kwargs={"menu_content_id": menu_content_id},
-            )
-            extra_context["list_url"] = reverse(
-                "admin:djangocms_navigation_menuitem_list",
-                kwargs={"menu_content_id": menu_content_id},
-            )
+            menu_content = get_object_or_404(
+                MenuContent._base_manager, id=menu_content_id)
+            if self._versioning_enabled:
+                version = Version.objects.get_for_content(menu_content)
+                try:
+                    version.check_modify(request.user)
+                except ConditionFailed as error:
+                    messages.error(request, str(error))
+                    return HttpResponseRedirect(version_list_url(menu_content))
+            extra_context["menu_content"] = menu_content
+            extra_context["versioning_enabled_for_nav"] = self._versioning_enabled
 
         return super().changelist_view(request, extra_context)
 
@@ -177,10 +205,23 @@ class MenuItemAdmin(TreeAdmin):
         return HttpResponseRedirect(url)
 
     def move_node(self, request, menu_content_id):
+        # Disallow moving of a node on anything other than a draft version
+        if self._versioning_enabled:
+            menu_content = get_object_or_404(
+                MenuContent._base_manager, id=menu_content_id)
+            version = Version.objects.get_for_content(menu_content)
+            try:
+                version.check_modify(request.user)
+            except ConditionFailed as error:
+                messages.error(request, str(error))
+                return HttpResponseBadRequest(str(error))
+
+        # Disallow moving of a node outside of the menu it is part of
         if request.POST.get("parent_id") == "0":
             message = _("Cannot move a node outside of the root menu node")
             messages.error(request, message)
             return HttpResponseBadRequest(message)
+
         return super().move_node(request)
 
     def has_add_permission(self, request):
@@ -198,7 +239,7 @@ class MenuItemAdmin(TreeAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form_class = super().get_form(request, obj, **kwargs)
-        menu_root = MenuContent.objects.get(id=request.menu_content_id).root
+        menu_root = get_object_or_404(MenuItem, menucontent=request.menu_content_id)
 
         class Form(form_class):
             def __new__(cls, *args, **kwargs):
@@ -206,6 +247,12 @@ class MenuItemAdmin(TreeAdmin):
                 return form_class(*args, **kwargs)
 
         return Form
+
+    @property
+    def _versioning_enabled(self):
+        """Helper property to check if versioning is enabled for navigation"""
+        return apps.get_app_config(
+            'djangocms_navigation').cms_config.djangocms_versioning_enabled
 
 
 admin.site.register(MenuItem, MenuItemAdmin)
