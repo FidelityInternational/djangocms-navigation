@@ -142,7 +142,7 @@ class MenuItemAdmin(TreeAdmin):
                 try:
                     version.check_modify(request.user)
                 except ConditionFailed as error:
-                    messages.error(request, _(str(error)))
+                    messages.error(request, str(error))
                     return HttpResponseRedirect(version_list_url(menu_content))
             extra_context["list_url"] = reverse(
                 "admin:djangocms_navigation_menuitem_list",
@@ -163,7 +163,7 @@ class MenuItemAdmin(TreeAdmin):
                 try:
                     version.check_modify(request.user)
                 except ConditionFailed as error:
-                    messages.error(request, _(str(error)))
+                    messages.error(request, str(error))
                     return HttpResponseRedirect(version_list_url(menu_content))
             extra_context["list_url"] = reverse(
                 "admin:djangocms_navigation_menuitem_list",
@@ -183,7 +183,7 @@ class MenuItemAdmin(TreeAdmin):
                 try:
                     version.check_modify(request.user)
                 except ConditionFailed as error:
-                    messages.error(request, _(str(error)))
+                    messages.error(request, str(error))
                     return HttpResponseRedirect(version_list_url(menu_content))
             extra_context["menu_content"] = menu_content
             extra_context["versioning_enabled_for_nav"] = self._versioning_enabled
@@ -213,9 +213,8 @@ class MenuItemAdmin(TreeAdmin):
             try:
                 version.check_modify(request.user)
             except ConditionFailed as error:
-                error_msg = _(str(error))
-                messages.error(request, error_msg)
-                return HttpResponseBadRequest(error_msg)
+                messages.error(request, str(error))
+                return HttpResponseBadRequest(str(error))
 
         # Disallow moving of a node outside of the menu it is part of
         if request.POST.get("parent_id") == "0":
