@@ -88,7 +88,7 @@ class MenuContentAdmin(admin.ModelAdmin):
             '<a href="{}" class="js-moderation-close-sideframe" target="_top">'
             '<span class="cms-icon cms-icon-eye"></span> {}'
             "</a>",
-            obj.get_preview_url,
+            obj.get_preview_url(),
             _("Preview"),
         )
 

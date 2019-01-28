@@ -43,7 +43,6 @@ class MenuContent(models.Model):
     def title(self):
         return self.root.title
 
-    @property
     def get_preview_url(self):
         return reverse(
             "admin:{app}_{model}_preview".format(
