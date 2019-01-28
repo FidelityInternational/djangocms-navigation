@@ -84,18 +84,11 @@ class MenuContentAdmin(admin.ModelAdmin):
     get_menuitem_link.short_description = _("Menu Items")
 
     def get_preview_link(self, obj):
-        object_preview_url = reverse(
-            "admin:{app}_{model}_preview".format(
-                app=obj._meta.app_label, model=MenuItem._meta.model_name
-            ),
-            args=[obj.pk],
-        )
-
         return format_html(
             '<a href="{}" class="js-moderation-close-sideframe" target="_top">'
             '<span class="cms-icon cms-icon-eye"></span> {}'
             "</a>",
-            object_preview_url,
+            obj.get_preview_url,
             _("Preview"),
         )
 
