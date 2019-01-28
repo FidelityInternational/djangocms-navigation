@@ -24,6 +24,12 @@ class PreviewViewTestCases(CMSTestCase):
             kwargs={"menu_content_id": self.menu_content.id},
         )
 
+    def test_view_url(self):
+        expcted_url = "/en/admin/djangocms_navigation/menuitem/{}/preview/".format(
+            self.menu_content.id
+        )
+        self.assertEqual(self.preview_url, expcted_url)
+
     def test_view_anonymous_user(self):
         response = self.client.get(self.preview_url)
         expected_url = "/en/admin/login/?next=" + self.preview_url

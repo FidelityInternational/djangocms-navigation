@@ -15,7 +15,6 @@ class MenuContentPreviewView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
         try:
             menu_content = MenuContent._base_manager.get(
                 id=self.kwargs.get("menu_content_id")
