@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 
-from cms.models import Page, PageContent, TreeNode
+from cms.models import Page, PageContent, TreeNode, Placeholder
 
 import factory
 from djangocms_versioning.models import Version
@@ -96,11 +96,26 @@ class PageContentWithVersionFactory(PageContentFactory):
     @factory.post_generation
     def version(self, create, extracted, **kwargs):
         # NOTE: Use this method as below to define version attributes:
-        # PollContentWithVersionFactory(version__label='label1')
+        # PageContentWithVersionFactory(version__label='label1')
         if not create:
             # Simple build, do nothing.
             return
         PageVersionFactory(content=self, **kwargs)
+
+
+class PlaceholderFactory(factory.django.DjangoModelFactory):
+    default_width = FuzzyInteger(0, 25)
+    slot = 'col_left'
+    object_id = factory.SelfAttribute("source.id")
+    content_type = factory.LazyAttribute(
+        lambda o: ContentType.objects.get_for_model(o.source)
+    )
+    # this can take other types of content as well, but putting in
+    # versioned PageContent by default
+    source = factory.SubFactory(PageContentWithVersionFactory)
+
+    class Meta:
+        model = Placeholder
 
 
 class MenuFactory(factory.django.DjangoModelFactory):
