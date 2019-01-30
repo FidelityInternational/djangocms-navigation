@@ -46,7 +46,7 @@ class MenuContent(models.Model):
     def get_preview_url(self):
         return reverse(
             "admin:{app}_{model}_preview".format(
-                app=self._meta.app_label, model=MenuItem._meta.model_name
+                app=MenuItem._meta.app_label, model=MenuItem._meta.model_name
             ),
             args=[self.id],
         )
