@@ -1,6 +1,10 @@
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
-from django.http import HttpResponseBadRequest, JsonResponse
+from django.http import (
+    HttpResponseBadRequest,
+    JsonResponse,
+)
+from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, View
 
 from cms.models import Page
@@ -15,12 +19,9 @@ class MenuContentPreviewView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        try:
-            menu_content = MenuContent._base_manager.get(
-                id=self.kwargs.get("menu_content_id")
-            )
-        except (MenuContent.DoesNotExist, ValueError):
-            return HttpResponseBadRequest()
+        menu_content = get_object_or_404(
+            MenuContent._base_manager, pk=self.kwargs.get("menu_content_id")
+        )
         annotated_list = MenuItem.get_annotated_list(parent=menu_content.root)
         context.update({"annotated_list": annotated_list})
         return context
