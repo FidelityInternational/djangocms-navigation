@@ -62,11 +62,10 @@ class PreviewViewTestCases(CMSTestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_view_url_with_invalid_string_menu_content(self):
-        # passing string as menu_content_id should result 404 as it shoudnt match any url
+        # passing string as menu_content_id should result 404 as it shoudnt match any url pattern
         preview_url = '/en/admin/djangocms_navigation/menuitem/dummy/preview/'
         response = self.client.get(preview_url)
         self.assertEqual(response.status_code, 404)
-
 
 
 class ContentObjectAutoFillTestCases(CMSTestCase):
