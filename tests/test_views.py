@@ -39,31 +39,32 @@ class PreviewViewPermissionTestCases(CMSTestCase):
 
 class PreviewViewTestCases(CMSTestCase):
     def setUp(self):
-        self.menu_content = MenuContentFactory()
-        self.preview_url = admin_reverse(
-            "djangocms_navigation_menuitem_preview",
-            kwargs={"menu_content_id": self.menu_content.id},
-        )
+
         self.client.force_login(self.get_superuser())
 
     def test_view_context_data_with_valid_menu_content(self):
-            response = self.client.get(self.preview_url)
-            expected = MenuItem.get_annotated_list(parent=self.menu_content.root)
-            self.assertEqual(response.status_code, 200)
-            self.assertIn("annotated_list", response.context_data)
-            self.assertEqual(response.context_data["annotated_list"], expected)
+        menu_content = MenuContentFactory()
+        preview_url = admin_reverse(
+            "djangocms_navigation_menuitem_preview",
+            kwargs={"menu_content_id": menu_content.id},
+        )
+        response = self.client.get(preview_url)
+        expected = MenuItem.get_annotated_list(parent=menu_content.root)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("annotated_list", response.context_data)
+        self.assertEqual(response.context_data["annotated_list"], expected)
 
     def test_view_response_with_invalid_int_menu_content(self):
-            preview_url = admin_reverse(
-                "djangocms_navigation_menuitem_preview", kwargs={"menu_content_id": 99}
-            )
-            response = self.client.get(preview_url)
-            self.assertEqual(response.status_code, 404)
+        preview_url = admin_reverse(
+            "djangocms_navigation_menuitem_preview", kwargs={"menu_content_id": 99}
+        )
+        response = self.client.get(preview_url)
+        self.assertEqual(response.status_code, 404)
 
     def test_view_url_with_invalid_string_menu_content(self):
         # passing string as menu_content_id should result 404 as it shoudnt match any url
-        url = '/en/admin/djangocms_navigation/menuitem/dummy/preview/'
-        response = self.client.get(url)
+        preview_url = '/en/admin/djangocms_navigation/menuitem/dummy/preview/'
+        response = self.client.get(preview_url)
         self.assertEqual(response.status_code, 404)
 
 
