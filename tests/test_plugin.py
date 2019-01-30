@@ -26,6 +26,8 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # Set up a versioned page with one placeholder
         page_content = factories.PageContentWithVersionFactory(language=self.language)
         placeholder = factories.PlaceholderFactory(source=page_content)
+        menu1 = factories.MenuContentWithVersionFactory().menu
+        menu2 = factories.MenuContentWithVersionFactory().menu
 
         # Patch the choices on the template field, so we don't get
         # form validation errors
@@ -49,11 +51,12 @@ class NavigationPluginViewTestCase(CMSTestCase):
             response = self.client.get(add_url)
             self.assertEqual(response.status_code, 200)
             # Now do a POST call on the add view
-            data = {'template': 'menu/menu.html'}
+            data = {'template': 'menu/menu.html', 'menu': menu1.pk}
             response = self.client.post(add_url, data)
             self.assertEqual(response.status_code, 200)
             created_plugin = NavigationPlugin.objects.latest('pk')
             self.assertEqual(created_plugin.template, 'menu/menu.html')
+            self.assertEqual(created_plugin.menu, menu1)
 
             # Now that a plugin has been successfully created, try to edit it
             change_url = self.get_change_plugin_uri(created_plugin)
@@ -61,20 +64,24 @@ class NavigationPluginViewTestCase(CMSTestCase):
             response = self.client.get(change_url)
             self.assertEqual(response.status_code, 200)
             # Now do a POST call on the change view
-            data = {'template': "menu/menuismo.html"}
+            data = {'template': 'menu/menuismo.html', 'menu': menu2.pk}
             response = self.client.post(change_url, data)
             self.assertEqual(response.status_code, 200)
             plugin = NavigationPlugin.objects.get(
                 pk=created_plugin.pk).get_bound_plugin()
             self.assertEqual(plugin.template, "menu/menuismo.html")
+            self.assertEqual(plugin.menu, menu2)
 
     @disable_versioning_for_navigation()
     def test_can_add_edit_a_navigation_plugin_when_versioning_disabled(self):
         """Same test as above but with versioning disabled"""
 
-        # Set up a versioned page with one placeholder
-        page_content = factories.PageContentFactory(language=self.language)
+        # Set up a versioned page (only disabling versioning for navigation)
+        # with one placeholder
+        page_content = factories.PageContentWithVersionFactory(language=self.language)
         placeholder = factories.PlaceholderFactory(source=page_content)
+        menu1 = factories.MenuContentFactory().menu
+        menu2 = factories.MenuContentFactory().menu
 
         # Patch the choices on the template field, so we don't get
         # form validation errors
@@ -98,11 +105,12 @@ class NavigationPluginViewTestCase(CMSTestCase):
             response = self.client.get(add_url)
             self.assertEqual(response.status_code, 200)
             # Now do a POST call on the add view
-            data = {'template': 'menu/menu.html'}
+            data = {'template': 'menu/menu.html', 'menu': menu1.pk}
             response = self.client.post(add_url, data)
             self.assertEqual(response.status_code, 200)
             created_plugin = NavigationPlugin.objects.latest('pk')
             self.assertEqual(created_plugin.template, 'menu/menu.html')
+            self.assertEqual(created_plugin.menu, menu1)
 
             # Now that a plugin has been successfully created, try to edit it
             change_url = self.get_change_plugin_uri(created_plugin)
@@ -110,9 +118,10 @@ class NavigationPluginViewTestCase(CMSTestCase):
             response = self.client.get(change_url)
             self.assertEqual(response.status_code, 200)
             # Now do a POST call on the change view
-            data = {'template': "menu/menuismo.html"}
+            data = {'template': 'menu/menuismo.html', 'menu': menu2.pk}
             response = self.client.post(change_url, data)
             self.assertEqual(response.status_code, 200)
             plugin = NavigationPlugin.objects.get(
                 pk=created_plugin.pk).get_bound_plugin()
             self.assertEqual(plugin.template, "menu/menuismo.html")
+            self.assertEqual(plugin.menu, menu2)

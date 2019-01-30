@@ -64,6 +64,7 @@ class NavigationPlugin(CMSPlugin):
         default=TEMPLATE_DEFAULT,
         max_length=255,
     )
+    menu = models.ForeignKey(Menu)
 
     class Meta:
         verbose_name = _("navigation plugin model")
