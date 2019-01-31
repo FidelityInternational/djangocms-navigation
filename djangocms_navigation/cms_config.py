@@ -85,5 +85,5 @@ class NavigationCMSAppConfig(CMSAppConfig):
         )
     ]
     moderated_models = [
-        MenuContent
+        MenuContent,
     ]
