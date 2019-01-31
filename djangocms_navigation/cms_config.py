@@ -70,7 +70,7 @@ class NavigationCMSAppConfig(CMSAppConfig):
     djangocms_versioning_enabled = getattr(
         settings, "DJANGOCMS_NAVIGATION_VERSIONING_ENABLED", True
     )
-    djangocms_versioning_enabled = getattr(
+    djangocms_moderation_enabled = getattr(
         settings, "DJANGOCMS_NAVIGATION_MODERATION_ENABLED", True
     )
     navigation_models = {
@@ -83,7 +83,7 @@ class NavigationCMSAppConfig(CMSAppConfig):
             grouper_field_name="menu",
             copy_function=copy_menu_content,
         )
-    ],
+    ]
     moderated_models = [
         MenuContent
     ]
