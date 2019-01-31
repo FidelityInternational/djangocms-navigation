@@ -38,6 +38,7 @@ class CMSMenu(Menu):
             )
 
     def get_nodes(self, request):
+        # TODO: tests
         navigations = self.get_roots(request)
         root_navigation_nodes = []
         root_ids = {}

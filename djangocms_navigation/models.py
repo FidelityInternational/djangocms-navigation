@@ -28,6 +28,12 @@ class Menu(models.Model):
     def __str__(self):
         return self.identifier
 
+    @property
+    def root_id(self):
+        """Returns the id of the root MenuItem as it will be in the
+        NavigationNode instance"""
+        return "root-" + self.identifier
+
 
 class MenuContent(models.Model):
     menu = models.ForeignKey(Menu, on_delete=models.PROTECT)

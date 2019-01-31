@@ -8,6 +8,11 @@ class MenuModelTestCase(TestCase):
         menu = factories.MenuFactory(identifier='page-about-cats')
         self.assertEqual(str(menu), 'page-about-cats')
 
+    def test_root_id(self):
+        menu = factories.MenuContentWithVersionFactory(
+            menu__identifier='black-cats').menu
+        self.assertEqual(menu.root_id, 'root-black-cats')
+
 
 class MenuContentModelTestCase(TestCase):
 

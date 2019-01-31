@@ -19,6 +19,27 @@ class NavigationSelectorTestCase(TestCase):
     def test_modify(self):
         selector = NavigationSelector(None)
         request = RequestFactory().get('/')
+        celery = NavigationNode(
+            title='Celery',
+            url='/vegetables/celery/',
+            id=12,
+            parent_id='root-vegetables',
+            attr={'link_target': '_self'},
+        )
+        carrots = NavigationNode(
+            title='Carrots',
+            url='/vegetables/carrots/',
+            id=28,
+            parent_id='root-vegetables',
+            attr={'link_target': '_self'},
+        )
+        purple_carrots = NavigationNode(
+            title='Purple Carrots',
+            url='/vegetables/carrots/purple/',
+            id=267,
+            parent_id=28,
+            attr={'link_target': '_self'},
+        )
         nodes = [
             NavigationNode(
                 title='',
@@ -41,20 +62,16 @@ class NavigationSelectorTestCase(TestCase):
                 parent_id='root-fruit',
                 attr={'link_target': '_self'},
             ),
-            NavigationNode(
-                title='Celery',
-                url='/vegetables/celery/',
-                id=28,
-                parent_id='root-vegetables',
-                attr={'link_target': '_self'},
-            ),
+            celery,
+            carrots,
+            purple_carrots,
         ]
-        namespace = None
-        root_id = None
-        post_cut = False
-        breadcrumb = False
-        result = selector.modify(request, nodes, namespace, root_id, post_cut, breadcrumb)
-        #~ import ipdb; ipdb.set_trace()
+        result = selector.modify(
+            request, nodes, namespace='root-vegetables',
+            root_id=None, post_cut=False, breadcrumb=False)
+        self.assertListEqual(result, [celery, carrots])
+
+    # TODO: Test for no namespace
 
 
 class NavigationPluginViewTestCase(CMSTestCase):
