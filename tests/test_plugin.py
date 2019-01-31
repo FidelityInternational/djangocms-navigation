@@ -1,14 +1,60 @@
 from mock import patch
 
 from django.conf import settings
+from django.test import TestCase, RequestFactory
 
 from cms.models import Page
 from cms.test_utils.testcases import CMSTestCase
+from menus.base import NavigationNode
 
+from djangocms_navigation.cms_menus import NavigationSelector
 from djangocms_navigation.models import NavigationPlugin
 from djangocms_navigation.test_utils import factories
 
 from .utils import disable_versioning_for_navigation
+
+
+class NavigationSelectorTestCase(TestCase):
+
+    def test_modify(self):
+        selector = NavigationSelector(None)
+        request = RequestFactory().get('/')
+        nodes = [
+            NavigationNode(
+                title='',
+                url='',
+                id='root-fruit',
+                parent_id=None,
+                attr={},
+            ),
+            NavigationNode(
+                title='',
+                url='',
+                id='root-vegetables',
+                parent_id=None,
+                attr={},
+            ),
+            NavigationNode(
+                title='Apples',
+                url='/fruit/apples/',
+                id=26,
+                parent_id='root-fruit',
+                attr={'link_target': '_self'},
+            ),
+            NavigationNode(
+                title='Celery',
+                url='/vegetables/celery/',
+                id=28,
+                parent_id='root-vegetables',
+                attr={'link_target': '_self'},
+            ),
+        ]
+        namespace = None
+        root_id = None
+        post_cut = False
+        breadcrumb = False
+        result = selector.modify(request, nodes, namespace, root_id, post_cut, breadcrumb)
+        #~ import ipdb; ipdb.set_trace()
 
 
 class NavigationPluginViewTestCase(CMSTestCase):
@@ -71,6 +117,15 @@ class NavigationPluginViewTestCase(CMSTestCase):
                 pk=created_plugin.pk).get_bound_plugin()
             self.assertEqual(plugin.template, "menu/menuismo.html")
             self.assertEqual(plugin.menu, menu2)
+
+            # publish
+            version = page_content.versions.get()
+            version.publish(self.get_superuser())
+
+            # Go to the page
+            page_url = page_content.page.get_absolute_url()
+            response = self.client.get(page_url)
+            self.assertEqual(response.status_code, 200)
 
     @disable_versioning_for_navigation()
     def test_can_add_edit_a_navigation_plugin_when_versioning_disabled(self):
