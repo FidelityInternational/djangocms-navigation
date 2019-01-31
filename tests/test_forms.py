@@ -287,6 +287,7 @@ class MenuContentFormTestCase(CMSTestCase):
             "link_target": "_self",
             "_position": "first-child",
         }
+        import pdb; pdb.set_trace()
         form = MenuItemForm(menu_root=self.menu_root, data=data)
 
         is_valid = form.is_valid()
