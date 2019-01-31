@@ -188,3 +188,47 @@ class VersioningSettingTestCase(TestCase):
             configure_cms_apps([self.versioning_app])
 
         self.assertEqual(len(self.versioning_app.cms_extension.versionables), 0)
+
+
+class ModerationSettingTestCase(TestCase):
+    def setUp(self):
+        self.moderation_app = apps.get_app_config('djangocms_moderation')
+        # Empty the list of registered models so it gets populated
+        # from scratch in tests
+        self.moderation_app.cms_extension.moderated_models = []
+
+    def tearDown(self):
+        """Populate everything again so our setting changes do not
+        effect any other tests"""
+        # Set the defaults for the navigation app config again
+        imp.reload(cms_config)
+        navigation_app = apps.get_app_config('djangocms_navigation')
+        navigation_app.cms_config = cms_config.NavigationCMSAppConfig(navigation_app)
+        # Reset the versioning app
+        self.moderation_app.cms_extension.moderated_models = []
+        configure_cms_apps([self.moderation_app])
+
+    @override_settings(DJANGOCMS_NAVIGATION_MODERATION_ENABLED=True)
+    def test_navigation_is_moderated_if_moderation_setting_enabled(self):
+        imp.reload(cms_config)  # Reload so setting gets checked again
+        # The app should have a cms config with the overridden setting
+        navigation_app = apps.get_app_config('djangocms_navigation')
+        navigation_app.cms_config = cms_config.NavigationCMSAppConfig(navigation_app)
+
+        with patch.object(app_registration, 'get_cms_config_apps', return_value=[navigation_app]):
+            configure_cms_apps([self.moderation_app])
+
+        self.assertEqual(len(self.moderation_app.cms_extension.moderated_models), 1)
+        self.assertEqual(self.moderation_app.cms_extension.moderated_models[0].content_model, MenuContent)
+
+    @override_settings(DJANGOCMS_NAVIGATION_MODERATION_ENABLED=False)
+    def test_navigation_is_moderated_if_moderation_setting_disabled(self):
+        imp.reload(cms_config)  # Reload so setting gets checked again
+        # The app should have a cms config with the overridden setting
+        navigation_app = apps.get_app_config('djangocms_navigation')
+        navigation_app.cms_config = cms_config.NavigationCMSAppConfig(navigation_app)
+
+        with patch.object(app_registration, 'get_cms_config_apps', return_value=[navigation_app]):
+            configure_cms_apps([self.moderation_app])
+
+        self.assertEqual(len(self.moderation_app.cms_extension.moderated_models), 0)
