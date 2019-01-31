@@ -2,6 +2,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.db import models
+from django.shortcuts import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from cms.models import CMSPlugin
@@ -41,6 +42,14 @@ class MenuContent(models.Model):
     @property
     def title(self):
         return self.root.title
+
+    def get_preview_url(self):
+        return reverse(
+            "admin:{app}_{model}_preview".format(
+                app=MenuItem._meta.app_label, model=MenuItem._meta.model_name
+            ),
+            args=[self.id],
+        )
 
 
 class MenuItem(MP_Node):

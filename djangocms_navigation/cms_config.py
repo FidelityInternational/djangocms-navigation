@@ -79,5 +79,6 @@ class NavigationCMSAppConfig(CMSAppConfig):
             content_model=MenuContent,
             grouper_field_name="menu",
             copy_function=copy_menu_content,
+            preview_url=MenuContent.get_preview_url,
         )
     ]
