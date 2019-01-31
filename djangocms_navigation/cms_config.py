@@ -70,6 +70,9 @@ class NavigationCMSAppConfig(CMSAppConfig):
     djangocms_versioning_enabled = getattr(
         settings, "DJANGOCMS_NAVIGATION_VERSIONING_ENABLED", True
     )
+    djangocms_versioning_enabled = getattr(
+        settings, "DJANGOCMS_NAVIGATION_MODERATION_ENABLED", True
+    )
     navigation_models = {
         # model_class : field(s) to search in menu item form UI
         Page: ["title"]
@@ -80,4 +83,7 @@ class NavigationCMSAppConfig(CMSAppConfig):
             grouper_field_name="menu",
             copy_function=copy_menu_content,
         )
+    ],
+    moderated_models = [
+        MenuContent
     ]
