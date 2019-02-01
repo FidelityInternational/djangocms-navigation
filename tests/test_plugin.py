@@ -98,7 +98,8 @@ class NavigationPluginViewTestCase(CMSTestCase):
         self.client.force_login(self.get_superuser())
 
     def _add_nav_plugin_and_assert(self, placeholder, menu, template):
-        # Start by testing the add view
+        """Helper method to do an http call to add a nav plugin and
+        assert the results"""
         add_url = self.get_add_plugin_uri(
             placeholder=placeholder,
             plugin_type='Navigation',
@@ -117,7 +118,8 @@ class NavigationPluginViewTestCase(CMSTestCase):
         return created_plugin
 
     def _edit_nav_plugin_and_assert(self, created_plugin, menu, template):
-        # Now that a plugin has been successfully created, try to edit it
+        """Helper method to do an http call to edit a nav plugin and
+        assert the results"""
         change_url = self.get_change_plugin_uri(created_plugin)
         # Start with a GET call on the change view
         response = self.client.get(change_url)
@@ -175,8 +177,6 @@ class NavigationPluginViewTestCase(CMSTestCase):
 
     @disable_versioning_for_navigation()
     def test_can_add_edit_view_a_navigation_plugin_when_versioning_disabled(self):
-        """Same test as above but with versioning disabled"""
-
         # The page content here is versioned because we're only disabling
         # versioning for navigation (i.e. MenuContent)
         page_content = factories.PageContentWithVersionFactory(language=self.language)
