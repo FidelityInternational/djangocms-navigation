@@ -97,13 +97,44 @@ class NavigationPluginViewTestCase(CMSTestCase):
         self.language = settings.LANGUAGES[0][0]
         self.client.force_login(self.get_superuser())
 
-    def test_can_add_edit_a_navigation_plugin_when_versioning_enabled(self):
-        """Adds a navigation plugin with an http call and then
-        edits the plugin with another http call."""
+    def _add_nav_plugin_and_assert(self, placeholder, menu, template):
+        # Start by testing the add view
+        add_url = self.get_add_plugin_uri(
+            placeholder=placeholder,
+            plugin_type='Navigation',
+            language=self.language,
+        )
+        # First do a GET on the add view
+        response = self.client.get(add_url)
+        self.assertEqual(response.status_code, 200)
+        # Now do a POST call on the add view
+        data = {'template': template, 'menu': menu.pk}
+        response = self.client.post(add_url, data)
+        self.assertEqual(response.status_code, 200)
+        created_plugin = NavigationPlugin.objects.latest('pk')
+        self.assertEqual(created_plugin.template, template)
+        self.assertEqual(created_plugin.menu, menu)
+        return created_plugin
+
+    def _edit_nav_plugin_and_assert(self, created_plugin, menu, template):
+        # Now that a plugin has been successfully created, try to edit it
+        change_url = self.get_change_plugin_uri(created_plugin)
+        # Start with a GET call on the change view
+        response = self.client.get(change_url)
+        self.assertEqual(response.status_code, 200)
+        # Now do a POST call on the change view
+        data = {'template': template, 'menu': menu.pk}
+        response = self.client.post(change_url, data)
+        self.assertEqual(response.status_code, 200)
+        plugin = NavigationPlugin.objects.get(
+            pk=created_plugin.pk).get_bound_plugin()
+        self.assertEqual(plugin.template, template)
+        self.assertEqual(plugin.menu, menu)
+
+    def test_can_add_edit_view_a_navigation_plugin_when_versioning_enabled(self):
         # NOTE: This test is based on a similar one from django-cms:
         # https://github.com/divio/django-cms/blob/2daeb7d63cb5fee49575a834d0f23669ce46144e/cms/tests/test_plugins.py#L160
 
-        # Set up a versioned page with one placeholder
         page_content = factories.PageContentWithVersionFactory(language=self.language)
         placeholder = factories.PlaceholderFactory(source=page_content)
         menu1 = factories.MenuContentWithVersionFactory().menu
@@ -120,53 +151,34 @@ class NavigationPluginViewTestCase(CMSTestCase):
             ('menu/menuismo.html', 'Menuismo')
         ]
         with patch.object(template_field, 'choices', patched_choices):
+            # First add the plugin and assert
+            # The added plugin will have the template menu/menu.html
+            # and the menu from menu1
+            created_plugin = self._add_nav_plugin_and_assert(
+                placeholder, menu1, 'menu/menu.html')
 
-            # Start by testing the add view
-            add_url = self.get_add_plugin_uri(
-                placeholder=placeholder,
-                plugin_type='Navigation',
-                language=self.language,
-            )
-            # First do a GET on the add view
-            response = self.client.get(add_url)
-            self.assertEqual(response.status_code, 200)
-            # Now do a POST call on the add view
-            data = {'template': 'menu/menu.html', 'menu': menu1.pk}
-            response = self.client.post(add_url, data)
-            self.assertEqual(response.status_code, 200)
-            created_plugin = NavigationPlugin.objects.latest('pk')
-            self.assertEqual(created_plugin.template, 'menu/menu.html')
-            self.assertEqual(created_plugin.menu, menu1)
+            # Now edit the plugin and assert
+            # After editing the plugin will have the template menu/menuismo.html
+            # and the menu from menu2
+            self._edit_nav_plugin_and_assert(
+                created_plugin, menu2, 'menu/menuismo.html')
 
-            # Now that a plugin has been successfully created, try to edit it
-            change_url = self.get_change_plugin_uri(created_plugin)
-            # Start with a GET call on the change view
-            response = self.client.get(change_url)
-            self.assertEqual(response.status_code, 200)
-            # Now do a POST call on the change view
-            data = {'template': 'menu/menuismo.html', 'menu': menu2.pk}
-            response = self.client.post(change_url, data)
-            self.assertEqual(response.status_code, 200)
-            plugin = NavigationPlugin.objects.get(
-                pk=created_plugin.pk).get_bound_plugin()
-            self.assertEqual(plugin.template, "menu/menuismo.html")
-            self.assertEqual(plugin.menu, menu2)
+        # Now publish the page content containing the plugin,
+        # so the page can be viewed
+        version = page_content.versions.get()
+        version.publish(self.get_superuser())
 
-            # publish
-            version = page_content.versions.get()
-            version.publish(self.get_superuser())
-
-            # Go to the page
-            page_url = page_content.page.get_absolute_url()
-            response = self.client.get(page_url)
-            self.assertEqual(response.status_code, 200)
+        # And view the page
+        page_url = page_content.page.get_absolute_url()
+        response = self.client.get(page_url)
+        self.assertEqual(response.status_code, 200)
 
     @disable_versioning_for_navigation()
-    def test_can_add_edit_a_navigation_plugin_when_versioning_disabled(self):
+    def test_can_add_edit_view_a_navigation_plugin_when_versioning_disabled(self):
         """Same test as above but with versioning disabled"""
 
-        # Set up a versioned page (only disabling versioning for navigation)
-        # with one placeholder
+        # The page content here is versioned because we're only disabling
+        # versioning for navigation (i.e. MenuContent)
         page_content = factories.PageContentWithVersionFactory(language=self.language)
         placeholder = factories.PlaceholderFactory(source=page_content)
         menu1 = factories.MenuContentFactory().menu
@@ -183,34 +195,24 @@ class NavigationPluginViewTestCase(CMSTestCase):
             ('menu/menuismo.html', 'Menuismo')
         ]
         with patch.object(template_field, 'choices', patched_choices):
+            # First add the plugin and assert
+            # The added plugin will have the template menu/menu.html
+            # and the menu from menu1
+            created_plugin = self._add_nav_plugin_and_assert(
+                placeholder, menu1, 'menu/menu.html')
 
-            # Start by testing the add view
-            add_url = self.get_add_plugin_uri(
-                placeholder=placeholder,
-                plugin_type='Navigation',
-                language=self.language,
-            )
-            # First do a GET on the add view
-            response = self.client.get(add_url)
-            self.assertEqual(response.status_code, 200)
-            # Now do a POST call on the add view
-            data = {'template': 'menu/menu.html', 'menu': menu1.pk}
-            response = self.client.post(add_url, data)
-            self.assertEqual(response.status_code, 200)
-            created_plugin = NavigationPlugin.objects.latest('pk')
-            self.assertEqual(created_plugin.template, 'menu/menu.html')
-            self.assertEqual(created_plugin.menu, menu1)
+            # Now edit the plugin and assert
+            # After editing the plugin will have the template menu/menuismo.html
+            # and the menu from menu2
+            self._edit_nav_plugin_and_assert(
+                created_plugin, menu2, 'menu/menuismo.html')
 
-            # Now that a plugin has been successfully created, try to edit it
-            change_url = self.get_change_plugin_uri(created_plugin)
-            # Start with a GET call on the change view
-            response = self.client.get(change_url)
-            self.assertEqual(response.status_code, 200)
-            # Now do a POST call on the change view
-            data = {'template': 'menu/menuismo.html', 'menu': menu2.pk}
-            response = self.client.post(change_url, data)
-            self.assertEqual(response.status_code, 200)
-            plugin = NavigationPlugin.objects.get(
-                pk=created_plugin.pk).get_bound_plugin()
-            self.assertEqual(plugin.template, "menu/menuismo.html")
-            self.assertEqual(plugin.menu, menu2)
+        # Now publish the page content containing the plugin,
+        # so the page can be viewed
+        version = page_content.versions.get()
+        version.publish(self.get_superuser())
+
+        # And view the page
+        page_url = page_content.page.get_absolute_url()
+        response = self.client.get(page_url)
+        self.assertEqual(response.status_code, 200)
