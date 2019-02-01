@@ -38,12 +38,11 @@ class CMSMenu(Menu):
             )
 
     def get_nodes(self, request):
-        # TODO: tests
         navigations = self.get_roots(request)
         root_navigation_nodes = []
         root_ids = {}
         for navigation in navigations:
-            identifier = "root-{}".format(navigation.menucontent.menu.identifier)
+            identifier = navigation.menucontent.menu.root_id
             node = NavigationNode(title="", url="", id=identifier)
             root_navigation_nodes.append(node)
             root_ids[navigation.pk] = identifier

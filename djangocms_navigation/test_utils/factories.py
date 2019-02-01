@@ -74,12 +74,12 @@ class PageContentFactory(factory.django.DjangoModelFactory):
     page_title = FuzzyText(length=12)
     menu_title = FuzzyText(length=12)
     meta_description = FuzzyText(length=12)
-    redirect = FuzzyText(length=12)
+    redirect = None
     created_by = FuzzyText(length=12)
     changed_by = FuzzyText(length=12)
     in_navigation = FuzzyChoice([True, False])
     soft_root = FuzzyChoice([True, False])
-    template = FuzzyText(length=12)
+    template = 'INHERIT'
     limit_visibility_in_menu = FuzzyInteger(0, 25)
     xframe_options = FuzzyInteger(0, 25)
 
