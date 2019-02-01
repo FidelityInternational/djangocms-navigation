@@ -219,7 +219,7 @@ class ModerationSettingTestCase(TestCase):
             configure_cms_apps([self.moderation_app])
 
         self.assertEqual(len(self.moderation_app.cms_extension.moderated_models), 1)
-        self.assertEqual(self.moderation_app.cms_extension.moderated_models[0].content_model, MenuContent)
+        self.assertIn(MenuContent, self.moderation_app.cms_extension.moderated_models)
 
     @override_settings(DJANGOCMS_NAVIGATION_MODERATION_ENABLED=False)
     def test_navigation_is_moderated_if_moderation_setting_disabled(self):
