@@ -1,4 +1,4 @@
-from mock import patch
+from unittest.mock import patch
 
 from django.conf import settings
 from django.test import TestCase, RequestFactory
@@ -137,7 +137,12 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # NOTE: This test is based on a similar one from django-cms:
         # https://github.com/divio/django-cms/blob/2daeb7d63cb5fee49575a834d0f23669ce46144e/cms/tests/test_plugins.py#L160
 
-        page_content = factories.PageContentWithVersionFactory(language=self.language)
+        # Set up a versioned page with one placeholder
+        page_content = factories.PageContentWithVersionFactory(
+            language=self.language,
+            redirect=None,
+            template='INHERIT',
+        )
         placeholder = factories.PlaceholderFactory(source=page_content)
         menu1 = factories.MenuContentWithVersionFactory().menu
         menu2 = factories.MenuContentWithVersionFactory().menu

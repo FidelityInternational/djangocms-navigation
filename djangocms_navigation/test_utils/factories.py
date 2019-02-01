@@ -3,8 +3,10 @@ import string
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
+from django.template.defaultfilters import slugify
 
-from cms.models import Page, PageContent, TreeNode, Placeholder
+from cms.models import Page, PageContent, PageUrl, TreeNode, Placeholder
+from cms.utils.page import get_available_slug
 
 import factory
 from djangocms_versioning.models import Version
@@ -83,6 +85,31 @@ class PageContentFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = PageContent
+
+    @factory.post_generation
+    def add_language(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        languages = self.page.get_languages()
+        if self.language not in languages:
+            languages.append(self.language)
+            self.page.update_languages(languages)
+
+    @factory.post_generation
+    def url(self, create, extracted, **kwargs):
+        if not create:
+            return
+        base = self.page.get_path_for_slug(slugify(self.title), self.language)
+        slug = get_available_slug(self.page.node.site, base, self.language)
+        PageUrl.objects.get_or_create(
+            page=self.page,
+            language=self.language,
+            defaults={
+                'slug': slug,
+                'path': self.page.get_path_for_slug(slug, self.language),
+            },
+        )
 
 
 class PageVersionFactory(AbstractVersionFactory):
