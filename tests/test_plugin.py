@@ -16,62 +16,79 @@ from .utils import disable_versioning_for_navigation
 
 class NavigationSelectorTestCase(TestCase):
 
-    def test_modify(self):
-        selector = NavigationSelector(None)
-        request = RequestFactory().get('/')
-        celery = NavigationNode(
+    def setUp(self):
+        self.selector = NavigationSelector(None)
+        self.request = RequestFactory().get('/')
+
+    def _get_nodes(self):
+        """Helper method to set up a list of NavigationNode instances"""
+        self.fruit = NavigationNode(
+            title='',
+            url='',
+            id='root-fruit',
+            parent_id=None,
+            attr={},
+        )
+        self.vegetables = NavigationNode(
+            title='',
+            url='',
+            id='root-vegetables',
+            parent_id=None,
+            attr={},
+        )
+        self.apples = NavigationNode(
+            title='Apples',
+            url='/fruit/apples/',
+            id=26,
+            parent_id='root-fruit',
+            attr={'link_target': '_self'},
+        )
+        self.celery = NavigationNode(
             title='Celery',
             url='/vegetables/celery/',
             id=12,
             parent_id='root-vegetables',
             attr={'link_target': '_self'},
         )
-        carrots = NavigationNode(
+        self.carrots = NavigationNode(
             title='Carrots',
             url='/vegetables/carrots/',
             id=28,
             parent_id='root-vegetables',
             attr={'link_target': '_self'},
         )
-        purple_carrots = NavigationNode(
+        self.purple_carrots = NavigationNode(
             title='Purple Carrots',
             url='/vegetables/carrots/purple/',
             id=267,
             parent_id=28,
             attr={'link_target': '_self'},
         )
-        nodes = [
-            NavigationNode(
-                title='',
-                url='',
-                id='root-fruit',
-                parent_id=None,
-                attr={},
-            ),
-            NavigationNode(
-                title='',
-                url='',
-                id='root-vegetables',
-                parent_id=None,
-                attr={},
-            ),
-            NavigationNode(
-                title='Apples',
-                url='/fruit/apples/',
-                id=26,
-                parent_id='root-fruit',
-                attr={'link_target': '_self'},
-            ),
-            celery,
-            carrots,
-            purple_carrots,
+        self.fruit.children = [self.apples]
+        self.vegetables.children = [self.celery, self.carrots]
+        self.carrots.children = [self.purple_carrots]
+        return [
+            self.fruit,
+            self.vegetables,
+            self.apples,
+            self.celery,
+            self.carrots,
+            self.purple_carrots,
         ]
-        result = selector.modify(
-            request, nodes, namespace='root-vegetables',
-            root_id=None, post_cut=False, breadcrumb=False)
-        self.assertListEqual(result, [celery, carrots])
 
-    # TODO: Test for no namespace
+    def test_modify_with_namespace(self):
+        result = self.selector.modify(
+            self.request, nodes=self._get_nodes(), namespace='root-vegetables',
+            root_id=None, post_cut=False, breadcrumb=False)
+        self.assertListEqual(result, [self.celery, self.carrots])
+
+    def test_modify_without_namespace(self):
+        result = self.selector.modify(
+            self.request, nodes=self._get_nodes(), namespace=None,
+            root_id=None, post_cut=False, breadcrumb=False)
+        # With no namespace supplied, the first node in the list of nodes
+        # will be used as root - in this case fruit
+        self.assertListEqual(result, [self.apples])
 
 
 class NavigationPluginViewTestCase(CMSTestCase):
