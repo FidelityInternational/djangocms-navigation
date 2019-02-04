@@ -6,10 +6,7 @@ from cms.test_utils.testcases import CMSTestCase
 from cms.utils.urlutils import admin_reverse
 
 from djangocms_navigation.constants import SELECT2_CONTENT_OBJECT_URL_NAME
-from djangocms_navigation.forms import (
-    ContentTypeObjectSelectWidget,
-    MenuItemForm,
-)
+from djangocms_navigation.forms import ContentTypeObjectSelectWidget, MenuItemForm
 from djangocms_navigation.test_utils import factories
 from djangocms_navigation.test_utils.app_1.models import TestModel1, TestModel2
 from djangocms_navigation.test_utils.app_2.models import TestModel3, TestModel4
@@ -263,7 +260,7 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertIn("title", form.errors)
         self.assertIn("This field is required.", form.errors["title"])
 
-    def test_content_type_is_optional(self):
+    def test_content_type_is_mandatory(self):
         data = {
             "title": "My new Title",
             "object_id": self.page_content.page.pk,
@@ -276,9 +273,11 @@ class MenuContentFormTestCase(CMSTestCase):
 
         is_valid = form.is_valid()
 
-        self.assertTrue(is_valid)
+        self.assertFalse(is_valid)
+        self.assertIn("content_type", form.errors)
+        self.assertIn("Please select content type", form.errors["content_type"])
 
-    def test_object_id_is_optional(self):
+    def test_object_id_is_mandatory(self):
         data = {
             "title": "My new Title",
             "content_type": self.page_ct.pk,
@@ -287,12 +286,13 @@ class MenuContentFormTestCase(CMSTestCase):
             "link_target": "_self",
             "_position": "first-child",
         }
-        import pdb; pdb.set_trace()
         form = MenuItemForm(menu_root=self.menu_root, data=data)
 
         is_valid = form.is_valid()
 
-        self.assertTrue(is_valid)
+        self.assertFalse(is_valid)
+        self.assertIn("object_id", form.errors)
+        self.assertIn("Please select content object", form.errors["object_id"])
 
     def test_invalid_object_id(self):
         item = factories.ChildMenuItemFactory(parent=self.menu_root)

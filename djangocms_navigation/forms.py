@@ -103,25 +103,25 @@ class MenuItemForm(MoveNodeForm):
                     cleaned_data["content_type"]
                     .model_class()
                     .objects.get(pk=cleaned_data["object_id"])
-                ) # flake8: noqa
+                )  # flake8: noqa
             except cleaned_data["content_type"].model_class().DoesNotExist:
                 raise forms.ValidationError({"object_id": ["Invalid object"]})
 
         if (
             self.instance
             and not self.instance.is_root()
-            and not cleaned_data['content_type']
+            and not cleaned_data["content_type"]
         ):
-            import pdb; pdb.set_trace()
-            raise forms.ValidationError({"content_type": ["Please choose content type"]})
+            raise forms.ValidationError(
+                {"content_type": ["Please select content type"]}
+            )
 
-        import pdb; pdb.set_trace()
         if (
             self.instance
-            and self.instance.is_root()
-            and cleaned_data['object_id'] != ''
+            and not self.instance.is_root()
+            and not cleaned_data["object_id"]
         ):
-            raise forms.ValidationError({"object_id": ["Please choose object content object"]})
+            raise forms.ValidationError({"object_id": ["Please select content object"]})
 
         return cleaned_data
 
