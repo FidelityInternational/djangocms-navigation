@@ -179,8 +179,23 @@ class NavigationPluginViewTestCase(CMSTestCase):
             pk=created_plugin.pk).get_bound_plugin()
         self.assertEqual(plugin.template, template)
         self.assertEqual(plugin.menu, menu)
+        return plugin
 
-    def test_can_add_edit_view_a_navigation_plugin_when_versioning_enabled(self):
+    def _delete_nav_plugin_and_assert(self, placeholder, plugin):
+        """Helper method to do an http call to delete a nav plugin and
+        assert the results"""
+        delete_url = self.get_delete_plugin_uri(plugin)
+        # Start with a GET call on the delete view
+        response = self.client.get(delete_url)
+        self.assertEqual(response.status_code, 200)
+        # Now do a POST call on the delete view
+        response = self.client.post(delete_url, {'plugin_id': plugin.pk})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/en/admin/')
+        self.assertEqual(NavigationPlugin.objects.filter(id=plugin.id).count(), 0)
+        self.assertEqual(placeholder.get_plugins().count(), 0)
+
+    def test_crud_for_navigation_plugin_when_versioning_enabled(self):
         # NOTE: This test is based on a similar one from django-cms:
         # https://github.com/divio/django-cms/blob/2daeb7d63cb5fee49575a834d0f23669ce46144e/cms/tests/test_plugins.py#L160
 
@@ -210,7 +225,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
             # Now edit the plugin and assert
             # After editing the plugin will have the template menu/menuismo.html
             # and the menu from menu2
-            self._edit_nav_plugin_and_assert(
+            plugin = self._edit_nav_plugin_and_assert(
                 created_plugin, menu2, 'menu/menuismo.html')
 
         # Now publish the page content containing the plugin,
@@ -223,8 +238,16 @@ class NavigationPluginViewTestCase(CMSTestCase):
         response = self.client.get(page_url)
         self.assertEqual(response.status_code, 200)
 
+        # To delete, the version has to be a draft
+        new_version = version.copy(self.get_superuser())
+        new_placeholder = new_version.content.placeholders.first()
+        new_plugin = new_placeholder.get_plugins()[0]
+
+        # Now delete the plugin from the page and assert
+        self._delete_nav_plugin_and_assert(new_placeholder, new_plugin)
+
     @disable_versioning_for_navigation()
-    def test_can_add_edit_view_a_navigation_plugin_when_versioning_disabled(self):
+    def test_crud_for_navigation_plugin_when_versioning_disabled(self):
         # The page content here is versioned because we're only disabling
         # versioning for navigation (i.e. MenuContent)
         page_content = factories.PageContentWithVersionFactory(language=self.language)
@@ -252,7 +275,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
             # Now edit the plugin and assert
             # After editing the plugin will have the template menu/menuismo.html
             # and the menu from menu2
-            self._edit_nav_plugin_and_assert(
+            plugin = self._edit_nav_plugin_and_assert(
                 created_plugin, menu2, 'menu/menuismo.html')
 
         # Now publish the page content containing the plugin,
@@ -264,3 +287,11 @@ class NavigationPluginViewTestCase(CMSTestCase):
         page_url = page_content.page.get_absolute_url()
         response = self.client.get(page_url)
         self.assertEqual(response.status_code, 200)
+
+        # To delete, the version has to be a draft
+        new_version = version.copy(self.get_superuser())
+        new_placeholder = new_version.content.placeholders.first()
+        new_plugin = new_placeholder.get_plugins()[0]
+
+        # Now delete the plugin from the page and assert
+        self._delete_nav_plugin_and_assert(new_placeholder, new_plugin)
