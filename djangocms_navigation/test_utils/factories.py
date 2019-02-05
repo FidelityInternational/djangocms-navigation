@@ -5,7 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.template.defaultfilters import slugify
 
-from cms.models import Page, PageContent, PageUrl, TreeNode, Placeholder
+from cms.models import Page, PageContent, PageUrl, Placeholder, TreeNode
 from cms.utils.page import get_available_slug
 
 import factory
