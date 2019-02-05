@@ -202,8 +202,10 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # Set up a versioned page with one placeholder
         page_content = factories.PageContentWithVersionFactory(language=self.language)
         placeholder = factories.PlaceholderFactory(source=page_content)
-        menu1 = factories.MenuContentWithVersionFactory().menu
-        menu2 = factories.MenuContentWithVersionFactory().menu
+        menu_content1 = factories.MenuContentWithVersionFactory()
+        menu_content2 = factories.MenuContentWithVersionFactory()
+        child = factories.ChildMenuItemFactory(parent=menu_content2.root)
+        grandchild = factories.ChildMenuItemFactory(parent=child)
 
         # Patch the choices on the template field, so we don't get
         # form validation errors
@@ -217,25 +219,31 @@ class NavigationPluginViewTestCase(CMSTestCase):
         ]
         with patch.object(template_field, 'choices', patched_choices):
             # First add the plugin and assert
-            # The added plugin will have the template menu/menu.html
+            # The added plugin will have the template menu/menuismo.html
             # and the menu from menu1
             created_plugin = self._add_nav_plugin_and_assert(
-                placeholder, menu1, 'menu/menu.html')
+                placeholder, menu_content1.menu, 'menu/menuismo.html')
 
             # Now edit the plugin and assert
-            # After editing the plugin will have the template menu/menuismo.html
+            # After editing the plugin will have the template menu/menu.html
             # and the menu from menu2
             plugin = self._edit_nav_plugin_and_assert(
-                created_plugin, menu2, 'menu/menuismo.html')
+                created_plugin, menu_content2.menu, 'menu/menu.html')
 
         # Now publish the page content containing the plugin,
         # so the page can be viewed
         version = page_content.versions.get()
         version.publish(self.get_superuser())
+        # TODO: Possibly there's a bug where MenuItem objects from
+        # unpublished MenuContent objects are being displayed. If yes
+        # then the menu_content2 will need to be published in this test
+        # once that bug is fixed
 
         # And view the page
         page_url = page_content.page.get_absolute_url()
         response = self.client.get(page_url)
+        self.assertIn(child.title, str(response.content))
+        self.assertIn(grandchild.title, str(response.content))
         self.assertEqual(response.status_code, 200)
 
         # To delete, the version has to be a draft
@@ -252,8 +260,10 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # versioning for navigation (i.e. MenuContent)
         page_content = factories.PageContentWithVersionFactory(language=self.language)
         placeholder = factories.PlaceholderFactory(source=page_content)
-        menu1 = factories.MenuContentFactory().menu
-        menu2 = factories.MenuContentFactory().menu
+        menu_content1 = factories.MenuContentFactory()
+        menu_content2 = factories.MenuContentFactory()
+        child = factories.ChildMenuItemFactory(parent=menu_content2.root)
+        grandchild = factories.ChildMenuItemFactory(parent=child)
 
         # Patch the choices on the template field, so we don't get
         # form validation errors
@@ -267,16 +277,16 @@ class NavigationPluginViewTestCase(CMSTestCase):
         ]
         with patch.object(template_field, 'choices', patched_choices):
             # First add the plugin and assert
-            # The added plugin will have the template menu/menu.html
+            # The added plugin will have the template menu/menuismo.html
             # and the menu from menu1
             created_plugin = self._add_nav_plugin_and_assert(
-                placeholder, menu1, 'menu/menu.html')
+                placeholder, menu_content1.menu, 'menu/menuismo.html')
 
             # Now edit the plugin and assert
-            # After editing the plugin will have the template menu/menuismo.html
+            # After editing the plugin will have the template menu/menu.html
             # and the menu from menu2
             plugin = self._edit_nav_plugin_and_assert(
-                created_plugin, menu2, 'menu/menuismo.html')
+                created_plugin, menu_content2.menu, 'menu/menu.html')
 
         # Now publish the page content containing the plugin,
         # so the page can be viewed
@@ -286,9 +296,11 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # And view the page
         page_url = page_content.page.get_absolute_url()
         response = self.client.get(page_url)
+        self.assertIn(child.title, str(response.content))
+        self.assertIn(grandchild.title, str(response.content))
         self.assertEqual(response.status_code, 200)
 
-        # To delete, the version has to be a draft
+        # To delete, the version (of the PageContent object) has to be a draft
         new_version = version.copy(self.get_superuser())
         new_placeholder = new_version.content.placeholders.first()
         new_plugin = new_placeholder.get_plugins()[0]

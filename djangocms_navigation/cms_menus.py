@@ -10,6 +10,7 @@ from .models import MenuItem
 
 class CMSMenu(Menu):
     def get_roots(self, request):
+        # TODO: What if the MenuItem objects are related to an unpublished version?
         return MenuItem.get_root_nodes().filter(
             menucontent__menu__site=get_current_site()
         )

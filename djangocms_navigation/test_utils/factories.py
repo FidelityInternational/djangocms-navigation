@@ -132,7 +132,7 @@ class PageContentWithVersionFactory(PageContentFactory):
 
 class PlaceholderFactory(factory.django.DjangoModelFactory):
     default_width = FuzzyInteger(0, 25)
-    slot = 'col_left'
+    slot = 'content'
     object_id = factory.SelfAttribute("source.id")
     content_type = factory.LazyAttribute(
         lambda o: ContentType.objects.get_for_model(o.source)
