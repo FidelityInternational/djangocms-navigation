@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 from django.apps import apps
 from django.core.exceptions import ImproperlyConfigured
-from django.test import override_settings, TestCase
+from django.test import TestCase, override_settings
 
 from cms import app_registration
 from cms.models import Page

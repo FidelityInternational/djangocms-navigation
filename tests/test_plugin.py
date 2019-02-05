@@ -1,13 +1,12 @@
 from unittest.mock import patch
 
 from django.conf import settings
-from django.test import TestCase, RequestFactory
+from django.test import RequestFactory, TestCase
 
-from cms.models import Page
 from cms.test_utils.testcases import CMSTestCase
 from menus.base import NavigationNode
 
-from djangocms_navigation.cms_menus import NavigationSelector, CMSMenu
+from djangocms_navigation.cms_menus import CMSMenu, NavigationSelector
 from djangocms_navigation.models import NavigationPlugin
 from djangocms_navigation.test_utils import factories
 
@@ -227,7 +226,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
             # Now edit the plugin and assert
             # After editing the plugin will have the template menu/menu.html
             # and the menu from menu2
-            plugin = self._edit_nav_plugin_and_assert(
+            self._edit_nav_plugin_and_assert(
                 created_plugin, menu_content2.menu, 'menu/menu.html')
 
         # Now publish the page content containing the plugin,
@@ -285,7 +284,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
             # Now edit the plugin and assert
             # After editing the plugin will have the template menu/menu.html
             # and the menu from menu2
-            plugin = self._edit_nav_plugin_and_assert(
+            self._edit_nav_plugin_and_assert(
                 created_plugin, menu_content2.menu, 'menu/menu.html')
 
         # Now publish the page content containing the plugin,
