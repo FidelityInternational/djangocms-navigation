@@ -82,3 +82,8 @@ class NavigationCMSAppConfig(CMSAppConfig):
             preview_url=MenuContent.get_preview_url,
         )
     ]
+
+    djangocms_versionlocking_enabled = getattr(
+        settings, 'VERSION_LOCKING_CMS_MODELS_ENABLED', True
+    )
+    version_lock_models = [MenuContent, ]
