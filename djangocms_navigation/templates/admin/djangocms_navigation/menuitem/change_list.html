@@ -8,6 +8,11 @@
         {% blocktrans with cl.opts.verbose_name as name %}Add  {{ name }}{% endblocktrans %}
     </a>
 </li>
+<li>
+    <a href="{% url 'admin:djangocms_navigation_menuitem_preview' menu_content.pk %}" class="cms-btn-group">
+        {% trans "Preview" %}
+    </a>
+</li>
 {% if versioning_enabled_for_nav %}
 <li>
     <a href="{{ menu_content|url_version_list }}">

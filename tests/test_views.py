@@ -1,13 +1,71 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
+from django.urls.exceptions import NoReverseMatch
 
 from cms.models import Page, User
 from cms.test_utils.testcases import CMSTestCase
 from cms.utils.urlutils import admin_reverse
 
 from djangocms_navigation.constants import SELECT2_CONTENT_OBJECT_URL_NAME
-from djangocms_navigation.test_utils.factories import PageContentFactory
+from djangocms_navigation.models import MenuItem
+from djangocms_navigation.test_utils.factories import (
+    MenuContentFactory,
+    PageContentFactory,
+)
 from djangocms_navigation.test_utils.polls.models import Poll, PollContent
+
+
+class PreviewViewPermissionTestCases(CMSTestCase):
+    def setUp(self):
+        self.menu_content = MenuContentFactory()
+        self.preview_url = admin_reverse(
+            "djangocms_navigation_menuitem_preview",
+            kwargs={"menu_content_id": self.menu_content.id},
+        )
+
+    def test_anonymous_user_cannot_access_preview(self):
+        response = self.client.get(self.preview_url)
+        expected_url = "/en/admin/login/?next=" + self.preview_url
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, expected_url)
+
+    def test_standard_user_cannot_access_preview(self):
+        with self.login_user_context(self.get_standard_user()):
+            response = self.client.get(self.preview_url)
+            expected_url = "/en/admin/login/?next=" + self.preview_url
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(response.url, expected_url)
+
+
+class PreviewViewTestCases(CMSTestCase):
+    def setUp(self):
+
+        self.client.force_login(self.get_superuser())
+
+    def test_view_context_data_with_valid_menu_content(self):
+        menu_content = MenuContentFactory()
+        preview_url = admin_reverse(
+            "djangocms_navigation_menuitem_preview",
+            kwargs={"menu_content_id": menu_content.id},
+        )
+        response = self.client.get(preview_url)
+        expected = MenuItem.get_annotated_list(parent=menu_content.root)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("annotated_list", response.context_data)
+        self.assertEqual(response.context_data["annotated_list"], expected)
+
+    def test_view_response_with_invalid_int_menu_content(self):
+        preview_url = admin_reverse(
+            "djangocms_navigation_menuitem_preview", kwargs={"menu_content_id": 99}
+        )
+        response = self.client.get(preview_url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_view_url_with_invalid_string_menu_content(self):
+        # passing string as menu_content_id should result 404 as it shoudnt match any url pattern
+        preview_url = '/en/admin/djangocms_navigation/menuitem/dummy/preview/'
+        response = self.client.get(preview_url)
+        self.assertEqual(response.status_code, 404)
 
 
 class ContentObjectAutoFillTestCases(CMSTestCase):
