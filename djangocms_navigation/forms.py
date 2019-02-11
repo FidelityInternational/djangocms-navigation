@@ -15,7 +15,7 @@ from .utils import supported_content_type_pks
 class NavigationPluginForm(forms.ModelForm):
     class Meta:
         model = NavigationPlugin
-        fields = ("template",)
+        fields = ("template", "menu")
 
 
 class MenuContentForm(forms.ModelForm):
