@@ -67,13 +67,14 @@ class NavigationCMSAppConfig(CMSAppConfig):
     djangocms_navigation_enabled = getattr(
         settings, "DJANGOCMS_NAVIGATION_CMS_MODELS_ENABLED", True
     )
-    djangocms_versioning_enabled = getattr(
-        settings, "DJANGOCMS_NAVIGATION_VERSIONING_ENABLED", True
-    )
     navigation_models = {
         # model_class : field(s) to search in menu item form UI
         Page: ["title"]
     }
+
+    djangocms_versioning_enabled = getattr(
+        settings, "DJANGOCMS_NAVIGATION_VERSIONING_ENABLED", True
+    )
     versioning = [
         VersionableItem(
             content_model=MenuContent,
@@ -83,6 +84,13 @@ class NavigationCMSAppConfig(CMSAppConfig):
         )
     ]
 
+    djangocms_moderation_enabled = getattr(
+        settings, "DJANGOCMS_NAVIGATION_MODERATION_ENABLED", True
+    )
+    moderated_models = [
+        MenuContent,
+    ]
+    
     djangocms_versionlocking_enabled = getattr(
         settings, 'VERSION_LOCKING_CMS_MODELS_ENABLED', True
     )
