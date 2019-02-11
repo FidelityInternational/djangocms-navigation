@@ -74,6 +74,11 @@ class MenuItemForm(MoveNodeForm):
         if self.errors:
             return cleaned_data
 
+        # Removing object_id from cleaned_data if user has not selected as it's coming as empty string
+        # here which raise ValueError in form.
+        if not cleaned_data.get("object_id"):
+            cleaned_data["object_id"] = None
+
         try:
             node = MenuItem.objects.get(id=cleaned_data["_ref_node_id"])
         except MenuItem.DoesNotExist:
@@ -106,22 +111,6 @@ class MenuItemForm(MoveNodeForm):
                 )  # flake8: noqa
             except cleaned_data["content_type"].model_class().DoesNotExist:
                 raise forms.ValidationError({"object_id": ["Invalid object"]})
-
-        if (
-            self.instance
-            and not self.instance.is_root()
-            and not cleaned_data["content_type"]
-        ):
-            raise forms.ValidationError(
-                {"content_type": ["Please select content type"]}
-            )
-
-        if (
-            self.instance
-            and not self.instance.is_root()
-            and not cleaned_data["object_id"]
-        ):
-            raise forms.ValidationError({"object_id": ["Please select content object"]})
 
         return cleaned_data
 

@@ -260,7 +260,7 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertIn("title", form.errors)
         self.assertIn("This field is required.", form.errors["title"])
 
-    def test_content_type_is_mandatory(self):
+    def test_content_type_is_not_mandatory(self):
         data = {
             "title": "My new Title",
             "object_id": self.page_content.page.pk,
@@ -273,11 +273,9 @@ class MenuContentFormTestCase(CMSTestCase):
 
         is_valid = form.is_valid()
 
-        self.assertFalse(is_valid)
-        self.assertIn("content_type", form.errors)
-        self.assertIn("Please select content type", form.errors["content_type"])
+        self.assertTrue(is_valid)
 
-    def test_object_id_is_mandatory(self):
+    def test_object_id_is_not_mandatory(self):
         data = {
             "title": "My new Title",
             "content_type": self.page_ct.pk,
@@ -290,9 +288,7 @@ class MenuContentFormTestCase(CMSTestCase):
 
         is_valid = form.is_valid()
 
-        self.assertFalse(is_valid)
-        self.assertIn("object_id", form.errors)
-        self.assertIn("Please select content object", form.errors["object_id"])
+        self.assertTrue(is_valid)
 
     def test_invalid_object_id(self):
         item = factories.ChildMenuItemFactory(parent=self.menu_root)
