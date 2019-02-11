@@ -111,6 +111,14 @@ class MenuItemForm(MoveNodeForm):
             except cleaned_data["content_type"].model_class().DoesNotExist:
                 raise forms.ValidationError({"object_id": ["Invalid object"]})
 
+        if cleaned_data["content_type"] and not cleaned_data["object_id"]:
+            raise forms.ValidationError({"object_id": ["Please select content object"]})
+
+        if not cleaned_data["content_type"] and cleaned_data["object_id"]:
+            raise forms.ValidationError(
+                {"content_type": ["Please select content type"]}
+            )
+
         return cleaned_data
 
     @classmethod
