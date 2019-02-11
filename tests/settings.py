@@ -5,6 +5,8 @@ HELPER_SETTINGS = {
         "djangocms_navigation.test_utils.app_2",
         "djangocms_navigation.test_utils.polls",
         "djangocms_versioning",
+        "djangocms_version_locking",
+        "djangocms_moderation",
     ],
     "DJANGOCMS_VERSIONING_ENABLE_MENU_REGISTRATION": False,
     "MIGRATION_MODULES": {
@@ -17,13 +19,14 @@ HELPER_SETTINGS = {
         "text": None,
         "djangocms_navigation": None,
         "djangocms_versioning": None,
+        'djangocms_version_locking': None,
+        'djangocms_moderation': None,
     },
 }
 
 
 def run():
     from djangocms_helper import runner
-
     runner.cms("djangocms_navigation", extra_args=[])
 
 
