@@ -70,7 +70,7 @@ class NavigationPlugin(CMSPlugin):
         default=TEMPLATE_DEFAULT,
         max_length=255,
     )
-    menu = models.ForeignKey(Menu)
+    menu = models.ForeignKey(Menu, on_delete=models.PROTECT)
 
     class Meta:
         verbose_name = _("navigation plugin model")
