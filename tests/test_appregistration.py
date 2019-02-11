@@ -216,10 +216,11 @@ class VersionLockingSettingTestCase(TestCase):
         navigation_app.cms_config = cms_config.NavigationCMSAppConfig(navigation_app)
 
         with patch.object(app_registration, 'get_cms_config_apps', return_value=[navigation_app]):
-            configure_cms_apps([self.versionlocking_app])
+            with patch.object(self.versionlocking_app.cms_extension, 'configure_app') as mocked_configure_app:
+                configure_cms_apps([self.versionlocking_app])
 
-        self.assertEqual(len(self.versionlocking_app.cms_extension.version_lock_models), 1)
-        self.assertIn(MenuContent, self.versionlocking_app.cms_extension.version_lock_models)
+        self.assertEqual(mocked_configure_app.call_count, 1)
+
 
     @override_settings(VERSION_LOCKING_CMS_MODELS_ENABLED=False)
     def test_navigation_is_versionlocked_if_versionlock_setting_disabled(self):
@@ -228,7 +229,9 @@ class VersionLockingSettingTestCase(TestCase):
         navigation_app = apps.get_app_config('djangocms_navigation')
         navigation_app.cms_config = cms_config.NavigationCMSAppConfig(navigation_app)
 
-        with patch.object(app_registration, 'get_cms_config_apps', return_value=[navigation_app]):
-            configure_cms_apps([self.versionlocking_app])
 
-        self.assertEqual(len(self.versionlocking_app.cms_extension.version_lock_models), 0)
+        with patch.object(app_registration, 'get_cms_config_apps', return_value=[navigation_app]):
+            with patch.object(self.versionlocking_app.cms_extension, 'configure_app') as mocked_configure_app:
+                configure_cms_apps([self.versionlocking_app])
+
+        self.assertEqual(mocked_configure_app.call_count, 0)
