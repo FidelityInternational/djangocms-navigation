@@ -74,7 +74,7 @@ class MenuItemForm(MoveNodeForm):
         if self.errors:
             return cleaned_data
 
-        # Removing object_id from cleaned_data if user has not selected as it's coming as empty string
+        # Setting object_id None if user has not selected as it's coming as empty string
         # here which raise ValueError in form.
         if not cleaned_data.get("object_id"):
             cleaned_data["object_id"] = None
