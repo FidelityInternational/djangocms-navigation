@@ -66,16 +66,8 @@ class AppRegistrationTestCase(TestCase, UsefulAssertsMixin):
 
 
 class NavigationIntegrationTestCase(TestCase):
-    def setUp(self):
-        app_registration.get_cms_extension_apps.cache_clear()
-        app_registration.get_cms_config_apps.cache_clear()
-
-    def tearDown(self):
-        app_registration.get_cms_extension_apps.cache_clear()
-        app_registration.get_cms_config_apps.cache_clear()
 
     def test_config_with_multiple_apps(self):
-        setup_cms_apps()
         registered_models = supported_models()
 
         expected_models = {
