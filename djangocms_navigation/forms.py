@@ -74,12 +74,16 @@ class MenuItemForm(MoveNodeForm):
         if self.errors:
             return cleaned_data
 
-        # Setting object_id None if user has not selected as will be empty string which will raise ValueError.
-        if not cleaned_data.get("object_id"):
+        object_id = cleaned_data.get("object_id")
+        content_type = cleaned_data.get("content_type")
+        _ref_node_id = cleaned_data.get("_ref_node_id")
+        _position = cleaned_data.get("_position")
+
+        if not object_id:
             cleaned_data["object_id"] = None
 
         try:
-            node = MenuItem.objects.get(id=cleaned_data["_ref_node_id"])
+            node = MenuItem.objects.get(id=_ref_node_id)
         except MenuItem.DoesNotExist:
             node = None
 
@@ -91,30 +95,23 @@ class MenuItemForm(MoveNodeForm):
                 {"_ref_node_id": "You must specify a relative menu item"}
             )
 
-        if node and node.is_root() and cleaned_data["_position"] in ["left", "right"]:
+        if node and node.is_root() and _position in ["left", "right"]:
             raise forms.ValidationError(
                 {"_ref_node_id": ["You cannot add a sibling for this menu item"]}
             )
 
-        if (
-            self.instance
-            and not self.instance.is_root()
-            and cleaned_data["content_type"]
-            and cleaned_data["object_id"]
-        ):
+        if self.instance and not self.instance.is_root() and content_type and object_id:
             try:
-                obj = (
-                    cleaned_data["content_type"]
-                    .model_class()
-                    .objects.get(pk=cleaned_data["object_id"])
+                obj = content_type.model_class().objects.get(
+                    pk=object_id
                 )  # flake8: noqa
-            except cleaned_data["content_type"].model_class().DoesNotExist:
+            except content_type.model_class().DoesNotExist:
                 raise forms.ValidationError({"object_id": ["Invalid object"]})
 
-        if cleaned_data["content_type"] and not cleaned_data["object_id"]:
+        if content_type and not object_id:
             raise forms.ValidationError({"object_id": ["Please select content object"]})
 
-        if not cleaned_data["content_type"] and cleaned_data["object_id"]:
+        if not content_type and object_id:
             raise forms.ValidationError(
                 {"content_type": ["Please select content type"]}
             )
