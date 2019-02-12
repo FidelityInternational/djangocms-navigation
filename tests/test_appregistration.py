@@ -1,4 +1,4 @@
-import imp
+import importlib
 from unittest.mock import Mock, patch
 
 from django.apps import apps
@@ -91,13 +91,13 @@ class NavigationSettingTestCase(TestCase):
     def tearDown(self):
         # Populate everything again so our setting changes do not effect
         # any other tests
-        imp.reload(cms_config)
+        importlib.reload(cms_config)
         self.app.cms_extension.navigation_apps_models = {}
         self.app.cms_config = cms_config.NavigationCMSAppConfig(self.app)
         configure_cms_apps([self.app])
 
     def test_cms_models_added_to_navigation_by_default(self):
-        imp.reload(cms_config)  # Reload so setting gets checked again
+        importlib.reload(cms_config)  # Reload so setting gets checked again
         # The app should have a cms config with the overridden setting
         self.app.cms_config = cms_config.NavigationCMSAppConfig(self.app)
 
@@ -107,7 +107,7 @@ class NavigationSettingTestCase(TestCase):
 
     @override_settings(DJANGOCMS_NAVIGATION_CMS_MODELS_ENABLED=True)
     def test_cms_models_added_to_navigation_if_enabled(self):
-        imp.reload(cms_config)  # Reload so setting gets checked again
+        importlib.reload(cms_config)  # Reload so setting gets checked again
         # The app should have a cms config with the overridden setting
         self.app.cms_config = cms_config.NavigationCMSAppConfig(self.app)
 
@@ -117,7 +117,7 @@ class NavigationSettingTestCase(TestCase):
 
     @override_settings(DJANGOCMS_NAVIGATION_CMS_MODELS_ENABLED=False)
     def test_cms_models_not_added_to_navigation_if_disabled(self):
-        imp.reload(cms_config)  # Reload so setting gets checked again
+        importlib.reload(cms_config)  # Reload so setting gets checked again
         # The app should have a cms config with the overridden setting
         self.app.cms_config = cms_config.NavigationCMSAppConfig(self.app)
 
@@ -138,12 +138,12 @@ class VersioningSettingTestCase(TestCase):
         """Populate everything again so our setting changes do not
         effect any other tests"""
         # Set the defaults for the navigation app config again
-        imp.reload(cms_config)
+        importlib.reload(cms_config)
         # Repopulate versionables in the app registry
         self.versioning_app.cms_extension.versionables = self.versionables
 
     def test_navigation_is_versioned_by_default(self):
-        imp.reload(cms_config)  # Reload so setting gets checked again
+        importlib.reload(cms_config)  # Reload so setting gets checked again
         # The app should have a cms config with the overridden setting
         navigation_app = apps.get_app_config('djangocms_navigation')
         navigation_app.cms_config = cms_config.NavigationCMSAppConfig(navigation_app)
@@ -156,7 +156,7 @@ class VersioningSettingTestCase(TestCase):
 
     @override_settings(DJANGOCMS_NAVIGATION_VERSIONING_ENABLED=True)
     def test_navigation_is_versioned_if_versioning_setting_enabled(self):
-        imp.reload(cms_config)  # Reload so setting gets checked again
+        importlib.reload(cms_config)  # Reload so setting gets checked again
         # The app should have a cms config with the overridden setting
         navigation_app = apps.get_app_config('djangocms_navigation')
         navigation_app.cms_config = cms_config.NavigationCMSAppConfig(navigation_app)
@@ -169,7 +169,7 @@ class VersioningSettingTestCase(TestCase):
 
     @override_settings(DJANGOCMS_NAVIGATION_VERSIONING_ENABLED=False)
     def test_navigation_is_versioned_if_versioning_setting_disabled(self):
-        imp.reload(cms_config)  # Reload so setting gets checked again
+        importlib.reload(cms_config)  # Reload so setting gets checked again
         # The app should have a cms config with the overridden setting
         navigation_app = apps.get_app_config('djangocms_navigation')
         navigation_app.cms_config = cms_config.NavigationCMSAppConfig(navigation_app)
@@ -191,7 +191,7 @@ class ModerationSettingTestCase(TestCase):
         """Populate everything again so our setting changes do not
         effect any other tests"""
         # Set the defaults for the navigation app config again
-        imp.reload(cms_config)
+        importlib.reload(cms_config)
         navigation_app = apps.get_app_config('djangocms_navigation')
         navigation_app.cms_config = cms_config.NavigationCMSAppConfig(navigation_app)
         # Reset the versioning app
@@ -213,7 +213,7 @@ class ModerationSettingTestCase(TestCase):
 
     @override_settings(DJANGOCMS_NAVIGATION_MODERATION_ENABLED=False)
     def test_navigation_is_moderated_if_moderation_setting_disabled(self):
-        imp.reload(cms_config)  # Reload so setting gets checked again
+        importlib.reload(cms_config)  # Reload so setting gets checked again
         # The app should have a cms config with the overridden setting
         navigation_app = apps.get_app_config('djangocms_navigation')
         navigation_app.cms_config = cms_config.NavigationCMSAppConfig(navigation_app)
