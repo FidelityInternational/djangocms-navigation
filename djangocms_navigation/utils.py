@@ -37,4 +37,4 @@ def get_versionable_for_content(content):
     try:
         return versionables.for_content(content)
     except KeyError:
-        pass
+        return

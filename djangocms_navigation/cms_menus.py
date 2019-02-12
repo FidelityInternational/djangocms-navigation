@@ -15,8 +15,9 @@ class CMSMenu(Menu):
         queryset = MenuItem.get_root_nodes().filter(
             menucontent__menu__site=get_current_site()
         )
-        menucontents = get_versionable_for_content(MenuContent).distinct_groupers()
+        menucontents = get_versionable_for_content(MenuContent)
         if menucontents:
+            menucontents = menucontents.distinct_groupers()
             queryset = queryset.filter(menucontent__in=menucontents)
         return queryset
 
