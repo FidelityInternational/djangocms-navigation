@@ -199,7 +199,8 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # https://github.com/divio/django-cms/blob/2daeb7d63cb5fee49575a834d0f23669ce46144e/cms/tests/test_plugins.py#L160
 
         # Set up a versioned page with one placeholder
-        page_content = factories.PageContentWithVersionFactory(language=self.language)
+        page_content = factories.PageContentWithVersionFactory(
+            language=self.language, version__created_by=self.get_superuser())
         placeholder = factories.PlaceholderFactory(source=page_content)
         menu_content1 = factories.MenuContentWithVersionFactory()
         menu_content2 = factories.MenuContentWithVersionFactory()
@@ -257,7 +258,8 @@ class NavigationPluginViewTestCase(CMSTestCase):
     def test_crud_for_navigation_plugin_when_versioning_disabled(self):
         # The page content here is versioned because we're only disabling
         # versioning for navigation (i.e. MenuContent)
-        page_content = factories.PageContentWithVersionFactory(language=self.language)
+        page_content = factories.PageContentWithVersionFactory(
+            language=self.language, version__created_by=self.get_superuser())
         placeholder = factories.PlaceholderFactory(source=page_content)
         menu_content1 = factories.MenuContentFactory()
         menu_content2 = factories.MenuContentFactory()
