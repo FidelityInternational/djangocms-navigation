@@ -200,7 +200,7 @@ class ModerationSettingTestCase(TestCase):
 
     @override_settings(DJANGOCMS_NAVIGATION_MODERATION_ENABLED=True)
     def test_navigation_is_moderated_if_moderation_setting_enabled(self):
-        imp.reload(cms_config)  # Reload so setting gets checked again
+        importlib.reload(cms_config)  # Reload so setting gets checked again
         # The app should have a cms config with the overridden setting
         navigation_app = apps.get_app_config('djangocms_navigation')
         navigation_app.cms_config = cms_config.NavigationCMSAppConfig(navigation_app)
