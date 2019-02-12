@@ -27,3 +27,14 @@ def supported_content_type_pks():
 def is_model_supported(model):
     """Return bool value if model is in supported_models"""
     return model in supported_models().keys()
+
+
+def get_versionable_for_content(content):
+    try:
+        from djangocms_versioning import versionables
+    except ImportError:
+        return
+    try:
+        return versionables.for_content(content)
+    except KeyError:
+        pass
