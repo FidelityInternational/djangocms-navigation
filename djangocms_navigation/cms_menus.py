@@ -5,15 +5,21 @@ from cms.utils import get_current_site
 from menus.base import Menu, Modifier, NavigationNode
 from menus.menu_pool import menu_pool
 
-from .models import MenuItem
+from .models import MenuContent, MenuItem
+from .utils import get_versionable_for_content
 
 
 class CMSMenu(Menu):
     def get_roots(self, request):
         # TODO: What if the MenuItem objects are related to an unpublished version?
-        return MenuItem.get_root_nodes().filter(
+        queryset = MenuItem.get_root_nodes().filter(
             menucontent__menu__site=get_current_site()
         )
+        menucontents = get_versionable_for_content(MenuContent)
+        if menucontents:
+            menucontents = menucontents.distinct_groupers()
+            queryset = queryset.filter(menucontent__in=menucontents)
+        return queryset
 
     def get_menu_nodes(self, roots):
         root_paths = roots.values_list("path", flat=True)
