@@ -1,4 +1,4 @@
-from django.test import RequestFactory
+from django.test import RequestFactory, TestCase
 
 from cms.test_utils.testcases import CMSTestCase
 
@@ -8,12 +8,11 @@ from djangocms_navigation.test_utils import factories
 from .utils import disable_versioning_for_navigation
 
 
-class CMSMenuTestCase(CMSTestCase):
+class CMSMenuTestCase(TestCase):
     def setUp(self):
         self.menu = CMSMenu(None)
         self.request = RequestFactory().get("/")
-        self.user = self.get_superuser()
-        self.client.force_login(self.user)
+        self.user = factories.UserFactory()
 
     def assertNavigationNodeEqual(self, node, **kwargs):
         """Helper method for asserting NavigationNode objects"""
@@ -75,37 +74,61 @@ class CMSMenuTestCase(CMSTestCase):
 
     def test_get_roots_with_multiple_menucontents(self):
         """test to check get_roots while creating two menu contents"""
-        factories.MenuContentFactory()
-        factories.MenuContentFactory()
+        menucontent_1 = factories.MenuContentFactory()
+        menucontent_2 = factories.MenuContentFactory()
         roots = self.menu.get_roots(self.request)
         self.assertEqual(roots.count(), 2)
+        self.assertListEqual(list(roots), [menucontent_1.root, menucontent_2.root])
 
-
-class CMSMenuVersioningTestCase(CMSTestCase):
-    def setUp(self):
-        self.menu = CMSMenu(None)
-        self.request = RequestFactory().get("/")
-        self.user = self.get_superuser()
-
-        # setting up menu content with versions
-        menuitem_1 = factories.RootMenuItemFactory()
-        menuitem_1_v1 = factories.MenuVersionFactory(content__root=menuitem_1)
-        menuitem_1_v1.archive(self.user)
-        menuitem_1_v1.copy(self.user)
-        menuitem_2 = factories.RootMenuItemFactory()
-        factories.MenuVersionFactory(content__root=menuitem_2)
-
-    def test_get_roots_with_versioning_enabled(self):
+    def test_get_roots_with_versions(self):
         """This test to check versioning would group all the versions
         of menu content and return latest of all distinct menu content
         """
+        menuitem_1 = factories.RootMenuItemFactory()
+        menucontent_1_version_1 = factories.MenuVersionFactory(content__root=menuitem_1)
+        menucontent_1_version_1.archive(self.user)
+        menucontent_1_version_2 = menucontent_1_version_1.copy(self.user)
+        menuitem_2 = factories.RootMenuItemFactory()
+        menucontent_2_version_1 = factories.MenuVersionFactory(content__root=menuitem_2)
         roots = self.menu.get_roots(self.request)
         self.assertEqual(roots.count(), 2)
+        self.assertListEqual(
+            list(roots),
+            [
+                menucontent_1_version_2.content.root,
+                menucontent_2_version_1.content.root,
+            ],
+        )
 
     @disable_versioning_for_navigation()
-    def test_get_roots_with_versioning_disabled(self):
+    def test_get_roots_with_when_versions_in_db_while_versioning_disable(self):
+        """This test case when
+        """
+        menucontent_1 = factories.MenuContentFactory()
+        menucontent_2 = factories.MenuContentFactory()
+        menucontent_3 = factories.MenuContentFactory()
+        roots = self.menu.get_roots(self.request)
+        self.assertEqual(roots.count(), 3)
+        self.assertListEqual(
+            list(roots), [menucontent_1.root, menucontent_2.root, menucontent_3.root]
+        )
+
+
+@disable_versioning_for_navigation()
+class CMSMenuDisabledVersioningTestCase(CMSTestCase):
+    def setUp(self):
+        self.menu = CMSMenu(None)
+        self.request = RequestFactory().get("/")
+
+    def test_get_roots_with_no_versions(self):
         """This test will check while versioning disabled it should check
         against all menu content created
         """
+        menucontent_1 = factories.MenuContentFactory()
+        menucontent_2 = factories.MenuContentFactory()
+        menucontent_3 = factories.MenuContentFactory()
         roots = self.menu.get_roots(self.request)
         self.assertEqual(roots.count(), 3)
+        self.assertListEqual(
+            list(roots), [menucontent_1.root, menucontent_2.root, menucontent_3.root]
+        )
