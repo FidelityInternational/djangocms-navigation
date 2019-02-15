@@ -91,7 +91,7 @@ class NavigationCMSAppConfig(CMSAppConfig):
         MenuContent,
     ]
     
-    djangocms_versionlocking_enabled = getattr(
-        settings, 'VERSION_LOCKING_CMS_MODELS_ENABLED', True
+    djangocms_version_locking_enabled = getattr(
+        settings, 'DJANGOCMS_VERSION_LOCKING_CMS_MODELS_ENABLED', True
     )
     version_lock_models = [MenuContent, ]
