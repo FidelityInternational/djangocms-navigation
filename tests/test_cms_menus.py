@@ -1,9 +1,8 @@
 from django.test import RequestFactory, TestCase
 
-from cms.test_utils.testcases import CMSTestCase
-
 from djangocms_navigation.cms_menus import CMSMenu
 from djangocms_navigation.test_utils import factories
+from djangocms_versioning.constants import ARCHIVED, DRAFT
 
 from .utils import disable_versioning_for_navigation
 
@@ -73,7 +72,7 @@ class CMSMenuTestCase(TestCase):
         )
 
     def test_get_roots_with_multiple_menucontents(self):
-        """test to check get_roots while creating two menu contents"""
+        """Test to check get_roots while creating two menu contents"""
         menucontent_1 = factories.MenuContentFactory()
         menucontent_2 = factories.MenuContentFactory()
         roots = self.menu.get_roots(self.request)
@@ -84,44 +83,20 @@ class CMSMenuTestCase(TestCase):
         """This test to check versioning would group all the versions
         of menu content and return latest of all distinct menu content
         """
-        menuitem_1 = factories.RootMenuItemFactory()
-        menucontent_1_version_1 = factories.MenuVersionFactory(content__root=menuitem_1)
-        menucontent_1_version_1.archive(self.user)
-        menucontent_1_version_2 = menucontent_1_version_1.copy(self.user)
-        menuitem_2 = factories.RootMenuItemFactory()
-        menucontent_2_version_1 = factories.MenuVersionFactory(content__root=menuitem_2)
+        menucontent_1_v1 = factories.MenuVersionFactory(state=ARCHIVED)
+        menucontent_1_v2 = factories.MenuVersionFactory(
+            content__menu=menucontent_1_v1.content.menu
+        )
+        menucontent_2_v1 = factories.MenuVersionFactory()
         roots = self.menu.get_roots(self.request)
         self.assertEqual(roots.count(), 2)
         self.assertListEqual(
-            list(roots),
-            [
-                menucontent_1_version_2.content.root,
-                menucontent_2_version_1.content.root,
-            ],
+            list(roots), [menucontent_1_v2.content.root, menucontent_2_v1.content.root]
         )
 
     @disable_versioning_for_navigation()
-    def test_get_roots_with_when_versions_in_db_while_versioning_disable(self):
-        """This test case when
-        """
-        menucontent_1 = factories.MenuContentFactory()
-        menucontent_2 = factories.MenuContentFactory()
-        menucontent_3 = factories.MenuContentFactory()
-        roots = self.menu.get_roots(self.request)
-        self.assertEqual(roots.count(), 3)
-        self.assertListEqual(
-            list(roots), [menucontent_1.root, menucontent_2.root, menucontent_3.root]
-        )
-
-
-@disable_versioning_for_navigation()
-class CMSMenuDisabledVersioningTestCase(CMSTestCase):
-    def setUp(self):
-        self.menu = CMSMenu(None)
-        self.request = RequestFactory().get("/")
-
-    def test_get_roots_with_no_versions(self):
-        """This test will check while versioning disabled it should check
+    def test_get_roots_with_versioning_disabled(self):
+        """This test will check while versioning disabled it should assert
         against all menu content created
         """
         menucontent_1 = factories.MenuContentFactory()
