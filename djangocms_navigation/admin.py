@@ -3,7 +3,6 @@ from django.conf.urls import url
 from django.contrib import admin, messages
 from django.contrib.admin.utils import quote
 from django.contrib.admin.views.main import ChangeList
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -104,6 +103,7 @@ class MenuContentAdmin(admin.ModelAdmin):
 class MenuItemAdmin(TreeAdmin):
     form = MenuItemForm
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
+    list_display = ["__str__", "get_object_url"]
 
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
@@ -275,19 +275,12 @@ class MenuItemAdmin(TreeAdmin):
 
         return Form
 
-    def get_list_display(self, request):
-        return list(super().get_list_display(request)) + ["get_object_url"]
-
-    def get_object_url(self, obj=None):
-        if obj is None:
-            return
-        if obj.content_type and obj.object_id:
-            ct = ContentType.objects.get_for_id(obj.content_type.id)
-            object = ct.get_object_for_this_type(pk=obj.object_id)
-            obj_url = object.get_absolute_url()
+    def get_object_url(self, obj):
+        if obj.content:
+            obj_url = obj.content.get_absolute_url()
             return format_html('<a href="' + obj_url + '">' + obj_url + "</a>")
 
-    get_object_url.short_description = "URL"
+    get_object_url.short_description = _("URL")
 
     @property
     def _versioning_enabled(self):

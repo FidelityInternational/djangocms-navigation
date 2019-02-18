@@ -486,9 +486,7 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
             "link_target": "_blank",
             "_position": "first-child",
         }
-        # add menuitem to db
         self.client.post(add_url, data)
-
         self.assertEqual(len(ma.get_list_display(mock_request)), 2)
         self.assertIn("get_object_url", ma.get_list_display(mock_request))
 
