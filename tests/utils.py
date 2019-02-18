@@ -41,11 +41,11 @@ class disable_versioning_for(TestContextDecorator):
     """
     def __init__(self, *args):
         self.content_models = args
-        self.versioning_ext = apps.get_app_config('djangocms_versioning').cms_extension
         super(disable_versioning_for, self).__init__()
 
     def enable(self):
         # Remove the versionables
+        self.versioning_ext = apps.get_app_config('djangocms_versioning').cms_extension
         self.versionables_to_remove = [
             self.versioning_ext.versionables_by_content[model]
             for model in self.content_models

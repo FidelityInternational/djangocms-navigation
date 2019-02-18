@@ -6,10 +6,7 @@ from cms.test_utils.testcases import CMSTestCase
 from cms.utils.urlutils import admin_reverse
 
 from djangocms_navigation.constants import SELECT2_CONTENT_OBJECT_URL_NAME
-from djangocms_navigation.forms import (
-    ContentTypeObjectSelectWidget,
-    MenuItemForm,
-)
+from djangocms_navigation.forms import ContentTypeObjectSelectWidget, MenuItemForm
 from djangocms_navigation.test_utils import factories
 from djangocms_navigation.test_utils.app_1.models import TestModel1, TestModel2
 from djangocms_navigation.test_utils.app_2.models import TestModel3, TestModel4
@@ -263,7 +260,7 @@ class MenuContentFormTestCase(CMSTestCase):
         self.assertIn("title", form.errors)
         self.assertIn("This field is required.", form.errors["title"])
 
-    def test_content_type_is_optional(self):
+    def test_content_type_is_mandatory_if_object_id_provided(self):
         data = {
             "title": "My new Title",
             "object_id": self.page_content.page.pk,
@@ -276,9 +273,23 @@ class MenuContentFormTestCase(CMSTestCase):
 
         is_valid = form.is_valid()
 
+        self.assertFalse(is_valid)
+
+    def test_content_type_is_not_mandatory_when_object_id_not_provided(self):
+        data = {
+            "title": "My new Title",
+            "_ref_node_id": self.menu_root.id,
+            "numchild": 1,
+            "link_target": "_self",
+            "_position": "first-child",
+        }
+        form = MenuItemForm(menu_root=self.menu_root, data=data)
+
+        is_valid = form.is_valid()
+
         self.assertTrue(is_valid)
 
-    def test_object_id_is_optional(self):
+    def test_object_id_is_mandatory_if_content_type_provided(self):
         data = {
             "title": "My new Title",
             "content_type": self.page_ct.pk,
@@ -291,7 +302,7 @@ class MenuContentFormTestCase(CMSTestCase):
 
         is_valid = form.is_valid()
 
-        self.assertTrue(is_valid)
+        self.assertFalse(is_valid)
 
     def test_invalid_object_id(self):
         item = factories.ChildMenuItemFactory(parent=self.menu_root)
