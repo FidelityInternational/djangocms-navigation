@@ -3,6 +3,7 @@ from django.conf.urls import url
 from django.contrib import admin, messages
 from django.contrib.admin.utils import quote
 from django.contrib.admin.views.main import ChangeList
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -12,6 +13,14 @@ from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.views.i18n import JavaScriptCatalog
 
+from treebeard.admin import TreeAdmin
+
+from .constants import SELECT2_CONTENT_OBJECT_URL_NAME
+from .forms import MenuContentForm, MenuItemForm
+from .models import Menu, MenuContent, MenuItem
+from .views import ContentObjectSelect2View, MenuContentPreviewView
+
+
 # TODO: Tests to be added (FIL-908).
 try:
     from djangocms_versioning.exceptions import ConditionFailed
@@ -19,13 +28,6 @@ try:
     from djangocms_versioning.models import Version
 except ImportError:
     pass
-
-from treebeard.admin import TreeAdmin
-
-from .constants import SELECT2_CONTENT_OBJECT_URL_NAME
-from .forms import MenuContentForm, MenuItemForm
-from .models import Menu, MenuContent, MenuItem
-from .views import ContentObjectSelect2View, MenuContentPreviewView
 
 
 class MenuItemChangeList(ChangeList):
@@ -272,6 +274,20 @@ class MenuItemAdmin(TreeAdmin):
                 return form_class(*args, **kwargs)
 
         return Form
+
+    def get_list_display(self, request):
+        return list(super().get_list_display(request)) + ["get_object_url"]
+
+    def get_object_url(self, obj=None):
+        if obj is None:
+            return
+        if obj.content_type and obj.object_id:
+            ct = ContentType.objects.get_for_id(obj.content_type.id)
+            object = ct.get_object_for_this_type(pk=obj.object_id)
+            obj_url = object.get_absolute_url()
+            return format_html('<a href="' + obj_url + '">' + obj_url + "</a>")
+
+    get_object_url.short_description = "URL"
 
     @property
     def _versioning_enabled(self):

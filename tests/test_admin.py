@@ -63,7 +63,6 @@ class MenuItemChangelistTestCase(TestCase):
 
 
 class MenuContentAdminViewTestCase(CMSTestCase):
-
     def setUp(self):
         self.client.force_login(self.get_superuser())
 
@@ -227,10 +226,14 @@ class MenuItemAdminChangeViewTestCase(CMSTestCase, UsefulAssertsMixin):
 
         self.assertEqual(response.status_code, 404)
 
-    @patch('django.contrib.messages.error')
-    @patch('djangocms_versioning.models.Version.check_modify')
-    def test_menuitem_change_view_does_modify_check_on_version(self, mocked_check, mocked_messages):
-        mocked_check.side_effect = ConditionFailed("Go look at some cat pictures instead")
+    @patch("django.contrib.messages.error")
+    @patch("djangocms_versioning.models.Version.check_modify")
+    def test_menuitem_change_view_does_modify_check_on_version(
+        self, mocked_check, mocked_messages
+    ):
+        mocked_check.side_effect = ConditionFailed(
+            "Go look at some cat pictures instead"
+        )
         menu_content = factories.MenuContentWithVersionFactory()
         item = factories.ChildMenuItemFactory(parent=menu_content.root)
         change_url = reverse(
@@ -243,11 +246,14 @@ class MenuItemAdminChangeViewTestCase(CMSTestCase, UsefulAssertsMixin):
         # Redirect happened, error message displayed and check modify used
         self.assertRedirectsToVersionList(response, menu_content.menu)
         self.assertDjangoErrorMessage(
-            'Go look at some cat pictures instead', mocked_messages)
+            "Go look at some cat pictures instead", mocked_messages
+        )
         mocked_check.assert_called_once_with(self.get_superuser())
 
-    @patch('django.contrib.messages.error')
-    def test_menuitem_change_view_redirects_if_not_latest_version_get(self, mocked_messages):
+    @patch("django.contrib.messages.error")
+    def test_menuitem_change_view_redirects_if_not_latest_version_get(
+        self, mocked_messages
+    ):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
         factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
@@ -262,11 +268,12 @@ class MenuItemAdminChangeViewTestCase(CMSTestCase, UsefulAssertsMixin):
 
         # Redirect happened and error message displayed
         self.assertRedirectsToVersionList(response, menu)
-        self.assertDjangoErrorMessage(
-            'Version is not a draft', mocked_messages)
+        self.assertDjangoErrorMessage("Version is not a draft", mocked_messages)
 
-    @patch('django.contrib.messages.error')
-    def test_menuitem_change_view_redirects_if_not_latest_version_post(self, mocked_messages):
+    @patch("django.contrib.messages.error")
+    def test_menuitem_change_view_redirects_if_not_latest_version_post(
+        self, mocked_messages
+    ):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
         factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
@@ -291,8 +298,7 @@ class MenuItemAdminChangeViewTestCase(CMSTestCase, UsefulAssertsMixin):
 
         # Redirect happened and error message displayed
         self.assertRedirectsToVersionList(response, menu)
-        self.assertDjangoErrorMessage(
-            'Version is not a draft', mocked_messages)
+        self.assertDjangoErrorMessage("Version is not a draft", mocked_messages)
         # Menu item object was not changed
         item.refresh_from_db()
         self.assertNotEqual(item.title, "My new Title")
@@ -366,27 +372,27 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
         )
 
     def test_menuitem_add_view_throws_404_on_non_existing_menucontent_get(self):
-        add_url = reverse(
-            "admin:djangocms_navigation_menuitem_add", args=(83,)
-        )
+        add_url = reverse("admin:djangocms_navigation_menuitem_add", args=(83,))
 
         response = self.client.get(add_url)
 
         self.assertEqual(response.status_code, 404)
 
     def test_menuitem_add_view_throws_404_on_non_existing_menucontent_post(self):
-        add_url = reverse(
-            "admin:djangocms_navigation_menuitem_add", args=(83,)
-        )
+        add_url = reverse("admin:djangocms_navigation_menuitem_add", args=(83,))
 
         response = self.client.post(add_url)
 
         self.assertEqual(response.status_code, 404)
 
-    @patch('django.contrib.messages.error')
-    @patch('djangocms_versioning.models.Version.check_modify')
-    def test_menuitem_add_view_does_modify_check_on_version(self, mocked_check, mocked_messages):
-        mocked_check.side_effect = ConditionFailed("Go look at some cat pictures instead")
+    @patch("django.contrib.messages.error")
+    @patch("djangocms_versioning.models.Version.check_modify")
+    def test_menuitem_add_view_does_modify_check_on_version(
+        self, mocked_check, mocked_messages
+    ):
+        mocked_check.side_effect = ConditionFailed(
+            "Go look at some cat pictures instead"
+        )
         menu_content = factories.MenuContentWithVersionFactory()
         add_url = reverse(
             "admin:djangocms_navigation_menuitem_add", args=(menu_content.id,)
@@ -408,11 +414,14 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
         # Redirect happened, error message displayed and check modify used
         self.assertRedirectsToVersionList(response, menu_content.menu)
         self.assertDjangoErrorMessage(
-            'Go look at some cat pictures instead', mocked_messages)
+            "Go look at some cat pictures instead", mocked_messages
+        )
         mocked_check.assert_called_once_with(self.get_superuser())
 
-    @patch('django.contrib.messages.error')
-    def test_menuitem_add_view_redirects_if_not_latest_version_get(self, mocked_messages):
+    @patch("django.contrib.messages.error")
+    def test_menuitem_add_view_redirects_if_not_latest_version_get(
+        self, mocked_messages
+    ):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
         factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
@@ -425,11 +434,12 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
 
         # Redirect happened and error message displayed
         self.assertRedirectsToVersionList(response, menu)
-        self.assertDjangoErrorMessage(
-            'Version is not a draft', mocked_messages)
+        self.assertDjangoErrorMessage("Version is not a draft", mocked_messages)
 
-    @patch('django.contrib.messages.error')
-    def test_menuitem_add_view_redirects_if_not_latest_version_post(self, mocked_messages):
+    @patch("django.contrib.messages.error")
+    def test_menuitem_add_view_redirects_if_not_latest_version_post(
+        self, mocked_messages
+    ):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
         factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
@@ -453,10 +463,34 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
 
         # Redirect happened and error message displayed
         self.assertRedirectsToVersionList(response, menu)
-        self.assertDjangoErrorMessage(
-            'Version is not a draft', mocked_messages)
+        self.assertDjangoErrorMessage("Version is not a draft", mocked_messages)
         # Menu item object was not added
         self.assertEqual(MenuItem.objects.filter(title="My new Title").count(), 0)
+
+    def test_menuitem_changelist_should_have_get_url_column(self):
+        menu = factories.MenuFactory()
+        version = factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
+        mock_request = RequestFactory()
+        ma = MenuItemAdmin(MenuItem, admin.AdminSite())
+        add_url = reverse(
+            "admin:djangocms_navigation_menuitem_add", args=(version.content.id,)
+        )
+        content_type = ContentType.objects.get(app_label="cms", model="page")
+        page = factories.PageContentFactory().page
+        data = {
+            "title": "My new Title",
+            "content_type": content_type.pk,
+            "object_id": page.pk,
+            "_ref_node_id": version.content.root.id,
+            "numchild": 1,
+            "link_target": "_blank",
+            "_position": "first-child",
+        }
+        # add menuitem to db
+        self.client.post(add_url, data)
+
+        self.assertEqual(len(ma.get_list_display(mock_request)), 2)
+        self.assertIn("get_object_url", ma.get_list_display(mock_request))
 
 
 class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
@@ -488,9 +522,7 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
         self.assertEqual(response.status_code, 200)
 
     def test_menuitem_changelist_throws_404_on_non_existing_menucontent(self):
-        list_url = reverse(
-            "admin:djangocms_navigation_menuitem_list", args=(881,)
-        )
+        list_url = reverse("admin:djangocms_navigation_menuitem_list", args=(881,))
 
         response = self.client.get(list_url)
 
@@ -521,10 +553,14 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
 
         self.assertIn(version_list_url(menu_content), str(response.content))
 
-    @patch('django.contrib.messages.error')
-    @patch('djangocms_versioning.models.Version.check_modify')
-    def test_menuitem_changelist_does_modify_check_on_version(self, mocked_check, mocked_messages):
-        mocked_check.side_effect = ConditionFailed("Go look at some cat pictures instead")
+    @patch("django.contrib.messages.error")
+    @patch("djangocms_versioning.models.Version.check_modify")
+    def test_menuitem_changelist_does_modify_check_on_version(
+        self, mocked_check, mocked_messages
+    ):
+        mocked_check.side_effect = ConditionFailed(
+            "Go look at some cat pictures instead"
+        )
         menu_content = factories.MenuContentWithVersionFactory()
         list_url = reverse(
             "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
@@ -535,10 +571,11 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
         # Redirect happened, error message displayed and check modify used
         self.assertRedirectsToVersionList(response, menu_content.menu)
         self.assertDjangoErrorMessage(
-            'Go look at some cat pictures instead', mocked_messages)
+            "Go look at some cat pictures instead", mocked_messages
+        )
         mocked_check.assert_called_once_with(self.get_superuser())
 
-    @patch('django.contrib.messages.error')
+    @patch("django.contrib.messages.error")
     def test_menuitem_changelist_redirects_if_not_latest_version(self, mocked_messages):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
@@ -552,8 +589,7 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
 
         # Redirect happened and error message displayed
         self.assertRedirectsToVersionList(response, menu)
-        self.assertDjangoErrorMessage(
-            'Version is not a draft', mocked_messages)
+        self.assertDjangoErrorMessage("Version is not a draft", mocked_messages)
 
 
 class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
@@ -616,10 +652,14 @@ class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
 
         self.assertEqual(response.status_code, 200)
 
-    @patch('django.contrib.messages.error')
-    @patch('djangocms_versioning.models.Version.check_modify')
-    def test_menuitem_move_node_does_modify_check_on_version(self, mocked_check, mocked_messages):
-        mocked_check.side_effect = ConditionFailed("Go look at some cat pictures instead")
+    @patch("django.contrib.messages.error")
+    @patch("djangocms_versioning.models.Version.check_modify")
+    def test_menuitem_move_node_does_modify_check_on_version(
+        self, mocked_check, mocked_messages
+    ):
+        mocked_check.side_effect = ConditionFailed(
+            "Go look at some cat pictures instead"
+        )
         menu_content = factories.MenuContentWithVersionFactory()
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         child_of_child = factories.ChildMenuItemFactory(parent=child)
@@ -638,15 +678,15 @@ class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(mocked_messages.call_count, 1)
         self.assertEqual(
-            mocked_messages.call_args[0][1],
-            "Go look at some cat pictures instead",
+            mocked_messages.call_args[0][1], "Go look at some cat pictures instead"
         )
-        self.assertEqual(
-            b"Go look at some cat pictures instead", response.content)
+        self.assertEqual(b"Go look at some cat pictures instead", response.content)
         mocked_check.assert_called_once_with(self.get_superuser())
 
-    @patch('django.contrib.messages.add_message')
-    def test_menuitem_move_node_permission_denied_if_not_latest_version(self, mocked_messages):
+    @patch("django.contrib.messages.add_message")
+    def test_menuitem_move_node_permission_denied_if_not_latest_version(
+        self, mocked_messages
+    ):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
         factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
@@ -666,7 +706,7 @@ class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
 
         # 400 error with error msg and node has not been moved
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(b'Version is not a draft', response.content)
+        self.assertEqual(b"Version is not a draft", response.content)
         child.refresh_from_db()
         child_of_child.refresh_from_db()
         self.assertFalse(child_of_child.is_sibling_of(child))

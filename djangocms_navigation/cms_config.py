@@ -54,7 +54,7 @@ def copy_menu_content(original_content):
             for field in MenuItem._meta.fields
             if field.name not in [MenuItem._meta.pk.name, "path"]
         }
-        item_fields["path"] = new_root.path + item.path[MenuItem.steplen :]
+        item_fields["path"] = new_root.path + item.path[MenuItem.steplen:]
         to_create.append(MenuItem(**item_fields))
     MenuItem.objects.bulk_create(to_create)
 

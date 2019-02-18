@@ -2,9 +2,14 @@ from django.test import RequestFactory, TestCase
 
 from djangocms_navigation.cms_menus import CMSMenu
 from djangocms_navigation.test_utils import factories
-from djangocms_versioning.constants import ARCHIVED, DRAFT
 
 from .utils import disable_versioning_for_navigation
+
+
+try:
+    from djangocms_versioning.constants import ARCHIVED, DRAFT
+except ImportError:
+    ARCHIVED, DRAFT = None
 
 
 class CMSMenuTestCase(TestCase):
