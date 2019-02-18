@@ -12,10 +12,14 @@ from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.views.i18n import JavaScriptCatalog
 
-# TODO: Possibly wrap this in try/except ImportError. But requires tests also.
-from djangocms_versioning.exceptions import ConditionFailed
-from djangocms_versioning.helpers import version_list_url
-from djangocms_versioning.models import Version
+# TODO: Tests to be added (FIL-908).
+try:
+    from djangocms_versioning.exceptions import ConditionFailed
+    from djangocms_versioning.helpers import version_list_url
+    from djangocms_versioning.models import Version
+except ImportError:
+    pass
+
 from treebeard.admin import TreeAdmin
 
 from .constants import SELECT2_CONTENT_OBJECT_URL_NAME
