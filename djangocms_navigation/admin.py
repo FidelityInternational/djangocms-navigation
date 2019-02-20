@@ -20,7 +20,7 @@ from .models import Menu, MenuContent, MenuItem
 from .views import ContentObjectSelect2View, MenuContentPreviewView
 
 
-# TODO: Tests to be added (FIL-908).
+# TODO: Tests to be added
 try:
     from djangocms_versioning.exceptions import ConditionFailed
     from djangocms_versioning.helpers import version_list_url
