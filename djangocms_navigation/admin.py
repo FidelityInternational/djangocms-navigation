@@ -278,7 +278,7 @@ class MenuItemAdmin(TreeAdmin):
     def get_object_url(self, obj):
         if obj.content:
             obj_url = obj.content.get_absolute_url()
-            return format_html('<a href="' + obj_url + '">' + obj_url + "</a>")
+            return format_html("<a href='{0}'>{0}</a>", obj_url)
 
     get_object_url.short_description = _("URL")
 
