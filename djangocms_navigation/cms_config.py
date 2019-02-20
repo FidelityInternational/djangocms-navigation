@@ -4,8 +4,6 @@ from django.core.exceptions import ImproperlyConfigured
 from cms.app_base import CMSAppConfig, CMSAppExtension
 from cms.models import Page
 
-from djangocms_versioning.datastructures import VersionableItem
-
 from .models import MenuContent, MenuItem
 
 
@@ -77,14 +75,16 @@ class NavigationCMSAppConfig(CMSAppConfig):
         # model_class : field(s) to search in menu item form UI
         Page: ["title"]
     }
-    versioning = [
-        VersionableItem(
-            content_model=MenuContent,
-            grouper_field_name="menu",
-            copy_function=copy_menu_content,
-            preview_url=MenuContent.get_preview_url,
-        )
-    ]
-    moderated_models = [
-        MenuContent,
-    ]
+
+    if djangocms_versioning_enabled:
+        from djangocms_versioning.datastructures import VersionableItem
+
+        versioning = [
+            VersionableItem(
+                content_model=MenuContent,
+                grouper_field_name="menu",
+                copy_function=copy_menu_content,
+                preview_url=MenuContent.get_preview_url,
+            )
+        ]
+    moderated_models = [MenuContent]

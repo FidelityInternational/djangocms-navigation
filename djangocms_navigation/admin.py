@@ -12,16 +12,21 @@ from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.views.i18n import JavaScriptCatalog
 
-# TODO: Possibly wrap this in try/except ImportError. But requires tests also.
-from djangocms_versioning.exceptions import ConditionFailed
-from djangocms_versioning.helpers import version_list_url
-from djangocms_versioning.models import Version
 from treebeard.admin import TreeAdmin
 
 from .constants import SELECT2_CONTENT_OBJECT_URL_NAME
 from .forms import MenuContentForm, MenuItemForm
 from .models import Menu, MenuContent, MenuItem
 from .views import ContentObjectSelect2View, MenuContentPreviewView
+
+
+# TODO: Tests to be added
+try:
+    from djangocms_versioning.exceptions import ConditionFailed
+    from djangocms_versioning.helpers import version_list_url
+    from djangocms_versioning.models import Version
+except ImportError:
+    pass
 
 
 class MenuItemChangeList(ChangeList):
@@ -98,6 +103,7 @@ class MenuContentAdmin(admin.ModelAdmin):
 class MenuItemAdmin(TreeAdmin):
     form = MenuItemForm
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
+    list_display = ["__str__", "get_object_url"]
 
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
@@ -268,6 +274,13 @@ class MenuItemAdmin(TreeAdmin):
                 return form_class(*args, **kwargs)
 
         return Form
+
+    def get_object_url(self, obj):
+        if obj.content:
+            obj_url = obj.content.get_absolute_url()
+            return format_html("<a href='{0}'>{0}</a>", obj_url)
+
+    get_object_url.short_description = _("URL")
 
     @property
     def _versioning_enabled(self):
