@@ -38,3 +38,9 @@ def get_versionable_for_content(content):
         return versionables.for_content(content)
     except KeyError:
         return
+
+
+def purge_menu_cache(site_id=None, language=None):
+    from menus.menu_pool import menu_pool
+
+    menu_pool.clear(site_id=site_id, language=language)
