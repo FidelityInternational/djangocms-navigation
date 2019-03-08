@@ -277,43 +277,25 @@ class NavigationPluginViewTestCase(CMSTestCase):
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         grandchild = factories.ChildMenuItemFactory(parent=child)
 
-        # Patch the choices on the template field, so we don't get
-        # form validation errors
-        template_field = [
-            field for field in NavigationPlugin._meta.fields if field.name == "template"
-        ][0]
-        patched_choices = [
-            ("menu/menu.html", "Default"),
-            ("menu/menuismo.html", "Menuismo"),
-        ]
-        with patch.object(template_field, "choices", patched_choices):
-            # First add the plugin and assert
-            # The added plugin will have the template menu/menuismo.html
-            # and the menu from menu1
-            created_plugin = self._add_nav_plugin_and_assert(
-                placeholder, menu_content.menu, "menu/menuismo.html"
-            )
-
-            # # Now edit the plugin and assert
-            # # After editing the plugin will have the template menu/menu.html
-            # # and the menu from menu2
-            self._edit_nav_plugin_and_assert(
-                created_plugin, menu_content.menu, "menu/menu.html"
-            )
+        # add nav plugin to placeholder
+        self._add_nav_plugin_and_assert(
+            placeholder, menu_content.menu, "menu/menu.html"
+        )
 
         # Now publish the page content containing the plugin,
         # so the page can be viewed
         version = page_content.versions.get()
         version.publish(self.get_superuser())
 
-        # asserting to check there is no cachekey exists
+        # Testing there is no cachekey exists
         cache_key = CacheKey.objects.all().count()
         self.assertEqual(cache_key, 0)
+
         # And view the page
         page_url = page_content.page.get_absolute_url()
         response = self.client.get(page_url)
 
-        # rendering should generate cachekey object
+        # Rendering should generate cachekey object
         cache_key = CacheKey.objects.all().count()
         self.assertEqual(cache_key, 1)
 
@@ -330,14 +312,6 @@ class NavigationPluginViewTestCase(CMSTestCase):
         cache_key = CacheKey.objects.all().count()
         self.assertEqual(cache_key, 0)
 
-        # Getting response again to fetch child2 and grandchild2 menu item
-        response = self.client.get(page_url)
-        self.assertEqual(response.status_code, 200)
-
-        # rendering should generate cachekey object
-        cache_key = CacheKey.objects.all().count()
-        self.assertEqual(cache_key, 1)
-
     def test_menu_cache_invalidate_after_menucontent_publish(self):
         # NOTE: This test is based on a similar one from django-cms:
         # https://github.com/divio/django-cms/blob/2daeb7d63cb5fee49575a834d0f23669ce46144e/cms/tests/test_plugins.py#L160
@@ -353,29 +327,10 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # grandchild
         factories.ChildMenuItemFactory(parent=child)
 
-        # Patch the choices on the template field, so we don't get
-        # form validation errors
-        template_field = [
-            field for field in NavigationPlugin._meta.fields if field.name == "template"
-        ][0]
-        patched_choices = [
-            ("menu/menu.html", "Default"),
-            ("menu/menuismo.html", "Menuismo"),
-        ]
-        with patch.object(template_field, "choices", patched_choices):
-            # First add the plugin and assert
-            # The added plugin will have the template menu/menuismo.html
-            # and the menu from menu1
-            created_plugin = self._add_nav_plugin_and_assert(
-                placeholder, menu_content.menu, "menu/menuismo.html"
-            )
-
-            # Now edit the plugin and assert
-            # After editing the plugin will have the template menu/menu.html
-            # and the menu from menu2
-            self._edit_nav_plugin_and_assert(
-                created_plugin, menu_content.menu, "menu/menu.html"
-            )
+        # add nav plugin to placeholder
+        self._add_nav_plugin_and_assert(
+            placeholder, menu_content.menu, "menu/menu.html"
+        )
 
         # Now publish the page content containing the plugin,
         # so the page can be viewed
@@ -385,13 +340,13 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # asserting to check there is no cachekey exists
         cache_key = CacheKey.objects.all().count()
         self.assertEqual(cache_key, 0)
+
         # And view the page
         page_url = page_content.page.get_absolute_url()
         response = self.client.get(page_url)
 
         # rendering should generate cachekey object
         cache_key = CacheKey.objects.all().count()
-
         self.assertEqual(response.status_code, 200)
         self.assertEqual(cache_key, 1)
 
@@ -418,29 +373,10 @@ class NavigationPluginViewTestCase(CMSTestCase):
 
         menu_content_version.publish(user=self.get_superuser())
 
-        # Patch the choices on the template field, so we don't get
-        # form validation errors
-        template_field = [
-            field for field in NavigationPlugin._meta.fields if field.name == "template"
-        ][0]
-        patched_choices = [
-            ("menu/menu.html", "Default"),
-            ("menu/menuismo.html", "Menuismo"),
-        ]
-        with patch.object(template_field, "choices", patched_choices):
-            # First add the plugin and assert
-            # The added plugin will have the template menu/menuismo.html
-            # and the menu from menu1
-            created_plugin = self._add_nav_plugin_and_assert(
-                placeholder, menu_content.menu, "menu/menuismo.html"
-            )
-
-            # Now edit the plugin and assert
-            # After editing the plugin will have the template menu/menu.html
-            # and the menu from menu2
-            self._edit_nav_plugin_and_assert(
-                created_plugin, menu_content.menu, "menu/menu.html"
-            )
+        # add nav plugin to placeholder
+        self._add_nav_plugin_and_assert(
+            placeholder, menu_content.menu, "menu/menu.html"
+        )
 
         # Now publish the page content containing the plugin,
         # so the page can be viewed
@@ -481,29 +417,10 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # grandchild
         factories.ChildMenuItemFactory(parent=child)
 
-        # Patch the choices on the template field, so we don't get
-        # form validation errors
-        template_field = [
-            field for field in NavigationPlugin._meta.fields if field.name == "template"
-        ][0]
-        patched_choices = [
-            ("menu/menu.html", "Default"),
-            ("menu/menuismo.html", "Menuismo"),
-        ]
-        with patch.object(template_field, "choices", patched_choices):
-            # First add the plugin and assert
-            # The added plugin will have the template menu/menuismo.html
-            # and the menu from menu1
-            created_plugin = self._add_nav_plugin_and_assert(
-                placeholder, menu_content.menu, "menu/menuismo.html"
-            )
-
-            # Now edit the plugin and assert
-            # After editing the plugin will have the template menu/menu.html
-            # and the menu from menu2
-            self._edit_nav_plugin_and_assert(
-                created_plugin, menu_content.menu, "menu/menu.html"
-            )
+        # add nav plugin to placeholder
+        self._add_nav_plugin_and_assert(
+            placeholder, menu_content.menu, "menu/menu.html"
+        )
 
         # Now publish the page content containing the plugin,
         # so the page can be viewed
