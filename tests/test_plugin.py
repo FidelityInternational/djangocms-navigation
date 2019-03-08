@@ -277,7 +277,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         grandchild = factories.ChildMenuItemFactory(parent=child)
 
-        # add nav plugin to placeholder
+        # Add nav plugin to placeholder
         self._add_nav_plugin_and_assert(
             placeholder, menu_content.menu, "menu/menu.html"
         )
@@ -287,7 +287,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
         version = page_content.versions.get()
         version.publish(self.get_superuser())
 
-        # Testing there is no cachekey exists
+        # Making sure there is no cachekey existed before rendering page
         cache_key = CacheKey.objects.all().count()
         self.assertEqual(cache_key, 0)
 
@@ -303,8 +303,9 @@ class NavigationPluginViewTestCase(CMSTestCase):
         self.assertIn(child.title, str(response.content))
         self.assertIn(grandchild.title, str(response.content))
 
-        # create further menu items which covers draft state
+        # Create further menu items which covers draft state
         child2 = factories.ChildMenuItemFactory(parent=menu_content.root)
+
         # grandchild2
         factories.ChildMenuItemFactory(parent=child2)
 
@@ -327,7 +328,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # grandchild
         factories.ChildMenuItemFactory(parent=child)
 
-        # add nav plugin to placeholder
+        # Add nav plugin to placeholder
         self._add_nav_plugin_and_assert(
             placeholder, menu_content.menu, "menu/menu.html"
         )
@@ -337,7 +338,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
         version = page_content.versions.get()
         version.publish(self.get_superuser())
 
-        # asserting to check there is no cachekey exists
+        # Making sure there is no cachekey existed before rendering page
         cache_key = CacheKey.objects.all().count()
         self.assertEqual(cache_key, 0)
 
@@ -345,7 +346,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
         page_url = page_content.page.get_absolute_url()
         response = self.client.get(page_url)
 
-        # rendering should generate cachekey object
+        # Rendering should generate cachekey object
         cache_key = CacheKey.objects.all().count()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(cache_key, 1)
@@ -373,7 +374,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
 
         menu_content_version.publish(user=self.get_superuser())
 
-        # add nav plugin to placeholder
+        # Add nav plugin to placeholder
         self._add_nav_plugin_and_assert(
             placeholder, menu_content.menu, "menu/menu.html"
         )
@@ -383,14 +384,14 @@ class NavigationPluginViewTestCase(CMSTestCase):
         version = page_content.versions.get()
         version.publish(self.get_superuser())
 
-        # asserting to check there is no cachekey exists
+        # Making sure there is no cachekey existed before rendering page
         cache_key = CacheKey.objects.all().count()
         self.assertEqual(cache_key, 0)
         # And view the page
         page_url = page_content.page.get_absolute_url()
         response = self.client.get(page_url)
 
-        # rendering should generate cachekey object
+        # Rendering should generate cachekey object
         cache_key = CacheKey.objects.all().count()
 
         self.assertEqual(response.status_code, 200)
@@ -417,7 +418,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # grandchild
         factories.ChildMenuItemFactory(parent=child)
 
-        # add nav plugin to placeholder
+        # Add nav plugin to placeholder
         self._add_nav_plugin_and_assert(
             placeholder, menu_content.menu, "menu/menu.html"
         )
@@ -427,14 +428,14 @@ class NavigationPluginViewTestCase(CMSTestCase):
         version = page_content.versions.get()
         version.publish(self.get_superuser())
 
-        # asserting to check there is no cachekey exists
+        # Making sure there is no cachekey existed before rendering page
         cache_key = CacheKey.objects.all().count()
         self.assertEqual(cache_key, 0)
         # And view the page
         page_url = page_content.page.get_absolute_url()
         response = self.client.get(page_url)
 
-        # rendering should generate cachekey object
+        # Rendering should generate cachekey object
         cache_key = CacheKey.objects.all().count()
 
         self.assertEqual(response.status_code, 200)
