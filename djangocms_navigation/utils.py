@@ -3,6 +3,8 @@ from functools import lru_cache
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 
+from menus.menu_pool import menu_pool
+
 
 @lru_cache(maxsize=1)
 def supported_models():
@@ -41,6 +43,4 @@ def get_versionable_for_content(content):
 
 
 def purge_menu_cache(site_id=None, language=None):
-    from menus.menu_pool import menu_pool
-
     menu_pool.clear(site_id=site_id, language=language)
