@@ -11,6 +11,8 @@ from djangocms_navigation.cms_menus import NavigationSelector
 from djangocms_navigation.models import NavigationPlugin
 from djangocms_navigation.test_utils import factories
 
+from djangocms_versioning.constants import PUBLISHED
+
 from .utils import disable_versioning_for_navigation
 
 
@@ -264,7 +266,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # Now delete the plugin from the page and assert
         self._delete_nav_plugin_and_assert(new_placeholder, new_plugin)
 
-    def test_menu_cache_invalidate_after_menuitem_creation(self):
+    def test_menu_cache_invalidate_after_menuitem_edit(self):
         # NOTE: This test is based on a similar one from django-cms:
         # https://github.com/divio/django-cms/blob/2daeb7d63cb5fee49575a834d0f23669ce46144e/cms/tests/test_plugins.py#L160
 
@@ -277,6 +279,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         grandchild = factories.ChildMenuItemFactory(parent=child)
 
+        # TODO: Use a factory instead
         # Add nav plugin to placeholder
         self._add_nav_plugin_and_assert(
             placeholder, menu_content.menu, "menu/menu.html"
@@ -295,19 +298,17 @@ class NavigationPluginViewTestCase(CMSTestCase):
         page_url = page_content.page.get_absolute_url()
         response = self.client.get(page_url)
 
-        # Rendering should generate cachekey object
         cache_key = CacheKey.objects.all().count()
+        # Rendering should generate cachekey object
         self.assertEqual(cache_key, 1)
 
+        # Check http response is ok
         self.assertEqual(response.status_code, 200)
         self.assertIn(child.title, str(response.content))
         self.assertIn(grandchild.title, str(response.content))
 
-        # Create further menu items which covers draft state
+        # Create further menu items
         child2 = factories.ChildMenuItemFactory(parent=menu_content.root)
-
-        # grandchild2
-        factories.ChildMenuItemFactory(parent=child2)
 
         # MenuItem creation should be invalidated cache_key object
         cache_key = CacheKey.objects.all().count()
@@ -328,6 +329,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # grandchild
         factories.ChildMenuItemFactory(parent=child)
 
+        # TODO: Use a factory instead
         # Add nav plugin to placeholder
         self._add_nav_plugin_and_assert(
             placeholder, menu_content.menu, "menu/menu.html"
@@ -346,9 +348,9 @@ class NavigationPluginViewTestCase(CMSTestCase):
         page_url = page_content.page.get_absolute_url()
         response = self.client.get(page_url)
 
-        # Rendering should generate cachekey object
         cache_key = CacheKey.objects.all().count()
         self.assertEqual(response.status_code, 200)
+        # Rendering should generate cachekey object
         self.assertEqual(cache_key, 1)
 
         menu_content_version.publish(user=self.get_superuser())
@@ -374,6 +376,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
 
         menu_content_version.publish(user=self.get_superuser())
 
+        # TODO: Use a factory instead
         # Add nav plugin to placeholder
         self._add_nav_plugin_and_assert(
             placeholder, menu_content.menu, "menu/menu.html"
@@ -391,10 +394,9 @@ class NavigationPluginViewTestCase(CMSTestCase):
         page_url = page_content.page.get_absolute_url()
         response = self.client.get(page_url)
 
-        # Rendering should generate cachekey object
         cache_key = CacheKey.objects.all().count()
-
         self.assertEqual(response.status_code, 200)
+        # Rendering should generate cachekey object
         self.assertEqual(cache_key, 1)
 
         menu_content_version.unpublish(user=self.get_superuser())
@@ -418,6 +420,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # grandchild
         factories.ChildMenuItemFactory(parent=child)
 
+        # TODO: Use a factory instead
         # Add nav plugin to placeholder
         self._add_nav_plugin_and_assert(
             placeholder, menu_content.menu, "menu/menu.html"
@@ -435,10 +438,10 @@ class NavigationPluginViewTestCase(CMSTestCase):
         page_url = page_content.page.get_absolute_url()
         response = self.client.get(page_url)
 
-        # Rendering should generate cachekey object
         cache_key = CacheKey.objects.all().count()
 
         self.assertEqual(response.status_code, 200)
+        # Rendering should generate cachekey object
         self.assertEqual(cache_key, 1)
 
         menu_content_version.archive(user=self.get_superuser())
