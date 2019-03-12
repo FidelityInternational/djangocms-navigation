@@ -5,6 +5,7 @@ from cms.app_base import CMSAppConfig, CMSAppExtension
 from cms.models import Page
 
 from .models import MenuContent, MenuItem
+from .utils import purge_menu_cache
 
 
 class NavigationCMSExtension(CMSAppExtension):
@@ -61,6 +62,26 @@ def copy_menu_content(original_content):
     return new_content
 
 
+def on_menu_content_publish(version):
+    menu_content = version.content
+    purge_menu_cache(site_id=menu_content.menu.site_id)
+
+
+def on_menu_content_unpublish(version):
+    menu_content = version.content
+    purge_menu_cache(site_id=menu_content.menu.site_id)
+
+
+def on_menu_content_draft_create(version):
+    menu_content = version.content
+    purge_menu_cache(site_id=menu_content.menu.site_id)
+
+
+def on_menu_content_archive(version):
+    menu_content = version.content
+    purge_menu_cache(site_id=menu_content.menu.site_id)
+
+
 class NavigationCMSAppConfig(CMSAppConfig):
     djangocms_navigation_enabled = getattr(
         settings, "DJANGOCMS_NAVIGATION_CMS_MODELS_ENABLED", True
@@ -85,6 +106,10 @@ class NavigationCMSAppConfig(CMSAppConfig):
                 grouper_field_name="menu",
                 copy_function=copy_menu_content,
                 preview_url=MenuContent.get_preview_url,
+                on_publish=on_menu_content_publish,
+                on_unpublish=on_menu_content_unpublish,
+                on_draft_create=on_menu_content_draft_create,
+                on_archive=on_menu_content_archive,
             )
         ]
     moderated_models = [MenuContent]

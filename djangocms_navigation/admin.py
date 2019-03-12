@@ -17,6 +17,7 @@ from treebeard.admin import TreeAdmin
 from .constants import SELECT2_CONTENT_OBJECT_URL_NAME
 from .forms import MenuContentForm, MenuItemForm
 from .models import Menu, MenuContent, MenuItem
+from .utils import purge_menu_cache
 from .views import ContentObjectSelect2View, MenuContentPreviewView
 
 
@@ -168,10 +169,13 @@ class MenuItemAdmin(TreeAdmin):
                 except ConditionFailed as error:
                     messages.error(request, str(error))
                     return HttpResponseRedirect(version_list_url(menu_content))
+                # purge menu cache
+                purge_menu_cache(site_id=menu_content.menu.site_id)
             extra_context["list_url"] = reverse(
                 "admin:djangocms_navigation_menuitem_list",
                 kwargs={"menu_content_id": menu_content_id},
             )
+
         return super().change_view(
             request, object_id, form_url="", extra_context=extra_context
         )
@@ -190,10 +194,13 @@ class MenuItemAdmin(TreeAdmin):
                 except ConditionFailed as error:
                     messages.error(request, str(error))
                     return HttpResponseRedirect(version_list_url(menu_content))
+                # purge menu cache
+                purge_menu_cache(site_id=menu_content.menu.site_id)
             extra_context["list_url"] = reverse(
                 "admin:djangocms_navigation_menuitem_list",
                 kwargs={"menu_content_id": menu_content_id},
             )
+
         return super().add_view(request, form_url=form_url, extra_context=extra_context)
 
     def changelist_view(self, request, menu_content_id=None, extra_context=None):
