@@ -7,6 +7,8 @@ from cms.toolbar_pool import toolbar_pool
 
 class NavigationToolbar(PlaceholderToolbar):
     def _add_navigation_menu(self):
+        if not self.request.user.has_perm("djangocms_navigation.change_menucontent"):
+            return
         admin_menu = self.toolbar.get_or_create_menu(ADMIN_MENU_IDENTIFIER)
         url = reverse("admin:djangocms_navigation_menucontent_changelist")
         admin_menu.add_sideframe_item(_("Navigation"), url=url, position=4)

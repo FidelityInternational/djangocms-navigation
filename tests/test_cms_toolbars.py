@@ -11,9 +11,6 @@ from djangocms_navigation.test_utils import factories
 
 
 class TestCMSToolbars(TestCase):
-    def setUp(self):
-        self.user = factories.UserFactory()
-
     def _get_page_request(self, page, user):
         request = RequestFactory().get("/")
         request.session = {}
@@ -51,8 +48,31 @@ class TestCMSToolbars(TestCase):
                     pass
 
     def test_navigation_menu_added_to_admin_menu(self):
+        user = factories.UserFactory()
+        user.user_permissions.add(
+            Permission.objects.get(
+                content_type__app_label="djangocms_navigation",
+                codename="change_menucontent",
+            )
+        )
         page_content = factories.PageContentFactory()
-        toolbar = self._get_toolbar(page_content, preview_mode=True, user=self.user)
+        toolbar = self._get_toolbar(page_content, preview_mode=True, user=user)
+        toolbar.populate()
+        toolbar.post_template_populate()
+        cms_toolbar = toolbar.toolbar
+        navigation_menu_item = self._find_menu_item("Navigation...", cms_toolbar)
+        url = reverse("admin:djangocms_navigation_menucontent_changelist")
+
+        self.assertIsNotNone(navigation_menu_item)
+        self.assertIsInstance(navigation_menu_item, SideframeItem)
+        self.assertEqual(navigation_menu_item.url, url)
+
+    def test_navigation_menu_not_added_to_admin_menu_if_user_doesnt_have_permissions(
+        self
+    ):
+        user = factories.UserFactory()
+        page_content = factories.PageContentFactory()
+        toolbar = self._get_toolbar(page_content, preview_mode=True, user=user)
         toolbar.populate()
         toolbar.post_template_populate()
         cms_toolbar = toolbar.toolbar
