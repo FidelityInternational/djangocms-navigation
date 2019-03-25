@@ -1,3 +1,4 @@
+from django.contrib.auth.models import Permission
 from django.shortcuts import reverse
 from django.test import TestCase
 from django.test.client import RequestFactory
@@ -79,6 +80,4 @@ class TestCMSToolbars(TestCase):
         navigation_menu_item = self._find_menu_item("Navigation...", cms_toolbar)
         url = reverse("admin:djangocms_navigation_menucontent_changelist")
 
-        self.assertIsNotNone(navigation_menu_item)
-        self.assertIsInstance(navigation_menu_item, SideframeItem)
-        self.assertEqual(navigation_menu_item.url, url)
+        self.assertIsNone(navigation_menu_item)
