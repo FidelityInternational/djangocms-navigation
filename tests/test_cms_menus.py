@@ -9,7 +9,7 @@ from .utils import disable_versioning_for_navigation
 try:
     from djangocms_versioning.constants import ARCHIVED, DRAFT, UNPUBLISHED
 except ImportError:
-    ARCHIVED, DRAFT = None
+    ARCHIVED, DRAFT, UNPUBLISHED = None
 
 
 class CMSMenuTestCase(TestCase):
