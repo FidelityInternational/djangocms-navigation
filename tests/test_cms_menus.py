@@ -7,7 +7,7 @@ from .utils import disable_versioning_for_navigation
 
 
 try:
-    from djangocms_versioning.constants import ARCHIVED, DRAFT
+    from djangocms_versioning.constants import ARCHIVED, DRAFT, UNPUBLISHED
 except ImportError:
     ARCHIVED, DRAFT = None
 
@@ -27,7 +27,7 @@ class CMSMenuTestCase(TestCase):
         self.assertDictEqual(node.attr, kwargs["attr"])
 
     def test_get_nodes(self):
-        menu_contents = factories.MenuContentFactory.create_batch(2)
+        menu_contents = factories.MenuContentWithVersionFactory.create_batch(2)
         child1 = factories.ChildMenuItemFactory(parent=menu_contents[0].root)
         child2 = factories.ChildMenuItemFactory(parent=menu_contents[1].root)
         grandchild = factories.ChildMenuItemFactory(parent=child1)
@@ -78,11 +78,13 @@ class CMSMenuTestCase(TestCase):
 
     def test_get_roots_with_multiple_menucontents(self):
         """Test to check get_roots while creating two menu contents"""
-        menucontent_1 = factories.MenuContentFactory()
-        menucontent_2 = factories.MenuContentFactory()
+        menucontent_1 = factories.MenuVersionFactory()
+        menucontent_2 = factories.MenuVersionFactory()
         roots = self.menu.get_roots(self.request)
         self.assertEqual(roots.count(), 2)
-        self.assertListEqual(list(roots), [menucontent_1.root, menucontent_2.root])
+        self.assertListEqual(
+            list(roots), [menucontent_1.content.root, menucontent_2.content.root]
+        )
 
     def test_get_roots_with_versions(self):
         """This test to check versioning would group all the versions
@@ -98,6 +100,14 @@ class CMSMenuTestCase(TestCase):
         self.assertListEqual(
             list(roots), [menucontent_1_v2.content.root, menucontent_2_v1.content.root]
         )
+
+    def test_get_roots_with_archived_versions(self):
+        """This test to check get_roots would not return any archived or unpublished versions
+        """
+        factories.MenuVersionFactory(state=ARCHIVED)
+        factories.MenuVersionFactory(state=UNPUBLISHED)
+        roots = self.menu.get_roots(self.request)
+        self.assertEqual(roots.count(), 0)
 
     @disable_versioning_for_navigation()
     def test_get_roots_with_versioning_disabled(self):

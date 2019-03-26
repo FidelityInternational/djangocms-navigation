@@ -5,6 +5,8 @@ from cms.utils import get_current_site
 from menus.base import Menu, Modifier, NavigationNode
 from menus.menu_pool import menu_pool
 
+from djangocms_versioning.constants import DRAFT, PUBLISHED
+
 from .models import MenuContent, MenuItem
 from .utils import get_versionable_for_content
 
@@ -17,7 +19,8 @@ class CMSMenu(Menu):
         )
         versionable = get_versionable_for_content(MenuContent)
         if versionable:
-            menucontents = versionable.distinct_groupers()
+            inner_filter = {"versions__state__in": [DRAFT, PUBLISHED]}
+            menucontents = versionable.distinct_groupers(**inner_filter)
             queryset = queryset.filter(menucontent__in=menucontents)
         return queryset
 
