@@ -13,13 +13,14 @@ from .utils import get_versionable_for_content
 
 class CMSMenu(Menu):
     def get_roots(self, request):
-        # TODO: What if the MenuItem objects are related to an unpublished version?
         queryset = MenuItem.get_root_nodes().filter(
             menucontent__menu__site=get_current_site()
         )
         versionable = get_versionable_for_content(MenuContent)
         if versionable:
-            inner_filter = {"versions__state__in": [DRAFT, PUBLISHED]}
+            inner_filter = {"versions__state__in": [PUBLISHED]}
+            if self.renderer.draft_mode_active:
+                inner_filter["versions__state__in"] += [DRAFT]
             menucontents = versionable.distinct_groupers(**inner_filter)
             queryset = queryset.filter(menucontent__in=menucontents)
         return queryset
