@@ -12,7 +12,7 @@ from .utils import disable_versioning_for_navigation
 try:
     from djangocms_versioning.constants import ARCHIVED, DRAFT, UNPUBLISHED, PUBLISHED
 except ImportError:
-    ARCHIVED, DRAFT, UNPUBLISHED = None
+    ARCHIVED, DRAFT, UNPUBLISHED, PUBLISHED = None
 
 
 class CMSMenuTestCase(TestCase):
@@ -82,7 +82,7 @@ class CMSMenuTestCase(TestCase):
             attr={"link_target": child2.link_target},
         )
 
-    def test_get_nodes_for_versioning(self):
+    def get_nodes_for_versioning_enabled(self):
         menu_versions = factories.MenuVersionFactory.create_batch(2, state=PUBLISHED)
         child1 = factories.ChildMenuItemFactory(parent=menu_versions[0].content.root)
         child2 = factories.ChildMenuItemFactory(parent=menu_versions[1].content.root)
@@ -132,9 +132,10 @@ class CMSMenuTestCase(TestCase):
             attr={"link_target": child2.link_target},
         )
 
-    def test_get_roots_with_draft_mode(self):
+    def test_get_roots_with_draft_mode_not_active(self):
         """This test to check versioning would group all the versions
         of menu content and return latest of all distinct menu content
+        when renderer draft_mode_active is false
         """
         menucontent_1_v1 = factories.MenuVersionFactory(state=ARCHIVED)
         menucontent_1_v2 = factories.MenuVersionFactory(
@@ -150,6 +151,18 @@ class CMSMenuTestCase(TestCase):
         self.assertEqual(roots.count(), 1)
         self.assertListEqual(list(roots), [menucontent_2_v1.content.root])
 
+    def test_get_roots_with_draft_mode_active(self):
+        """This test to check versioning would group all the versions
+        of menu content and return latest of all distinct menu content
+        when renderer draft_mode_active is True
+        """
+        menucontent_1_v1 = factories.MenuVersionFactory(state=ARCHIVED)
+        menucontent_1_v2 = factories.MenuVersionFactory(
+            content__menu=menucontent_1_v1.content.menu, state=DRAFT
+        )
+        menucontent_2_v1 = factories.MenuVersionFactory(state=PUBLISHED)
+        menucontent_3_v1 = factories.MenuVersionFactory(state=UNPUBLISHED)
+
         # Getting renderer to set draft_mode_active
         renderer = self.renderer
         renderer.draft_mode_active = True
@@ -160,14 +173,6 @@ class CMSMenuTestCase(TestCase):
         self.assertListEqual(
             list(roots), [menucontent_1_v2.content.root, menucontent_2_v1.content.root]
         )
-
-    def test_get_roots_for_archived_and_unpublished_versions(self):
-        """This test to check get_roots would not return any archived or unpublished versions
-        """
-        factories.MenuVersionFactory(state=ARCHIVED)
-        factories.MenuVersionFactory(state=UNPUBLISHED)
-        roots = self.menu.get_roots(self.request)
-        self.assertEqual(roots.count(), 0)
 
     @disable_versioning_for_navigation()
     def test_get_roots_with_versioning_disabled(self):
