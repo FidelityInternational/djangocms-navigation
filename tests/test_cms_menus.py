@@ -10,7 +10,7 @@ from .utils import disable_versioning_for_navigation
 
 
 try:
-    from djangocms_versioning.constants import ARCHIVED, DRAFT, UNPUBLISHED
+    from djangocms_versioning.constants import ARCHIVED, DRAFT, UNPUBLISHED, PUBLISHED
 except ImportError:
     ARCHIVED, DRAFT, UNPUBLISHED = None
 
@@ -82,33 +82,73 @@ class CMSMenuTestCase(TestCase):
             attr={"link_target": child2.link_target},
         )
 
-    def test_get_roots_when_draft_mode_isnt_active(self):
+    def test_get_nodes_for_versioning(self):
+        menu_versions = factories.MenuVersionFactory.create_batch(2, state=PUBLISHED)
+        child1 = factories.ChildMenuItemFactory(parent=menu_versions[0].content.root)
+        child2 = factories.ChildMenuItemFactory(parent=menu_versions[1].content.root)
+        grandchild = factories.ChildMenuItemFactory(parent=child1)
+
+        nodes = self.menu.get_nodes(self.request)
+
+        self.assertEqual(len(nodes), 5)
+        self.assertNavigationNodeEqual(
+            nodes[0],
+            title="",
+            url="",
+            id=menu_versions[0].content.menu.root_id,
+            parent_id=None,
+            attr={},
+        )
+        self.assertNavigationNodeEqual(
+            nodes[1],
+            title="",
+            url="",
+            id=menu_versions[1].content.menu.root_id,
+            parent_id=None,
+            attr={},
+        )
+        self.assertNavigationNodeEqual(
+            nodes[2],
+            title=child1.title,
+            url=child1.content.get_absolute_url(),
+            id=child1.id,
+            parent_id=menu_versions[0].content.menu.root_id,
+            attr={"link_target": child1.link_target},
+        )
+        self.assertNavigationNodeEqual(
+            nodes[3],
+            title=grandchild.title,
+            url=grandchild.content.get_absolute_url(),
+            id=grandchild.id,
+            parent_id=child1.id,
+            attr={"link_target": grandchild.link_target},
+        )
+        self.assertNavigationNodeEqual(
+            nodes[4],
+            title=child2.title,
+            url=child2.content.get_absolute_url(),
+            id=child2.id,
+            parent_id=menu_versions[1].content.menu.root_id,
+            attr={"link_target": child2.link_target},
+        )
+
+    def test_get_roots_with_draft_mode(self):
         """This test to check versioning would group all the versions
         of menu content and return latest of all distinct menu content
         """
         menucontent_1_v1 = factories.MenuVersionFactory(state=ARCHIVED)
-        # draft version
         menucontent_1_v2 = factories.MenuVersionFactory(
-            content__menu=menucontent_1_v1.content.menu
+            content__menu=menucontent_1_v1.content.menu, state=DRAFT
         )
-        # draft version
-        menucontent_2_v1 = factories.MenuVersionFactory()
-        # assert to check draft_mode_active is false
+        menucontent_2_v1 = factories.MenuVersionFactory(state=PUBLISHED)
+        menucontent_3_v1 = factories.MenuVersionFactory(state=UNPUBLISHED)
+        # Assert to check draft_mode_active is false
         self.assertFalse(self.menu.renderer.draft_mode_active)
         roots = self.menu.get_roots(self.request)
 
-        # renderer should only render published menucontent
-        # In this testcase there isnt any published version
-        self.assertEqual(roots.count(), 0)
-
-    def test_get_roots_when_draft_mode_active(self):
-        menucontent_1_v1 = factories.MenuVersionFactory(state=ARCHIVED)
-        # draft version
-        menucontent_1_v2 = factories.MenuVersionFactory(
-            content__menu=menucontent_1_v1.content.menu
-        )
-        # draft version
-        menucontent_2_v1 = factories.MenuVersionFactory()
+        # Renderer should only render published menucontent
+        self.assertEqual(roots.count(), 1)
+        self.assertListEqual(list(roots), [menucontent_2_v1.content.root])
 
         # Getting renderer to set draft_mode_active
         renderer = self.renderer
@@ -137,6 +177,10 @@ class CMSMenuTestCase(TestCase):
         menucontent_1 = factories.MenuContentFactory()
         menucontent_2 = factories.MenuContentFactory()
         menucontent_3 = factories.MenuContentFactory()
+        child1 = factories.ChildMenuItemFactory(parent=menucontent_1.root)
+        child2 = factories.ChildMenuItemFactory(parent=menucontent_2.root)
+        grandchild = factories.ChildMenuItemFactory(parent=child1)
+
         roots = self.menu.get_roots(self.request)
         self.assertEqual(roots.count(), 3)
         self.assertListEqual(
