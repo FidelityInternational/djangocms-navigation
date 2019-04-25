@@ -15,13 +15,13 @@ from .constants import TARGETS, TEMPLATE_DEFAULT, get_templates
 __all__ = ["Menu", "MenuContent", "MenuItem", "NavigationPlugin"]
 
 
-class Menu(models.Model):
+class AbstractMenu(models.Model):
     """
     MenuContent Grouper
     """
-
+    site = models.ForeignKey(Site, related_name="%(app_label)s_%(class)s_site",
+                             on_delete=models.PROTECT)
     identifier = models.CharField(verbose_name=_("identifier"), max_length=100)
-    site = models.ForeignKey(Site, on_delete=models.PROTECT)
 
     class Meta:
         unique_together = (("identifier", "site"),)
@@ -35,8 +35,38 @@ class Menu(models.Model):
         NavigationNode instance"""
         return "root-" + self.identifier
 
+    class Meta:
+        abstract = True
 
-class MenuContent(models.Model):
+
+class AbstractMenuContent(models.Model):
+    class Meta:
+        abstract = True
+
+
+class AbstractMenuItem(MP_Node):
+    title = models.CharField(verbose_name=_("title"), max_length=100)
+    link_target = models.CharField(choices=TARGETS, default="_self", max_length=20)
+    # Allow null for content as the root menu item won't have a link
+    content_type = models.ForeignKey(
+        ContentType, related_name="%(app_label)s_%(class)s_content_type",
+        on_delete=models.PROTECT, null=True, blank=True
+    )
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    content = GenericForeignKey("content_type", "object_id")
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        abstract = True
+
+
+class Menu(AbstractMenu):
+    pass
+
+
+class MenuContent(AbstractMenuContent):
     menu = models.ForeignKey(Menu, on_delete=models.PROTECT)
     root = models.OneToOneField(
         "djangocms_navigation.MenuItem", on_delete=models.PROTECT
@@ -58,18 +88,8 @@ class MenuContent(models.Model):
         )
 
 
-class MenuItem(MP_Node):
-    title = models.CharField(verbose_name=_("title"), max_length=100)
-    link_target = models.CharField(choices=TARGETS, default="_self", max_length=20)
-    # Allow null for content as the root menu item won't have a link
-    content_type = models.ForeignKey(
-        ContentType, on_delete=models.PROTECT, null=True, blank=True
-    )
-    object_id = models.PositiveIntegerField(null=True, blank=True)
-    content = GenericForeignKey("content_type", "object_id")
-
-    def __str__(self):
-        return self.title
+class MenuItem(AbstractMenuItem):
+    pass
 
 
 class NavigationPlugin(CMSPlugin):
