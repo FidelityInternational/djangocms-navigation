@@ -12,24 +12,24 @@
 
 {% block breadcrumbs %}
 {% endblock %}
+
 {% block content %}
-    <a href="{% url 'admin:djangocms_navigation_menuitem_list' menu_content_id %}"  class="cms-btn-group">
+    <a href="{% url opts|admin_urlname:'list' menu_content_id %}" class="cms-btn-group">
         {% trans "Back" %}
     </a>
-<br/><br/>
+    <br/><br/>
 
-{% for item, info in annotated_list %}
-    {% if info.open %}
-        <ul><li>
-    {% else %}
-        </li><li>
-    {% endif %}
+    {% for item, info in annotated_list %}
+        {% if info.open %}
+            <ul><li>
+        {% else %}
+            </li><li>
+        {% endif %}
 
-    {{ item }}
+        {{ item }}
 
-    {% for close in info.close %}
-        </li></ul>
+        {% for close in info.close %}
+            </li></ul>
+        {% endfor %}
     {% endfor %}
-{% endfor %}
-
 {% endblock %}
