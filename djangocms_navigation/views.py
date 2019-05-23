@@ -23,7 +23,10 @@ class MenuContentPreviewView(TemplateView):
             MenuContent._base_manager, pk=self.kwargs.get("menu_content_id")
         )
         annotated_list = MenuItem.get_annotated_list(parent=menu_content.root)
-        context.update({"annotated_list": annotated_list})
+        context.update({
+            "annotated_list": annotated_list,
+            "opts": MenuItem._meta
+        })
         return context
 
 
