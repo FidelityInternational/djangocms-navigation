@@ -49,6 +49,14 @@ class MenuContentAdmin(admin.ModelAdmin):
     list_display = ["title", "get_menuitem_link", "get_preview_link"]
     list_display_links = None
 
+    def get_admin_name(self, name):
+        '''Used for creating admin urls'''
+        return '{}_{}_{}'.format(
+            self.model._meta.app_label,
+            self.model._meta.model_name,
+            name
+        )
+
     def save_model(self, request, obj, form, change):
         if not change:
             title = form.cleaned_data.get("title")
@@ -61,21 +69,16 @@ class MenuContentAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
-        meta = MenuItem._meta
         return HttpResponseRedirect(
             reverse(
-                "admin:{app}_{model}_list".format(
-                    app=meta.app_label, model=meta.model_name
-                ),
+                self.get_admin_name('list'),
                 args=[object_id],
             )
         )
 
     def get_menuitem_link(self, obj):
         object_menuitem_url = reverse(
-            "admin:{app}_{model}_list".format(
-                app=obj._meta.app_label, model=MenuItem._meta.model_name
-            ),
+            self.get_admin_name('list'),
             args=[obj.pk],
         )
 
@@ -102,32 +105,40 @@ class MenuContentAdmin(admin.ModelAdmin):
 
 
 class MenuItemAdmin(TreeAdmin):
+    MenuModel = MenuContent
     form = MenuItemForm
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
     list_display = ["__str__", "get_object_url"]
 
+    def get_admin_name(self, name):
+        '''Used for creating admin urls'''
+        return '{}_{}_{}'.format(
+            self.model._meta.app_label,
+            self.model._meta.model_name,
+            name
+        )
+
     def get_urls(self):
-        info = self.model._meta.app_label, self.model._meta.model_name
         return [
             url(
                 r"^(?P<menu_content_id>\d+)/$",
                 self.admin_site.admin_view(self.changelist_view),
-                name="{}_{}_list".format(*info),
+                name=self.get_admin_name('list'),
             ),
             url(
                 r"^(?P<menu_content_id>\d+)/add/$",
                 self.admin_site.admin_view(self.add_view),
-                name="{}_{}_add".format(*info),
+                name=self.get_admin_name('add'),
             ),
             url(
                 r"^(?P<menu_content_id>\d+)/(?P<object_id>\d+)/change/$",
                 self.admin_site.admin_view(self.change_view),
-                name="{}_{}_change".format(*info),
+                name=self.get_admin_name('change'),
             ),
             url(
                 r"^(?P<menu_content_id>\d+)/move/$",
                 self.admin_site.admin_view(self.move_node),
-                name="{}_{}_move_node".format(*info),
+                name=self.get_admin_name('move_node'),
             ),
             url(
                 r"^(?P<menu_content_id>\d+)/jsi18n/$",
@@ -141,14 +152,14 @@ class MenuItemAdmin(TreeAdmin):
             url(
                 r"^(?P<menu_content_id>\d+)/preview/$",
                 self.admin_site.admin_view(MenuContentPreviewView.as_view()),
-                name="{}_{}_preview".format(*info),
+                name=self.get_admin_name('preview'),
             ),
         ]
 
     def get_queryset(self, request):
         if hasattr(request, "menu_content_id"):
             menu_content = get_object_or_404(
-                MenuContent._base_manager, id=request.menu_content_id
+                self.MenuModel._base_manager, id=request.menu_content_id
             )
             return MenuItem.get_tree(menu_content.root)
         return self.model().get_tree()
@@ -161,7 +172,7 @@ class MenuItemAdmin(TreeAdmin):
             request.menu_content_id = menu_content_id
             if self._versioning_enabled:
                 menu_content = get_object_or_404(
-                    MenuContent._base_manager, id=menu_content_id
+                    self.MenuModel._base_manager, id=menu_content_id
                 )
                 version = Version.objects.get_for_content(menu_content)
                 try:
@@ -172,7 +183,7 @@ class MenuItemAdmin(TreeAdmin):
                 # purge menu cache
                 purge_menu_cache(site_id=menu_content.menu.site_id)
             extra_context["list_url"] = reverse(
-                "admin:djangocms_navigation_menuitem_list",
+                self.get_admin_name('menuitem_list'),
                 kwargs={"menu_content_id": menu_content_id},
             )
 
@@ -186,7 +197,7 @@ class MenuItemAdmin(TreeAdmin):
             request.menu_content_id = menu_content_id
             if self._versioning_enabled:
                 menu_content = get_object_or_404(
-                    MenuContent._base_manager, id=menu_content_id
+                    self.MenuModel._base_manager, id=menu_content_id
                 )
                 version = Version.objects.get_for_content(menu_content)
                 try:
@@ -197,7 +208,7 @@ class MenuItemAdmin(TreeAdmin):
                 # purge menu cache
                 purge_menu_cache(site_id=menu_content.menu.site_id)
             extra_context["list_url"] = reverse(
-                "admin:djangocms_navigation_menuitem_list",
+                self.get_admin_name('menuitem_list'),
                 kwargs={"menu_content_id": menu_content_id},
             )
 
@@ -209,7 +220,7 @@ class MenuItemAdmin(TreeAdmin):
         if menu_content_id:
             request.menu_content_id = menu_content_id
             menu_content = get_object_or_404(
-                MenuContent._base_manager, id=menu_content_id
+                self.MenuModel._base_manager, id=menu_content_id
             )
             if self._versioning_enabled:
                 version = Version.objects.get_for_content(menu_content)
@@ -225,14 +236,14 @@ class MenuItemAdmin(TreeAdmin):
 
     def response_change(self, request, obj):
         url = reverse(
-            "admin:djangocms_navigation_menuitem_list",
+            self.get_admin_name('menuitem_list'),
             kwargs={"menu_content_id": request.menu_content_id},
         )
         return HttpResponseRedirect(url)
 
     def response_add(self, request, obj, post_url_continue=None):
         url = reverse(
-            "admin:djangocms_navigation_menuitem_list",
+            self.get_admin_name('menuitem_list'),
             kwargs={"menu_content_id": request.menu_content_id},
         )
         return HttpResponseRedirect(url)
@@ -241,7 +252,7 @@ class MenuItemAdmin(TreeAdmin):
         # Disallow moving of a node on anything other than a draft version
         if self._versioning_enabled:
             menu_content = get_object_or_404(
-                MenuContent._base_manager, id=menu_content_id
+                self.MenuModel._base_manager, id=menu_content_id
             )
             version = Version.objects.get_for_content(menu_content)
             try:
@@ -293,7 +304,7 @@ class MenuItemAdmin(TreeAdmin):
     def _versioning_enabled(self):
         """Helper property to check if versioning is enabled for navigation"""
         return apps.get_app_config(
-            "djangocms_navigation"
+            self.model._meta.app_label,
         ).cms_config.djangocms_versioning_enabled
 
 
