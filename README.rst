@@ -26,6 +26,21 @@ Run::
 
 to perform the application's database migrations.
 
+
+Running Tests
+=============
+
+You can run all the tests by executing:
+
+    python -m venv venv
+    source venv/bin/activate
+    python setup.py test
+
+    # Alternatively you could run the test runner stand-alone
+    pip install -r tests/requirements.txt
+    python tests.settings.py
+
+
 App Integration
 ===============
 

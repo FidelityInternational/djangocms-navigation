@@ -2,3 +2,7 @@ djangocms-helper
 tox
 coverage
 isort
+factory_boy
+git+git://github.com/divio/djangocms-versioning.git#egg=djangocms-versioning
+git+git://github.com/FidelityInternational/djangocms-version-locking.git#egg=djangocms-version-locking
+git+git://github.com/divio/djangocms-moderation.git#egg=djangocms-moderation
