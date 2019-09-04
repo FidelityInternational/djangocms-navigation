@@ -29,6 +29,17 @@ try:
 except ImportError:
     pass
 
+try:
+    from djangocms_version_locking.helpers import content_is_unlocked_for_user
+    using_version_lock = True
+    LOCK_MESSAGE = _(
+        "The item is currently locked or you don't "
+        "have permission to change it"
+    )
+except ImportError:
+    using_version_lock = False
+    LOCK_MESSAGE = _("You don't have permission to change this item")
+
 
 class MenuItemChangeList(ChangeList):
     def __init__(self, request, *args, **kwargs):
@@ -165,22 +176,29 @@ class MenuItemAdmin(TreeAdmin):
         extra_context = extra_context or {}
         if menu_content_id:
             request.menu_content_id = menu_content_id
-            if self._versioning_enabled:
-                menu_content = get_object_or_404(
-                    MenuContent._base_manager, id=menu_content_id
-                )
-                version = Version.objects.get_for_content(menu_content)
-                try:
-                    version.check_modify(request.user)
-                except ConditionFailed as error:
-                    messages.error(request, str(error))
-                    return HttpResponseRedirect(version_list_url(menu_content))
-                # purge menu cache
-                purge_menu_cache(site_id=menu_content.menu.site_id)
-            extra_context["list_url"] = reverse(
-                "admin:djangocms_navigation_menuitem_list",
-                kwargs={"menu_content_id": menu_content_id},
+
+        if self._versioning_enabled:
+            menu_content = get_object_or_404(
+                self.MenuModel._base_manager, id=menu_content_id
             )
+
+            change_perm = self.has_change_permission(request, menu_content)
+            if not change_perm:
+                messages.error(request, 'You don\'t have permission to edit or it is locked')
+                return HttpResponseRedirect(version_list_url(menu_content))
+
+            version = Version.objects.get_for_content(menu_content)
+            try:
+                version.check_modify(request.user)
+            except ConditionFailed as error:
+                messages.error(request, str(error))
+                return HttpResponseRedirect(version_list_url(menu_content))
+            # purge menu cache
+            purge_menu_cache(site_id=menu_content.menu.site_id)
+        extra_context["list_url"] = reverse(
+            self.get_admin_name('list', reverse=True),
+            kwargs={"menu_content_id": menu_content_id},
+        )
 
         return super().change_view(
             request, object_id, form_url="", extra_context=extra_context
@@ -249,6 +267,12 @@ class MenuItemAdmin(TreeAdmin):
             menu_content = get_object_or_404(
                 MenuContent._base_manager, id=menu_content_id
             )
+            request.menu_content_id = menu_content_id
+            change_perm = self.has_change_permission(request, menu_content)
+            if not change_perm:
+                messages.error(request, LOCK_MESSAGE)
+                return HttpResponseBadRequest(LOCK_MESSAGE)
+
             version = Version.objects.get_for_content(menu_content)
             try:
                 version.check_modify(request.user)
@@ -272,6 +296,12 @@ class MenuItemAdmin(TreeAdmin):
     def has_change_permission(self, request, obj=None):
         if not hasattr(request, "menu_content_id"):
             return False
+
+        if obj and using_version_lock:
+            unlocked = content_is_unlocked_for_user(obj, request.user)
+            if not unlocked:
+                return False
+
         return super().has_change_permission(request, obj)
 
     def get_changelist(self, request, **kwargs):
