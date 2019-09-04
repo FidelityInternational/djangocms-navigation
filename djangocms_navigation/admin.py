@@ -81,7 +81,7 @@ class MenuContentAdmin(admin.ModelAdmin):
                 identifier=slugify(title), site=get_current_site(request)
             )
             # Creating root menu item with title
-            obj.root = MenuItem.add_root(title=title)
+            obj.root = self.ItemModel.add_root(title=title)
         super().save_model(request, obj, form, change)
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
@@ -180,7 +180,7 @@ class MenuItemAdmin(TreeAdmin):
             menu_content = get_object_or_404(
                 self.MenuModel._base_manager, id=request.menu_content_id
             )
-            return MenuItem.get_tree(menu_content.root)
+            return self.model.get_tree(menu_content.root)
         return self.model().get_tree()
 
     def change_view(
@@ -322,7 +322,7 @@ class MenuItemAdmin(TreeAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form_class = super().get_form(request, obj, **kwargs)
-        menu_root = get_object_or_404(MenuItem, menucontent=request.menu_content_id)
+        menu_root = get_object_or_404(self.model, menucontent=request.menu_content_id)
 
         class Form(form_class):
             def __new__(cls, *args, **kwargs):
