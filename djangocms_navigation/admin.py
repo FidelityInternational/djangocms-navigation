@@ -46,16 +46,21 @@ class MenuItemChangeList(ChangeList):
 
 class MenuContentAdmin(admin.ModelAdmin):
     form = MenuContentForm
+    ItemModel = MenuItem
     list_display = ["title", "get_menuitem_link", "get_preview_link"]
     list_display_links = None
 
-    def get_admin_name(self, name):
+    def get_admin_name(self, name, reverse=False, model=None):
         '''Used for creating admin urls'''
-        return '{}_{}_{}'.format(
-            self.model._meta.app_label,
-            self.model._meta.model_name,
+        model = model if model else self.model
+        name = '{}_{}_{}'.format(
+            model._meta.app_label,
+            model._meta.model_name,
             name
         )
+        if reverse:
+            return 'admin:{}'.format(name)
+        return name
 
     def save_model(self, request, obj, form, change):
         if not change:
@@ -71,14 +76,14 @@ class MenuContentAdmin(admin.ModelAdmin):
     def change_view(self, request, object_id, form_url="", extra_context=None):
         return HttpResponseRedirect(
             reverse(
-                self.get_admin_name('list'),
+                self.get_admin_name('list', reverse=True, model=self.ItemModel),
                 args=[object_id],
             )
         )
 
     def get_menuitem_link(self, obj):
         object_menuitem_url = reverse(
-            self.get_admin_name('list'),
+            self.get_admin_name('list', reverse=True, model=self.ItemModel),
             args=[obj.pk],
         )
 
@@ -110,13 +115,16 @@ class MenuItemAdmin(TreeAdmin):
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
     list_display = ["__str__", "get_object_url"]
 
-    def get_admin_name(self, name):
+    def get_admin_name(self, name, reverse=False):
         '''Used for creating admin urls'''
-        return '{}_{}_{}'.format(
+        name = '{}_{}_{}'.format(
             self.model._meta.app_label,
             self.model._meta.model_name,
             name
         )
+        if reverse:
+            return 'admin:{}'.format(name)
+        return name
 
     def get_urls(self):
         return [
@@ -183,7 +191,7 @@ class MenuItemAdmin(TreeAdmin):
                 # purge menu cache
                 purge_menu_cache(site_id=menu_content.menu.site_id)
             extra_context["list_url"] = reverse(
-                self.get_admin_name('menuitem_list'),
+                self.get_admin_name('list', reverse=True),
                 kwargs={"menu_content_id": menu_content_id},
             )
 
@@ -208,7 +216,7 @@ class MenuItemAdmin(TreeAdmin):
                 # purge menu cache
                 purge_menu_cache(site_id=menu_content.menu.site_id)
             extra_context["list_url"] = reverse(
-                self.get_admin_name('menuitem_list'),
+                self.get_admin_name('list', reverse=True),
                 kwargs={"menu_content_id": menu_content_id},
             )
 
@@ -236,14 +244,14 @@ class MenuItemAdmin(TreeAdmin):
 
     def response_change(self, request, obj):
         url = reverse(
-            self.get_admin_name('menuitem_list'),
+            self.get_admin_name('list', reverse=True),
             kwargs={"menu_content_id": request.menu_content_id},
         )
         return HttpResponseRedirect(url)
 
     def response_add(self, request, obj, post_url_continue=None):
         url = reverse(
-            self.get_admin_name('menuitem_list'),
+            self.get_admin_name('list', reverse=True),
             kwargs={"menu_content_id": request.menu_content_id},
         )
         return HttpResponseRedirect(url)
