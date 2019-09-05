@@ -159,7 +159,9 @@ class MenuItemAdminVersionLocked(CMSTestCase, UsefulAssertsMixin):
         }
 
     def test_visit_change_view_when_node_is_version_locked_fails(self):
-        """It fails as super user is not the person who created the version"""
+        """Visiting the change view for a menu item by a different user should be
+        rejected, because the user is different to the locked to user."""
+
         response = self.client.get(self.change_url)
         msg = list(get_messages(response.wsgi_request))[0]
 
@@ -167,6 +169,7 @@ class MenuItemAdminVersionLocked(CMSTestCase, UsefulAssertsMixin):
         self.assertEquals(response.status_code, 302)
 
     def test_moving_node_that_is_version_locked_fails(self):
+        """A menu item cannot be changed by a user who is not the lock owner"""
         response = self.client.post(self.move_url, data=self.data)
         content = response.content.decode('utf-8')
         msg = "The item is currently locked or you don't have permission to change it"
@@ -176,6 +179,7 @@ class MenuItemAdminVersionLocked(CMSTestCase, UsefulAssertsMixin):
 
     @patch('djangocms_navigation.admin.using_version_lock', False)
     def test_moving_node_version_lock_not_installed_works_without_error(self):
+        """A menu item can be moved without issue if version locking is not installed"""
         response = self.client.post(self.move_url, data=self.data)
 
         self.assertEquals(response.status_code, 200)
@@ -653,6 +657,7 @@ class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
         self.client.force_login(self.user)
 
     def test_menuitem_move_node_smoke_test(self):
+        """A node can be moved"""
         menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         child_of_child = factories.ChildMenuItemFactory(parent=child)
@@ -674,6 +679,9 @@ class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
 
     @patch("django.contrib.messages.error")
     def test_menuitem_move_node_cant_move_outside_of_root(self, mocked_messages):
+        """A node can't be moved outside of a root node because that would
+        pull it out of a tree altogether"""
+
         menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         move_url = reverse(

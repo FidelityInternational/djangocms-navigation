@@ -92,12 +92,12 @@ class MenuItemForm(MoveNodeForm):
         changing_root = self.instance.pk and self.instance.is_root()
         if not node and not changing_root:
             raise forms.ValidationError(
-                {"_ref_node_id": "You must specify a relative menu item"}
+                {"_ref_node_id": _("You must specify a relative menu item")}
             )
 
         if node and node.is_root() and _position in ["left", "right"]:
             raise forms.ValidationError(
-                {"_ref_node_id": ["You cannot add a sibling for this menu item"]}
+                {"_ref_node_id": [_("You cannot add a sibling for this menu item")]}
             )
 
         if self.instance and not self.instance.is_root() and content_type and object_id:
@@ -106,14 +106,14 @@ class MenuItemForm(MoveNodeForm):
                     pk=object_id
                 )  # flake8: noqa
             except content_type.model_class().DoesNotExist:
-                raise forms.ValidationError({"object_id": ["Invalid object"]})
+                raise forms.ValidationError({"object_id": [_("Invalid object")]})
 
         if content_type and not object_id:
-            raise forms.ValidationError({"object_id": ["Please select content object"]})
+            raise forms.ValidationError({"object_id": [_("Please select content object")]})
 
         if not content_type and object_id:
             raise forms.ValidationError(
-                {"content_type": ["Please select content type"]}
+                {"content_type": [_("Please select content type")]}
             )
 
         return cleaned_data
