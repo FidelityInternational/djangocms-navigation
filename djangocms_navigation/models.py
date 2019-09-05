@@ -5,6 +5,7 @@ from django.db import models
 from django.shortcuts import reverse
 from django.utils.translation import ugettext_lazy as _
 
+from cms.models import Page
 from cms.models import CMSPlugin
 
 from treebeard.mp_tree import MP_Node
@@ -25,6 +26,7 @@ class AbstractMenu(models.Model):
 
     class Meta:
         unique_together = (("identifier", "site"),)
+        abstract = True
 
     def __str__(self):
         return self.identifier
@@ -34,9 +36,6 @@ class AbstractMenu(models.Model):
         """Returns the id of the root MenuItem as it will be in the
         NavigationNode instance"""
         return "root-" + self.identifier
-
-    class Meta:
-        abstract = True
 
 
 class AbstractMenuContent(models.Model):

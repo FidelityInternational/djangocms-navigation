@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
-
+from .utils import get_model
 
 TARGETS = (
     ("_blank", _("Load in a new window")),
@@ -21,8 +21,9 @@ def get_templates():
     return choices
 
 
-PLUGIN_URL_NAME_PREFIX = "djangocms_navigation"
-
-SELECT2_CONTENT_OBJECT_URL_NAME = "{}_select2_content_object".format(
-    PLUGIN_URL_NAME_PREFIX
-)
+def get_select2_url_name():
+    MenuContent = get_model('MENU_MODEL')
+    url_name = "{}_select2_content_object".format(
+        MenuContent._meta.app_label
+    )
+    return url_name

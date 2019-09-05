@@ -13,8 +13,6 @@ from djangocms_navigation import cms_config
 from djangocms_navigation.models import MenuContent
 from djangocms_navigation.test_utils.app_1.models import TestModel1, TestModel2
 from djangocms_navigation.test_utils.app_2.models import TestModel3, TestModel4
-from djangocms_navigation.test_utils.polls.models import PollContent
-from djangocms_navigation.utils import supported_models
 
 from .utils import UsefulAssertsMixin
 
@@ -63,22 +61,6 @@ class AppRegistrationTestCase(TestCase, UsefulAssertsMixin):
             self.assertTrue(TestModel2 in register_model)
             self.assertTrue(TestModel3 in register_model)
             self.assertTrue(TestModel4 in register_model)
-
-
-class NavigationIntegrationTestCase(TestCase):
-
-    def test_config_with_multiple_apps(self):
-        registered_models = supported_models()
-
-        expected_models = {
-            TestModel1: [],
-            TestModel2: [],
-            TestModel3: [],
-            TestModel4: [],
-            Page: ["title"],
-            PollContent: ["text"],
-        }
-        self.assertDictEqual(registered_models, expected_models)
 
 
 class NavigationSettingTestCase(TestCase):

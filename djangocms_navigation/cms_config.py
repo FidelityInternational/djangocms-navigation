@@ -4,8 +4,11 @@ from django.core.exceptions import ImproperlyConfigured
 from cms.app_base import CMSAppConfig, CMSAppExtension
 from cms.models import Page
 
-from .models import MenuContent, MenuItem
-from .utils import purge_menu_cache
+from .utils import purge_menu_cache, get_model
+
+
+MenuContent = get_model('MENU_MODEL')
+MenuItem = get_model('ITEM_MODEL')
 
 
 class NavigationCMSExtension(CMSAppExtension):

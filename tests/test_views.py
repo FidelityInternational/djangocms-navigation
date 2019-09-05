@@ -6,7 +6,7 @@ from cms.models import Page, User
 from cms.test_utils.testcases import CMSTestCase
 from cms.utils.urlutils import admin_reverse
 
-from djangocms_navigation.constants import SELECT2_CONTENT_OBJECT_URL_NAME
+from djangocms_navigation.constants import get_select2_url_name
 from djangocms_navigation.models import MenuItem
 from djangocms_navigation.test_utils.factories import (
     MenuContentFactory,
@@ -70,7 +70,7 @@ class PreviewViewTestCases(CMSTestCase):
 
 class ContentObjectAutoFillTestCases(CMSTestCase):
     def setUp(self):
-        self.select2_endpoint = admin_reverse(SELECT2_CONTENT_OBJECT_URL_NAME)
+        self.select2_endpoint = admin_reverse(get_select2_url_name())
         self.superuser = self.get_superuser()
 
     def test_select2_view_no_content_id(self):

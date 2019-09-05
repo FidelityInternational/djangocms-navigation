@@ -1,4 +1,4 @@
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
@@ -23,23 +23,28 @@ class SupportedModelsTestCase(TestCase):
     def tearDown(self):
         supported_models.cache_clear()
 
-    def test_supported_models(self):
-        models = ["Foo", "Bar"]
-        app_config = Mock(
-            spec=[], cms_extension=Mock(spec=[], navigation_apps_models=models)
-        )
-        with patch.object(apps, "get_app_config", return_value=app_config):
-            self.assertEqual(supported_models(), models)
+    def test_supported_models_with_installed_apps(self):
+        """Tests that all models registered in cms_config shows
+        up in supported models"""
+
+        registered_models = supported_models()
+
+        expected_models = {
+            TestModel1: [],
+            TestModel2: [],
+            TestModel3: [],
+            TestModel4: [],
+            Page: ["title"],
+            PollContent: ["text"],
+        }
+        self.assertDictEqual(registered_models, expected_models)
 
     @patch.object(apps, "get_app_config", side_effect=LookupError)
     def test_supported_models_returns_empty_list_on_lookup_error(self, mocked_apps):
         self.assertDictEqual(supported_models(), {})
 
     def test_supported_models_is_cached(self):
-        models = ["Foo", "Bar"]
-        app_config = Mock(
-            spec=[], cms_extension=Mock(spec=[], navigation_apps_models=models)
-        )
+        app_config = apps.get_app_config('djangocms_navigation')
         with patch.object(apps, "get_app_config", return_value=app_config):
             supported_models()
         with patch.object(apps, "get_app_config") as mock:
