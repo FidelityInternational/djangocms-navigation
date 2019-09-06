@@ -1,12 +1,11 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
-from django.urls.exceptions import NoReverseMatch
 
 from cms.models import Page, User
 from cms.test_utils.testcases import CMSTestCase
 from cms.utils.urlutils import admin_reverse
 
-from djangocms_navigation.constants import get_select2_url_name
+from djangocms_navigation.utils import get_select2_url_name
 from djangocms_navigation.models import MenuItem
 from djangocms_navigation.test_utils.factories import (
     MenuContentFactory,

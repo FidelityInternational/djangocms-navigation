@@ -5,7 +5,7 @@ from cms.models import Page
 from cms.test_utils.testcases import CMSTestCase
 from cms.utils.urlutils import admin_reverse
 
-from djangocms_navigation.constants import get_select2_url_name
+from djangocms_navigation.utils import get_select2_url_name
 from djangocms_navigation.forms import ContentTypeObjectSelectWidget, MenuItemForm
 from djangocms_navigation.test_utils import factories
 from djangocms_navigation.test_utils.app_1.models import TestModel1, TestModel2

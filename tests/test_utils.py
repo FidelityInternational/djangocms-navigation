@@ -24,8 +24,7 @@ class SupportedModelsTestCase(TestCase):
         supported_models.cache_clear()
 
     def test_supported_models_with_installed_apps(self):
-        """Tests that all models registered in cms_config shows
-        up in supported models"""
+        """All models registered in cms_config are shown in supported models"""
 
         registered_models = supported_models()
 

@@ -7,12 +7,12 @@ from cms.utils.urlutils import admin_reverse
 
 from treebeard.forms import MoveNodeForm, _get_exclude_for_model
 
-from .constants import get_select2_url_name
+from .constants import MENU_MODEL, ITEM_MODEL
 from .models import NavigationPlugin
-from .utils import supported_content_type_pks, get_model
+from .utils import supported_content_type_pks, get_model, get_select2_url_name
 
-MenuContent = get_model('MENU_MODEL')
-MenuItem = get_model('ITEM_MODEL')
+MenuContent = get_model(MENU_MODEL)
+MenuItem = get_model(ITEM_MODEL)
 
 
 class NavigationPluginForm(forms.ModelForm):

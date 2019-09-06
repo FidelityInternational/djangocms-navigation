@@ -8,9 +8,10 @@ from menus.menu_pool import menu_pool
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 
 from .utils import get_versionable_for_content, get_model
+from .constants import MENU_MODEL, ITEM_MODEL
 
-MenuContent = get_model('MENU_MODEL')
-MenuItem = get_model('ITEM_MODEL')
+MenuContent = get_model(MENU_MODEL)
+MenuItem = get_model(ITEM_MODEL)
 
 
 class CMSMenu(Menu):

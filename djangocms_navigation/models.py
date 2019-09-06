@@ -5,7 +5,6 @@ from django.db import models
 from django.shortcuts import reverse
 from django.utils.translation import ugettext_lazy as _
 
-from cms.models import Page
 from cms.models import CMSPlugin
 
 from treebeard.mp_tree import MP_Node

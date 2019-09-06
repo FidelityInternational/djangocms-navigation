@@ -1,12 +1,13 @@
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
-from .utils import get_model
 
 TARGETS = (
     ("_blank", _("Load in a new window")),
     ("_self", _("Load in the same frame as it was clicked")),
     ("_top", _("Load in the full body of the window")),
 )
+MENU_MODEL = 'MENU_MODEL'
+ITEM_MODEL = 'ITEM_MODEL'
 
 
 # Add additional choices through the ``settings.py``.
@@ -19,11 +20,3 @@ def get_templates():
     choices = [(TEMPLATE_DEFAULT, _("Default"))]
     choices += getattr(settings, "DJANGOCMS_NAVIGATION_TEMPLATES", [])
     return choices
-
-
-def get_select2_url_name():
-    MenuContent = get_model('MENU_MODEL')
-    url_name = "{}_select2_content_object".format(
-        MenuContent._meta.app_label
-    )
-    return url_name

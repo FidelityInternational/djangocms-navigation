@@ -15,10 +15,11 @@ from django.views.i18n import JavaScriptCatalog
 
 from treebeard.admin import TreeAdmin
 
-from .constants import get_select2_url_name
+from .constants import MENU_MODEL, ITEM_MODEL
 from .forms import MenuContentForm, MenuItemForm
 from .models import Menu, MenuContent, MenuItem
 from .utils import purge_menu_cache, get_model, reverse_admin_name, get_admin_name
+from .utils import get_select2_url_name
 from .views import ContentObjectSelect2View, MenuContentPreviewView
 
 # TODO: Tests to be added
@@ -57,7 +58,7 @@ class MenuItemChangeList(ChangeList):
 
 class MenuContentAdmin(admin.ModelAdmin):
     form = MenuContentForm
-    item_model = get_model('ITEM_MODEL')
+    item_model = get_model(ITEM_MODEL)
     list_display = ["title", "get_menuitem_link", "get_preview_link"]
     list_display_links = None
 
@@ -105,7 +106,7 @@ class MenuContentAdmin(admin.ModelAdmin):
 
 
 class MenuItemAdmin(TreeAdmin):
-    menu_model = get_model('MENU_MODEL')
+    menu_model = get_model(MENU_MODEL)
     form = MenuItemForm
     change_form_template = "admin/djangocms_navigation/menuitem/change_form.html"
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
@@ -316,6 +317,7 @@ class MenuItemAdmin(TreeAdmin):
         return getattr(
             settings, "DJANGOCMS_NAVIGATION_VERSIONING_ENABLED", True
         )
+
 
 admin.site.register(MenuItem, MenuItemAdmin)
 admin.site.register(MenuContent, MenuContentAdmin)

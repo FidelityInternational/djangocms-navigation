@@ -5,10 +5,11 @@ from cms.app_base import CMSAppConfig, CMSAppExtension
 from cms.models import Page
 
 from .utils import purge_menu_cache, get_model
+from .constants import MENU_MODEL, ITEM_MODEL
 
 
-MenuContent = get_model('MENU_MODEL')
-MenuItem = get_model('ITEM_MODEL')
+MenuContent = get_model(MENU_MODEL)
+MenuItem = get_model(ITEM_MODEL)
 
 
 class NavigationCMSExtension(CMSAppExtension):

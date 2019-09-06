@@ -6,17 +6,18 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 
 from menus.menu_pool import menu_pool
+from .constants import MENU_MODEL, ITEM_MODEL
 
 
 def get_model(model_setting):
     """
     If you use your own model it needs to be registered in the following way
-    NAVIGATION_MENU_MODEL = 'appname.model_name'
-    NAVIGATION_ITEM_MODEL = 'appname.model_name'
+    DJANGOCMS_NAVIGATION_MENU_MODEL = 'appname.model_name'
+    DJANGOCMS_NAVIGATION_ITEM_MODEL = 'appname.model_name'
     """
     default = {
-        'MENU_MODEL': 'djangocms_navigation.MenuContent',
-        'ITEM_MODEL': 'djangocms_navigation.MenuItem'
+        MENU_MODEL: 'djangocms_navigation.MenuContent',
+        ITEM_MODEL: 'djangocms_navigation.MenuItem'
     }
     model_path = getattr(
         settings,
@@ -36,6 +37,14 @@ def get_admin_name(model, name):
     return name
 
 
+def get_select2_url_name():
+    MenuContent = get_model('MENU_MODEL')
+    url_name = "{}_select2_content_object".format(
+        MenuContent._meta.app_label
+    )
+    return url_name
+
+
 def reverse_admin_name(model, name, args=None, kwargs=None):
     name = get_admin_name(model, name)
     url = reverse('admin:{}'.format(name), args=args, kwargs=kwargs)
@@ -45,9 +54,7 @@ def reverse_admin_name(model, name, args=None, kwargs=None):
 @lru_cache(maxsize=1)
 def supported_models():
     try:
-        MenuContent = get_model('MENU_MODEL')
-        app_label = MenuContent._meta.app_label
-        app_config = apps.get_app_config(app_label)
+        app_config = get_app_config_from_model(MENU_MODEL)
     except LookupError:
         return {}
     else:
@@ -57,12 +64,17 @@ def supported_models():
 
 @lru_cache(maxsize=1)
 def supported_content_type_pks():
-    MenuContent = get_model('MENU_MODEL')
-    app_label = MenuContent._meta.app_label
-    app_config = apps.get_app_config(app_label)
+    app_config = get_app_config_from_model(MENU_MODEL)
     models = app_config.cms_extension.navigation_apps_models
     content_type_dict = ContentType.objects.get_for_models(*models)
     return [ct.pk for ct in content_type_dict.values()]
+
+
+def get_app_config_from_model(model):
+    MenuContent = get_model(MENU_MODEL)
+    app_label = MenuContent._meta.app_label
+    app_config = apps.get_app_config(app_label)
+    return app_config
 
 
 @lru_cache(maxsize=1)
