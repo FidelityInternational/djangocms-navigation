@@ -193,6 +193,7 @@ class MenuItemAdminChangeViewTestCase(CMSTestCase, UsefulAssertsMixin):
         self.client.force_login(self.get_superuser())
 
     def test_menuitem_change_view(self):
+        """The change view does not show draft versions"""
         menu_content = factories.MenuContentWithVersionFactory(
             version__state=DRAFT, version__created_by=self.get_superuser()
         )
