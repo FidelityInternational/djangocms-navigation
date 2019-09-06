@@ -106,6 +106,7 @@ class MenuContentAdmin(admin.ModelAdmin):
 class MenuItemAdmin(TreeAdmin):
     menu_model = get_model('MENU_MODEL')
     form = MenuItemForm
+    change_form_template = "admin/djangocms_navigation/menuitem/change_form.html"
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
     list_display = ["__str__", "get_object_url"]
 
