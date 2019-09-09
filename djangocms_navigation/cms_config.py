@@ -1,15 +1,14 @@
+from functools import partial
+
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 from cms.app_base import CMSAppConfig, CMSAppExtension
 from cms.models import Page
 
-from .utils import purge_menu_cache, get_model
-from .constants import MENU_MODEL, ITEM_MODEL
-
-
-MenuContent = get_model(MENU_MODEL)
-MenuItem = get_model(ITEM_MODEL)
+from .utils import purge_menu_cache
+from .models import MenuContent
+from .models import MenuItem
 
 
 class NavigationCMSExtension(CMSAppExtension):
@@ -17,53 +16,65 @@ class NavigationCMSExtension(CMSAppExtension):
         self.navigation_apps_models = {}
 
     def configure_app(self, cms_config):
-        if hasattr(cms_config, "navigation_models"):
-            navigation_app_models = getattr(cms_config, "navigation_models")
-            if isinstance(navigation_app_models, dict):
-                self.navigation_apps_models.update(navigation_app_models)
-            else:
-                raise ImproperlyConfigured(
-                    "navigation configuration must be a dictionary object"
-                )
-        else:
+        if not hasattr(cms_config, "navigation_models"):
             raise ImproperlyConfigured(
                 "cms_config.py must have navigation_models attribute"
             )
 
+        navigation_app_models = getattr(cms_config, "navigation_models")
+        if isinstance(navigation_app_models, dict):
+            self.navigation_apps_models.update(navigation_app_models)
+        else:
+            raise ImproperlyConfigured(
+                "navigation configuration must be a dictionary object"
+            )
 
-def copy_menu_content(original_content):
-    """Copy the MenuContent object and deepcopy its menu items."""
-    # Copy root menu item
+
+def _copy_menu_content(menu_model, item_model, original_content):
+    """Use this function together with a partial to customize the models"""
+
     original_root = original_content.root
     root_fields = {
         field.name: getattr(original_root, field.name)
-        for field in MenuItem._meta.fields
-        if field.name not in [MenuItem._meta.pk.name, "path", "depth"]
+        for field in item_model._meta.fields
+        if field.name not in [item_model._meta.pk.name, "path", "depth"]
     }
-    new_root = MenuItem.add_root(**root_fields)
+    new_root = item_model.add_root(**root_fields)
 
     # Copy MenuContent object
     content_fields = {
         field.name: getattr(original_content, field.name)
-        for field in MenuContent._meta.fields
-        if field.name not in [MenuContent._meta.pk.name, "root"]
+        for field in menu_model._meta.fields
+        if field.name not in [menu_model._meta.pk.name, "root"]
     }
     content_fields["root"] = new_root
-    new_content = MenuContent.objects.create(**content_fields)
+    new_content = menu_model.objects.create(**content_fields)
 
     # Copy menu items
     to_create = []
-    for item in MenuItem.get_tree(original_root).exclude(pk=original_root.pk):
+    for item in item_model.get_tree(original_root).exclude(pk=original_root.pk):
         item_fields = {
             field.name: getattr(item, field.name)
-            for field in MenuItem._meta.fields
-            if field.name not in [MenuItem._meta.pk.name, "path"]
+            for field in item_model._meta.fields
+            if field.name not in [item_model._meta.pk.name, "path"]
         }
-        item_fields["path"] = new_root.path + item.path[MenuItem.steplen:]
-        to_create.append(MenuItem(**item_fields))
-    MenuItem.objects.bulk_create(to_create)
+        item_fields["path"] = new_root.path + item.path[item_model.steplen:]
+        to_create.append(item_model(**item_fields))
+    item_model.objects.bulk_create(to_create)
 
     return new_content
+
+
+complete_copy_menu_content = partial(
+    _copy_menu_content,
+    MenuContent,
+    MenuItem
+)
+
+
+def copy_menu_content(original_content):
+    """Copy the MenuContent object and deepcopy its menu items."""
+    return complete_copy_menu_content(original_content)
 
 
 def on_menu_content_publish(version):
@@ -100,7 +111,6 @@ class NavigationCMSAppConfig(CMSAppConfig):
         # model_class : field(s) to search in menu item form UI
         Page: ["title"]
     }
-
     if djangocms_versioning_enabled:
         from djangocms_versioning.datastructures import VersionableItem
 
@@ -108,7 +118,7 @@ class NavigationCMSAppConfig(CMSAppConfig):
             VersionableItem(
                 content_model=MenuContent,
                 grouper_field_name="menu",
-                copy_function=copy_menu_content,
+                copy_function=complete_copy_menu_content,
                 preview_url=MenuContent.get_preview_url,
                 on_publish=on_menu_content_publish,
                 on_unpublish=on_menu_content_unpublish,

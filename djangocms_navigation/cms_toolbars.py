@@ -9,15 +9,17 @@ MenuContent = get_model(MENU_MODEL)
 
 
 class NavigationToolbar(PlaceholderToolbar):
+    menu_model = MenuContent
+
     def _add_navigation_menu(self):
-        app_label = MenuContent._meta.app_label
-        model_name = MenuContent._meta.model_name
+        app_label = self.menu_model._meta.app_label
+        model_name = self.menu_model._meta.model_name
 
         change_permission = '{}.change_{}'.format(app_label, model_name)
         if not self.request.user.has_perm(change_permission):
             return
         admin_menu = self.toolbar.get_or_create_menu(ADMIN_MENU_IDENTIFIER)
-        url = reverse_admin_name(MenuContent, 'changelist')
+        url = reverse_admin_name(self.menu_model, 'changelist')
         admin_menu.add_sideframe_item(_("Navigation"), url=url, position=4)
 
     def post_template_populate(self):

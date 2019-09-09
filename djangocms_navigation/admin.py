@@ -314,9 +314,9 @@ class MenuItemAdmin(TreeAdmin):
     @property
     def _versioning_enabled(self):
         """Helper property to check if versioning is enabled for navigation"""
-        return getattr(
-            settings, "DJANGOCMS_NAVIGATION_VERSIONING_ENABLED", True
-        )
+        return apps.get_app_config(
+            self.model._meta.app_label
+        ).cms_config.djangocms_versioning_enabled
 
 
 admin.site.register(MenuItem, MenuItemAdmin)
