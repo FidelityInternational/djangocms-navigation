@@ -115,6 +115,11 @@ class MenuItemAdmin(TreeAdmin):
     def get_urls(self):
         return [
             url(
+                r"^$",
+                self.admin_site.admin_view(self.changelist_view),
+                name=get_admin_name(self.model, 'changelist'),
+            ),
+            url(
                 r"^(?P<menu_content_id>\d+)/$",
                 self.admin_site.admin_view(self.changelist_view),
                 name=get_admin_name(self.model, 'list'),

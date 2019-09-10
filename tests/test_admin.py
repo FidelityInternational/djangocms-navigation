@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.contrib.messages import get_messages
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
@@ -555,13 +556,14 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
 
 class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
     def setUp(self):
+        self.menu_content = factories.MenuContentWithVersionFactory()
+        factories.ChildMenuItemFactory.create_batch(5, parent=self.menu_content.root)
         self.client.force_login(self.get_superuser())
 
     def test_menuitem_changelist(self):
-        menu_content = factories.MenuContentWithVersionFactory()
-        factories.ChildMenuItemFactory.create_batch(5, parent=menu_content.root)
+
         list_url = reverse(
-            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
+            "admin:djangocms_navigation_menuitem_list", args=(self.menu_content.id,)
         )
 
         response = self.client.get(list_url)
@@ -571,10 +573,8 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
 
     @disable_versioning_for_navigation()
     def test_menuitem_changelist_view_smoketest_for_versioning_disabled(self):
-        menu_content = factories.MenuContentFactory()
-        factories.ChildMenuItemFactory.create_batch(5, parent=menu_content.root)
         list_url = reverse(
-            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
+            "admin:djangocms_navigation_menuitem_list", args=(self.menu_content.id,)
         )
 
         response = self.client.get(list_url)
@@ -589,29 +589,45 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
         self.assertEqual(response.status_code, 404)
 
     def test_menuitem_changelist_contains_add_url(self):
-        menu_content = factories.MenuContentWithVersionFactory()
-        factories.ChildMenuItemFactory.create_batch(5, parent=menu_content.root)
         list_url = reverse(
-            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
+            "admin:djangocms_navigation_menuitem_list", args=(self.menu_content.id,)
         )
 
         response = self.client.get(list_url)
 
         add_url = reverse(
-            "admin:djangocms_navigation_menuitem_add", args=(menu_content.id,)
+            "admin:djangocms_navigation_menuitem_add", args=(self.menu_content.id,)
         )
         self.assertIn(add_url, str(response.content))
 
     def test_menuitem_changelist_contains_version_list_url(self):
-        menu_content = factories.MenuContentWithVersionFactory()
-        factories.ChildMenuItemFactory.create_batch(5, parent=menu_content.root)
         list_url = reverse(
-            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
+            "admin:djangocms_navigation_menuitem_list", args=(self.menu_content.id,)
         )
 
         response = self.client.get(list_url)
 
-        self.assertIn(version_list_url(menu_content), str(response.content))
+        self.assertIn(version_list_url(self.menu_content), str(response.content))
+
+    def test_delete_action_in_changelist(self):
+        """Select deleted works as expected"""
+
+        item = MenuItem.objects.last()
+
+        delete_confirmation_data = {
+            ACTION_CHECKBOX_NAME: [item.pk],
+            'action': 'delete_selected',
+            'post': 'yes',
+        }
+        post_url = reverse(
+            "admin:djangocms_navigation_menuitem_list",
+            args=(self.menu_content.id,)
+        )
+        resp = self.client.post(post_url, delete_confirmation_data)
+        count = MenuItem.objects.filter(pk=item.pk).count()
+
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(count, 0)
 
     @patch("django.contrib.messages.error")
     @patch("djangocms_versioning.models.Version.check_modify")
