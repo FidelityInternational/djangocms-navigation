@@ -7,16 +7,13 @@ from menus.menu_pool import menu_pool
 
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 
-from .utils import get_versionable_for_content, get_model
-from .constants import MENU_MODEL, ITEM_MODEL
-
-MenuContent = get_model(MENU_MODEL)
-MenuItem = get_model(ITEM_MODEL)
+from .models import MenuContent, MenuItem
+from .utils import get_versionable_for_content
 
 
 class CMSMenu(Menu):
-    item_model = MenuItem
     menu_model = MenuContent
+    item_model = MenuItem
 
     def get_roots(self, request):
         queryset = self.item_model.get_root_nodes().filter(

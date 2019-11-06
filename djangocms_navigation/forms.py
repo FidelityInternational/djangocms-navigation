@@ -7,12 +7,8 @@ from cms.utils.urlutils import admin_reverse
 
 from treebeard.forms import MoveNodeForm, _get_exclude_for_model
 
-from .constants import MENU_MODEL, ITEM_MODEL
-from .models import NavigationPlugin
-from .utils import supported_content_type_pks, get_model, get_select2_url_name
-
-MenuContent = get_model(MENU_MODEL)
-MenuItem = get_model(ITEM_MODEL)
+from .models import NavigationPlugin, MenuContent, MenuItem
+from .utils import supported_content_type_pks, get_select2_url_name
 
 
 class NavigationPluginForm(forms.ModelForm):
@@ -37,6 +33,7 @@ class Select2Mixin:
 
 class ContentTypeObjectSelectWidget(Select2Mixin, forms.TextInput):
     def get_url(self):
+        import ipdb; ipdb.set_trace()
         return admin_reverse(get_select2_url_name())
 
     def build_attrs(self, *args, **kwargs):
@@ -85,10 +82,9 @@ class MenuItemForm(MoveNodeForm):
         if not object_id:
             cleaned_data["object_id"] = None
 
-        Model = self._meta.model
         try:
-            node = Model.objects.get(id=_ref_node_id)
-        except Model.DoesNotExist:
+            node = self._meta.model.objects.get(id=_ref_node_id)
+        except self._meta.model.DoesNotExist:
             node = None
 
         # Check we're not trying to modify the root node cause some

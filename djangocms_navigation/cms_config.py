@@ -1,5 +1,3 @@
-from functools import partial
-
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
@@ -7,8 +5,7 @@ from cms.app_base import CMSAppConfig, CMSAppExtension
 from cms.models import Page
 
 from .utils import purge_menu_cache
-from .models import MenuContent
-from .models import MenuItem
+from .models import MenuContent, MenuItem
 
 
 class NavigationCMSExtension(CMSAppExtension):
@@ -30,51 +27,39 @@ class NavigationCMSExtension(CMSAppExtension):
             )
 
 
-def _copy_menu_content(menu_model, item_model, original_content):
+def _copy_menu_content(original_content):
     """Use this function together with a partial to customize the models"""
 
     original_root = original_content.root
     root_fields = {
         field.name: getattr(original_root, field.name)
-        for field in item_model._meta.fields
-        if field.name not in [item_model._meta.pk.name, "path", "depth"]
+        for field in MenuItem._meta.fields
+        if field.name not in [MenuItem._meta.pk.name, "path", "depth"]
     }
-    new_root = item_model.add_root(**root_fields)
+    new_root = MenuItem.add_root(**root_fields)
 
     # Copy MenuContent object
     content_fields = {
         field.name: getattr(original_content, field.name)
-        for field in menu_model._meta.fields
-        if field.name not in [menu_model._meta.pk.name, "root"]
+        for field in MenuContent._meta.fields
+        if field.name not in [MenuContent._meta.pk.name, "root"]
     }
     content_fields["root"] = new_root
-    new_content = menu_model.objects.create(**content_fields)
+    new_content = MenuContent.objects.create(**content_fields)
 
     # Copy menu items
     to_create = []
-    for item in item_model.get_tree(original_root).exclude(pk=original_root.pk):
+    for item in MenuItem.get_tree(original_root).exclude(pk=original_root.pk):
         item_fields = {
             field.name: getattr(item, field.name)
-            for field in item_model._meta.fields
-            if field.name not in [item_model._meta.pk.name, "path"]
+            for field in MenuItem._meta.fields
+            if field.name not in [MenuItem._meta.pk.name, "path"]
         }
-        item_fields["path"] = new_root.path + item.path[item_model.steplen:]
-        to_create.append(item_model(**item_fields))
-    item_model.objects.bulk_create(to_create)
+        item_fields["path"] = new_root.path + item.path[MenuItem.steplen:]
+        to_create.append(MenuItem(**item_fields))
+    MenuItem.objects.bulk_create(to_create)
 
     return new_content
-
-
-complete_copy_menu_content = partial(
-    _copy_menu_content,
-    MenuContent,
-    MenuItem
-)
-
-
-def copy_menu_content(original_content):
-    """Copy the MenuContent object and deepcopy its menu items."""
-    return complete_copy_menu_content(original_content)
 
 
 def on_menu_content_publish(version):
@@ -118,7 +103,7 @@ class NavigationCMSAppConfig(CMSAppConfig):
             VersionableItem(
                 content_model=MenuContent,
                 grouper_field_name="menu",
-                copy_function=complete_copy_menu_content,
+                copy_function=_copy_menu_content,
                 preview_url=MenuContent.get_preview_url,
                 on_publish=on_menu_content_publish,
                 on_unpublish=on_menu_content_unpublish,

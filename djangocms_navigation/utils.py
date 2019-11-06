@@ -1,31 +1,11 @@
 from functools import lru_cache
 
-from django.conf import settings
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-
 from menus.menu_pool import menu_pool
-from .constants import MENU_MODEL, ITEM_MODEL
 
-
-def get_model(model_setting):
-    """
-    If you use your own model it needs to be registered in the following way
-    DJANGOCMS_NAVIGATION_MENU_MODEL = 'appname.model_name'
-    DJANGOCMS_NAVIGATION_ITEM_MODEL = 'appname.model_name'
-    """
-    default = {
-        MENU_MODEL: 'djangocms_navigation.MenuContent',
-        ITEM_MODEL: 'djangocms_navigation.MenuItem'
-    }
-    model_path = getattr(
-        settings,
-        'DJANGOCMS_NAVIGATION_{}'.format(model_setting),
-        default[model_setting]
-    )
-    app_name, model_name = model_path.split('.')
-    return apps.get_model(app_name, model_name)
+from .models import MenuContent
 
 
 def get_admin_name(model, name):
@@ -37,24 +17,24 @@ def get_admin_name(model, name):
     return name
 
 
-def get_select2_url_name():
-    MenuContent = get_model('MENU_MODEL')
-    url_name = "{}_select2_content_object".format(
-        MenuContent._meta.app_label
-    )
-    return url_name
-
-
+# FIXME: Reuse the django cms reverse util: admin_reverse()
 def reverse_admin_name(model, name, args=None, kwargs=None):
     name = get_admin_name(model, name)
     url = reverse('admin:{}'.format(name), args=args, kwargs=kwargs)
     return url
 
 
+def get_select2_url_name():
+    url_name = "{}_select2_content_object".format(
+        MenuContent._meta.app_label
+    )
+    return url_name
+
+
 @lru_cache(maxsize=1)
 def supported_models():
     try:
-        app_config = get_app_config_from_model(MENU_MODEL)
+        app_config = apps.get_app_config("djangocms_navigation")
     except LookupError:
         return {}
     else:
@@ -64,17 +44,10 @@ def supported_models():
 
 @lru_cache(maxsize=1)
 def supported_content_type_pks():
-    app_config = get_app_config_from_model(MENU_MODEL)
+    app_config = apps.get_app_config("djangocms_navigation")
     models = app_config.cms_extension.navigation_apps_models
     content_type_dict = ContentType.objects.get_for_models(*models)
     return [ct.pk for ct in content_type_dict.values()]
-
-
-def get_app_config_from_model(model):
-    MenuContent = get_model(MENU_MODEL)
-    app_label = MenuContent._meta.app_label
-    app_config = apps.get_app_config(app_label)
-    return app_config
 
 
 @lru_cache(maxsize=1)

@@ -15,11 +15,14 @@ from django.views.i18n import JavaScriptCatalog
 
 from treebeard.admin import TreeAdmin
 
-from .constants import MENU_MODEL, ITEM_MODEL
 from .forms import MenuContentForm, MenuItemForm
 from .models import Menu, MenuContent, MenuItem
-from .utils import purge_menu_cache, get_model, reverse_admin_name, get_admin_name
-from .utils import get_select2_url_name
+from .utils import (
+    get_select2_url_name,
+    purge_menu_cache,
+    reverse_admin_name,
+    get_admin_name
+)
 from .views import ContentObjectSelect2View, MenuContentPreviewView
 
 # TODO: Tests to be added
@@ -58,7 +61,7 @@ class MenuItemChangeList(ChangeList):
 
 class MenuContentAdmin(admin.ModelAdmin):
     form = MenuContentForm
-    item_model = get_model(ITEM_MODEL)
+    item_model = MenuItem
     list_display = ["title", "get_menuitem_link", "get_preview_link"]
     list_display_links = None
 
@@ -106,7 +109,7 @@ class MenuContentAdmin(admin.ModelAdmin):
 
 
 class MenuItemAdmin(TreeAdmin):
-    menu_model = get_model(MENU_MODEL)
+    menu_model = MenuContent
     form = MenuItemForm
     change_form_template = "admin/djangocms_navigation/menuitem/change_form.html"
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
@@ -146,7 +149,7 @@ class MenuItemAdmin(TreeAdmin):
             url(
                 r"^select2/$",
                 self.admin_site.admin_view(ContentObjectSelect2View.as_view()),
-                name=get_select2_url_name(),
+                name=get_select2_url_name(self.menu_model),
             ),
             url(
                 r"^(?P<menu_content_id>\d+)/preview/$",
