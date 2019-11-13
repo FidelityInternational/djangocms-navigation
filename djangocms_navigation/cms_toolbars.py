@@ -2,10 +2,9 @@ from django.utils.translation import ugettext_lazy as _
 
 from cms.cms_toolbars import ADMIN_MENU_IDENTIFIER, PlaceholderToolbar
 from cms.toolbar_pool import toolbar_pool
-from .utils import get_model, reverse_admin_name
-from .constants import MENU_MODEL
 
-MenuContent = get_model(MENU_MODEL)
+from .models import MenuContent
+from .utils import reverse_admin_name
 
 
 class NavigationToolbar(PlaceholderToolbar):

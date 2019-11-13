@@ -33,7 +33,6 @@ class Select2Mixin:
 
 class ContentTypeObjectSelectWidget(Select2Mixin, forms.TextInput):
     def get_url(self):
-        import ipdb; ipdb.set_trace()
         return admin_reverse(get_select2_url_name())
 
     def build_attrs(self, *args, **kwargs):
