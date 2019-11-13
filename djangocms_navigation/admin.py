@@ -149,7 +149,7 @@ class MenuItemAdmin(TreeAdmin):
             url(
                 r"^select2/$",
                 self.admin_site.admin_view(ContentObjectSelect2View.as_view()),
-                name=get_select2_url_name(),
+                name=get_select2_url_name(self.menu_model),
             ),
             url(
                 r"^(?P<menu_content_id>\d+)/preview/$",

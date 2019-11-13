@@ -24,9 +24,9 @@ def reverse_admin_name(model, name, args=None, kwargs=None):
     return url
 
 
-def get_select2_url_name():
+def get_select2_url_name(content_model=MenuContent):
     url_name = "{}_select2_content_object".format(
-        MenuContent._meta.app_label
+        content_model._meta.app_label
     )
     return url_name
 
