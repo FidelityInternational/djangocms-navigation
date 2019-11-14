@@ -61,7 +61,7 @@ class MenuItemForm(MoveNodeForm):
 
         self.fields["content_type"].queryset = self.fields[
             "content_type"
-        ].queryset.filter(pk__in=supported_content_type_pks())
+        ].queryset.filter(pk__in=supported_content_type_pks(self._meta.model))
 
         self.fields["_ref_node_id"].choices = self.mk_dropdown_tree(
             MenuItem, for_node=self.menu_root.get_root()

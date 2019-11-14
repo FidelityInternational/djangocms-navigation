@@ -31,20 +31,43 @@ def get_select2_url_name(content_model=MenuContent):
     return url_name
 
 
-@lru_cache(maxsize=1)
-def supported_models():
+def _get_app_config(app_label):
+    """
+    An internal utility to get the app config from a supplied model
+    """
     try:
-        app_config = apps.get_app_config("djangocms_navigation")
+        app_config = apps.get_app_config(app_label)
     except LookupError:
         return {}
-    else:
-        extension = app_config.cms_extension
-        return extension.navigation_apps_models
+    return app_config
+
+
+def _in_reuse_mode(app_config):
+    """
+    Determine if the navigation package is being reused / extended by another package
+    """
+    return getattr(app_config, 'navigation_app_shared_mode', False)
 
 
 @lru_cache(maxsize=1)
-def supported_content_type_pks():
-    app_config = apps.get_app_config("djangocms_navigation")
+def supported_models(model=MenuContent):
+    app_config = _get_app_config(model._meta.app_label)
+    # Fall back to the current apps configuration
+    if not _in_reuse_mode(app_config):
+        app_config = _get_app_config("djangocms_navigation")
+    # If the app config is not defined, return an empty dictionary
+    if not app_config:
+        return app_config
+    extension = app_config.cms_extension
+    return extension.navigation_apps_models
+
+
+@lru_cache(maxsize=1)
+def supported_content_type_pks(model=MenuContent):
+    app_config = _get_app_config(model._meta.app_label)
+    # Fall back to the current apps configuration
+    if not _in_reuse_mode(app_config):
+        app_config = _get_app_config("djangocms_navigation")
     models = app_config.cms_extension.navigation_apps_models
     content_type_dict = ContentType.objects.get_for_models(*models)
     return [ct.pk for ct in content_type_dict.values()]
@@ -53,7 +76,7 @@ def supported_content_type_pks():
 @lru_cache(maxsize=1)
 def is_model_supported(model):
     """Return bool value if model is in supported_models"""
-    return model in supported_models().keys()
+    return model in supported_models(model).keys()
 
 
 def get_versionable_for_content(content):

@@ -11,6 +11,7 @@ from .models import MenuContent, MenuItem
 class NavigationCMSExtension(CMSAppExtension):
     def __init__(self):
         self.navigation_apps_models = {}
+        self.navigation_app_shared_mode = False
 
     def configure_app(self, cms_config):
         if not hasattr(cms_config, "navigation_models"):
