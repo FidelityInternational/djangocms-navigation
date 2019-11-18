@@ -22,6 +22,12 @@ HELPER_SETTINGS = {
         'djangocms_version_locking': None,
         'djangocms_moderation': None,
     },
+    "LANGUAGES": (
+        ("en", "English"),
+        ("de", "German"),
+        ("fr", "French"),
+        ("it", "Italiano"),
+    ),
 }
 
 
