@@ -12,6 +12,10 @@ from treebeard.mp_tree import MP_Node
 from .constants import TARGETS, TEMPLATE_DEFAULT, get_templates
 
 
+
+from cms.utils.i18n import get_default_language
+
+
 __all__ = ["Menu", "MenuContent", "MenuItem", "NavigationPlugin"]
 
 
@@ -40,6 +44,11 @@ class AbstractMenu(models.Model):
 
 
 class AbstractMenuContent(models.Model):
+    # TODO: Data migration to convert all existing navigation models to
+    #       default to the default language for the site that they reside in, get_default_language does not do this!
+    # FIXME: DO NOT MERGE WITHOUT THIS ^^^^^^^
+    language = models.CharField(_("language"), max_length=15, db_index=True, default=get_default_language)
+
     class Meta:
         abstract = True
 

@@ -15,6 +15,7 @@ from django.views.i18n import JavaScriptCatalog
 from treebeard.admin import TreeAdmin
 
 from .constants import SELECT2_CONTENT_OBJECT_URL_NAME
+from .filters import LanguageFilter
 from .forms import MenuContentForm, MenuItemForm
 from .models import Menu, MenuContent, MenuItem
 from .utils import purge_menu_cache
