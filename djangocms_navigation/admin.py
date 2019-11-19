@@ -49,6 +49,12 @@ class MenuContentAdmin(admin.ModelAdmin):
     list_display = ["title", "get_menuitem_link", "get_preview_link"]
     list_display_links = None
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.prefetch_related('menu').filter(
+            menu__site=get_current_site(request))
+        return queryset
+
     def save_model(self, request, obj, form, change):
         if not change:
             title = form.cleaned_data.get("title")

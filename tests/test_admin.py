@@ -12,7 +12,7 @@ from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.exceptions import ConditionFailed
 from djangocms_versioning.helpers import version_list_url
 
-from djangocms_navigation.admin import MenuItemAdmin, MenuItemChangeList
+from djangocms_navigation.admin import MenuContentAdmin, MenuItemAdmin, MenuItemChangeList
 from djangocms_navigation.models import Menu, MenuContent, MenuItem
 from djangocms_navigation.test_utils import factories
 
@@ -65,6 +65,8 @@ class MenuItemChangelistTestCase(TestCase):
 class MenuContentAdminViewTestCase(CMSTestCase):
     def setUp(self):
         self.client.force_login(self.get_superuser())
+        self.admin_site = admin.AdminSite()
+        self.admin_site.register(MenuContent, MenuContentAdmin)
 
     def test_menucontent_add_view(self):
         add_url = reverse("admin:djangocms_navigation_menucontent_add")
@@ -105,6 +107,44 @@ class MenuContentAdminViewTestCase(CMSTestCase):
         self.assertNotEqual(menu.identifier, "my-title")
         root = MenuItem.objects.get()
         self.assertNotEqual(root.title, "My Title")
+
+    def test_menucontent_change_view_limited_to_site(self):
+        """
+        The admin change list is limited to show only the menus for the current site.
+        No other menus should be shown that belong to other sites.
+        """
+        site_2 = Site.objects.create(domain="site_2.com", name="site_2")
+        site_3 = Site.objects.create(domain="site_3.com", name="site_3")
+        menu_1 = factories.MenuFactory(site=site_2)
+        menu_2 = factories.MenuFactory(site=site_3)
+        site_2_menu_version = factories.MenuVersionFactory(content__menu=menu_1, state=PUBLISHED)
+        site_3_menu_version = factories.MenuVersionFactory(content__menu=menu_2, state=PUBLISHED)
+        menu_content_admin = self.admin_site._registry[MenuContent]
+
+        # Site 1 has no menus and should be empty
+        with self.settings(SITE_ID=1):
+            request = RequestFactory().get("/admin/djangocms_navigation/menucontent/")
+            site1_query_result = menu_content_admin.get_queryset(request)
+
+            self.assertEqual(site1_query_result.count(), 0)
+
+        # Site 2 has a menu and should it should only be the one created for that site
+        with self.settings(SITE_ID=site_2.pk):
+            request = RequestFactory().get("/admin/djangocms_navigation/menucontent/")
+            request.site = site_2
+            site2_query_result = menu_content_admin.get_queryset(request)
+
+            self.assertEqual(site2_query_result.count(), 1)
+            self.assertEqual(site2_query_result.first(), site_2_menu_version.content)
+
+        # Site 3 has a menu and should it should only be the one created for that site
+        with self.settings(SITE_ID=site_3.pk):
+            request = RequestFactory().get("/admin/djangocms_navigation/menucontent/")
+            request.site = site_3
+            site3_query_result = menu_content_admin.get_queryset(request)
+
+            self.assertEqual(site3_query_result.count(), 1)
+            self.assertEqual(site3_query_result.first(), site_3_menu_version.content)
 
 
 class MenuItemModelAdminTestCase(TestCase):
