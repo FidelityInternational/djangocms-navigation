@@ -1,8 +1,8 @@
 from unittest.mock import patch
 
-from django.contrib.messages import get_messages
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages import get_messages
 from django.contrib.sites.models import Site
 from django.shortcuts import reverse
 from django.test import RequestFactory, TestCase
@@ -179,7 +179,6 @@ class MenuItemModelAdminTestCase(TestCase):
 class MenuItemAdminVersionLocked(CMSTestCase, UsefulAssertsMixin):
 
     def setUp(self):
-        # who is author..
         self.menu_content = factories.MenuContentWithVersionFactory(version__state=DRAFT)
         self.item = factories.ChildMenuItemFactory(parent=self.menu_content.root)
 
@@ -207,7 +206,7 @@ class MenuItemAdminVersionLocked(CMSTestCase, UsefulAssertsMixin):
         response = self.client.get(self.change_url)
         msg = list(get_messages(response.wsgi_request))[0]
 
-        self.assertEquals(msg.message, "You don't have permission to edit or it is locked")
+        self.assertEquals(msg.message, "The item is currently locked or you don't have permission to change it")
         self.assertEquals(response.status_code, 302)
 
     def test_moving_node_that_is_version_locked_fails(self):

@@ -17,7 +17,7 @@ from treebeard.admin import TreeAdmin
 from .constants import SELECT2_CONTENT_OBJECT_URL_NAME
 from .forms import MenuContentForm, MenuItemForm
 from .models import Menu, MenuContent, MenuItem
-from .utils import purge_menu_cache
+from .utils import purge_menu_cache, reverse_admin_name
 from .views import ContentObjectSelect2View, MenuContentPreviewView
 
 
@@ -179,12 +179,12 @@ class MenuItemAdmin(TreeAdmin):
 
         if self._versioning_enabled:
             menu_content = get_object_or_404(
-                self.MenuModel._base_manager, id=menu_content_id
+                MenuContent._base_manager, id=menu_content_id
             )
 
             change_perm = self.has_change_permission(request, menu_content)
             if not change_perm:
-                messages.error(request, 'You don\'t have permission to edit or it is locked')
+                messages.error(request, LOCK_MESSAGE)
                 return HttpResponseRedirect(version_list_url(menu_content))
 
             version = Version.objects.get_for_content(menu_content)
@@ -195,8 +195,9 @@ class MenuItemAdmin(TreeAdmin):
                 return HttpResponseRedirect(version_list_url(menu_content))
             # purge menu cache
             purge_menu_cache(site_id=menu_content.menu.site_id)
-        extra_context["list_url"] = reverse(
-            self.get_admin_name('list', reverse=True),
+        extra_context["list_url"] = reverse_admin_name(
+            self.model,
+            'list',
             kwargs={"menu_content_id": menu_content_id},
         )
 

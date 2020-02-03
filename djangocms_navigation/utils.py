@@ -2,8 +2,24 @@ from functools import lru_cache
 
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
+from django.urls import reverse
 
 from menus.menu_pool import menu_pool
+
+
+def get_admin_name(model, name):
+    name = '{}_{}_{}'.format(
+        model._meta.app_label,
+        model._meta.model_name,
+        name
+    )
+    return name
+
+
+def reverse_admin_name(model, name, args=None, kwargs=None):
+    name = get_admin_name(model, name)
+    url = reverse('admin:{}'.format(name), args=args, kwargs=kwargs)
+    return url
 
 
 @lru_cache(maxsize=1)
