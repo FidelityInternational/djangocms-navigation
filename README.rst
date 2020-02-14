@@ -32,7 +32,7 @@ Running Tests
 
 You can run all the tests by executing:
 
-    python -m venv venv
+    python -m venv myvirtualenvironmentname
     source venv/bin/activate
     python setup.py test
 
@@ -40,16 +40,20 @@ You can run all the tests by executing:
     pip install -r tests/requirements.txt
     python tests.settings.py
 
+    # Or on MacOS use Pyenv:
+    pyenv virtualenv myvirtualenvironmentname
+    pyenv activate myvirtualenvironmentname
+
 
 App Integration
 ===============
 
-To register model to use navigation app, app should provide class in cms_config.py which inherit `CMSAppConfig`
-class. It should have `djangocms_navigation_enabled` flag True which register to use djangocms_navigation and
-provide model mapping object, `navigation_models`.
+To register models to use the navigation app, provide a class in cms_config.py which inherits the `CMSAppConfig`
+class. It should have a `djangocms_navigation_enabled` flag set to True which registers the app with djangocms_navigation and
+provides the model mapping object, `navigation_models`.
 
-Mapping object should provide Model class as key and list of model fields which will be used for autocomplete form fields. E.g. if you have a PageContent model and an Article model, when you are choosing the Content_Object to link a menu item to, you may want the "title" field for the PageContent model and the "slug" field for the Article model. Example of
-configuration defined below.
+The mapping object should provide a Model class as key and a list of model fields which will be used in the case of autocomplete form fields. E.g. if you have a PageContent model and an Article model, when you are choosing the Content_Object to link a menu item to, you may want the "title" field for the PageContent model and the "slug" field for the Article model. An example of the 
+configuration is defined below.
 
 
 .. code-block:: python
