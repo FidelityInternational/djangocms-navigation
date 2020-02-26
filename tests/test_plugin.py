@@ -11,8 +11,6 @@ from djangocms_navigation.cms_menus import NavigationSelector
 from djangocms_navigation.models import NavigationPlugin
 from djangocms_navigation.test_utils import factories
 
-from djangocms_versioning.constants import PUBLISHED
-
 from .utils import disable_versioning_for_navigation
 
 
@@ -308,7 +306,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
         self.assertIn(grandchild.title, str(response.content))
 
         # Create further menu items
-        child2 = factories.ChildMenuItemFactory(parent=menu_content.root)
+        factories.ChildMenuItemFactory(parent=menu_content.root)
 
         # MenuItem creation should be invalidated cache_key object
         cache_key = CacheKey.objects.all().count()

@@ -1,6 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
-from django.urls.exceptions import NoReverseMatch
 
 from cms.models import Page, User
 from cms.test_utils.testcases import CMSTestCase
@@ -147,10 +146,10 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
     def test_select2_view_text_page_repr(self):
         """Result should contain model repr text"""
         page_contenttype_id = ContentType.objects.get_for_model(Page).id
-        page1 = PageContentFactory(
+        PageContentFactory(
             title="test", menu_title="test", page_title="test", language="en"
         )  # flake8: noqa
-        page2 = PageContentFactory(
+        PageContentFactory(
             title="test2", menu_title="test2", page_title="test2", language="en"
         )  # flake8: noqa
         with self.login_user_context(self.superuser):
@@ -164,10 +163,10 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
     def test_select2_view_search_text_page(self):
         """ Both pages should appear in results for test query"""
         page_contenttype_id = ContentType.objects.get_for_model(Page).id
-        page1 = PageContentFactory(
+        PageContentFactory(
             title="test", menu_title="test", page_title="test", language="en"
         )
-        page2 = PageContentFactory(
+        PageContentFactory(
             title="test2", menu_title="test2", page_title="test2", language="en"
         )
         with self.login_user_context(self.superuser):
@@ -182,10 +181,10 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
     def test_select2_view_search_exact_text_page(self):
         """ One page should appear in results for test2 exact query"""
         page_contenttype_id = ContentType.objects.get_for_model(Page).id
-        page1 = PageContentFactory(
+        PageContentFactory(
             title="test", menu_title="test", page_title="test", language="en"
         )
-        page2 = PageContentFactory(
+        PageContentFactory(
             title="test2", menu_title="test2", page_title="test2", language="en"
         )
         with self.login_user_context(self.superuser):
