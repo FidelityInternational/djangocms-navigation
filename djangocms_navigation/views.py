@@ -1,9 +1,6 @@
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
-from django.http import (
-    HttpResponseBadRequest,
-    JsonResponse,
-)
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, View
 

@@ -102,7 +102,7 @@ class MenuItemForm(MoveNodeForm):
 
         if self.instance and not self.instance.is_root() and content_type and object_id:
             try:
-                obj = content_type.model_class().objects.get(
+                content_type.model_class().objects.get(
                     pk=object_id
                 )  # flake8: noqa
             except content_type.model_class().DoesNotExist:

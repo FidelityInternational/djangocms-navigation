@@ -12,7 +12,11 @@ from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.exceptions import ConditionFailed
 from djangocms_versioning.helpers import version_list_url
 
-from djangocms_navigation.admin import MenuContentAdmin, MenuItemAdmin, MenuItemChangeList
+from djangocms_navigation.admin import (
+    MenuContentAdmin,
+    MenuItemAdmin,
+    MenuItemChangeList,
+)
 from djangocms_navigation.models import Menu, MenuContent, MenuItem
 from djangocms_navigation.test_utils import factories
 
