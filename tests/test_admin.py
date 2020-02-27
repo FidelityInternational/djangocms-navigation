@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages import get_messages
 from django.contrib.sites.models import Site
 from django.shortcuts import reverse
 from django.test import RequestFactory, TestCase
@@ -175,12 +176,65 @@ class MenuItemModelAdminTestCase(TestCase):
         )
 
 
+class MenuItemAdminVersionLocked(CMSTestCase, UsefulAssertsMixin):
+
+    def setUp(self):
+        self.menu_content = factories.MenuContentWithVersionFactory(version__state=DRAFT)
+        self.item = factories.ChildMenuItemFactory(parent=self.menu_content.root)
+
+        self.change_url = reverse(
+            "admin:djangocms_navigation_menuitem_change",
+            kwargs={"menu_content_id": self.menu_content.pk, "object_id": self.item.pk}
+        )
+        self.client.force_login(self.get_superuser())
+
+        # moving a node
+        menu_content = factories.MenuContentWithVersionFactory()
+        self.child = factories.ChildMenuItemFactory(parent=menu_content.root)
+        self.child_of_child = factories.ChildMenuItemFactory(parent=self.child)
+        self.move_url = reverse(
+            "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,)
+        )
+        self.data = {
+            "node_id": self.child_of_child.pk,
+            "sibling_id": menu_content.root.pk,
+            "as_child": 1,
+        }
+
+    def test_visit_change_view_when_node_is_version_locked_fails(self):
+        """It fails as super user is not the person who created the version"""
+        response = self.client.get(self.change_url)
+        msg = list(get_messages(response.wsgi_request))[0]
+
+        self.assertEquals(msg.message, "The item is currently locked or you don't have permission to change it")
+        self.assertEquals(response.status_code, 302)
+
+    def test_moving_node_that_is_version_locked_fails(self):
+        response = self.client.post(self.move_url, data=self.data)
+        content = response.content.decode('utf-8')
+        msg = "The item is currently locked or you don't have permission to change it"
+
+        self.assertEquals(response.status_code, 400)
+        self.assertEquals(content, msg)
+
+    @patch('djangocms_navigation.admin.using_version_lock', False)
+    def test_moving_node_version_lock_not_installed_works_without_error(self):
+        response = self.client.post(self.move_url, data=self.data)
+
+        self.assertEquals(response.status_code, 200)
+        self.child.refresh_from_db()
+        self.child_of_child.refresh_from_db()
+        self.assertTrue(self.child_of_child.is_sibling_of(self.child))
+
+
 class MenuItemAdminChangeViewTestCase(CMSTestCase, UsefulAssertsMixin):
     def setUp(self):
         self.client.force_login(self.get_superuser())
 
     def test_menuitem_change_view(self):
-        menu_content = factories.MenuContentWithVersionFactory(version__state=DRAFT)
+        menu_content = factories.MenuContentWithVersionFactory(
+            version__state=DRAFT, version__created_by=self.get_superuser()
+        )
         item = factories.ChildMenuItemFactory(parent=menu_content.root)
         change_url = reverse(
             "admin:djangocms_navigation_menuitem_change",
@@ -278,7 +332,9 @@ class MenuItemAdminChangeViewTestCase(CMSTestCase, UsefulAssertsMixin):
         mocked_check.side_effect = ConditionFailed(
             "Go look at some cat pictures instead"
         )
-        menu_content = factories.MenuContentWithVersionFactory()
+        menu_content = factories.MenuContentWithVersionFactory(
+            version__created_by=self.get_superuser()
+        )
         item = factories.ChildMenuItemFactory(parent=menu_content.root)
         change_url = reverse(
             "admin:djangocms_navigation_menuitem_change",
@@ -636,10 +692,11 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
 
 class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
     def setUp(self):
-        self.client.force_login(self.get_superuser())
+        self.user = self.get_superuser()
+        self.client.force_login(self.user)
 
     def test_menuitem_move_node_smoke_test(self):
-        menu_content = factories.MenuContentWithVersionFactory()
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         child_of_child = factories.ChildMenuItemFactory(parent=child)
         move_url = reverse(
@@ -660,7 +717,7 @@ class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
 
     @patch("django.contrib.messages.error")
     def test_menuitem_move_node_cant_move_outside_of_root(self, mocked_messages):
-        menu_content = factories.MenuContentWithVersionFactory()
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         move_url = reverse(
             "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,)
@@ -702,7 +759,7 @@ class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
         mocked_check.side_effect = ConditionFailed(
             "Go look at some cat pictures instead"
         )
-        menu_content = factories.MenuContentWithVersionFactory()
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         child_of_child = factories.ChildMenuItemFactory(parent=child)
         move_url = reverse(
