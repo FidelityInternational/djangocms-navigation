@@ -14,7 +14,6 @@ from django.views.i18n import JavaScriptCatalog
 
 from treebeard.admin import TreeAdmin
 
-from .constants import SELECT2_CONTENT_OBJECT_URL_NAME
 from .forms import MenuContentForm, MenuItemForm
 from .models import Menu, MenuContent, MenuItem
 from .utils import purge_menu_cache, reverse_admin_name
@@ -126,7 +125,6 @@ class MenuItemAdmin(TreeAdmin):
     change_form_template = "admin/djangocms_navigation/menuitem/change_form.html"
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
     list_display = ["__str__", "get_object_url"]
-    select_2_url_name = SELECT2_CONTENT_OBJECT_URL_NAME
 
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
