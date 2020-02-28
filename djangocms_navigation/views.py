@@ -8,21 +8,21 @@ from cms.models import Page
 
 from djangocms_navigation.utils import is_model_supported, supported_models
 
-from .models import MenuContent, MenuItem
-
 
 class MenuContentPreviewView(TemplateView):
+    menu_content_model = None
+    menu_item_model = None
     template_name = "admin/djangocms_navigation/menucontent/preview.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         menu_content = get_object_or_404(
-            MenuContent._base_manager, pk=self.kwargs.get("menu_content_id")
+            self.menu_content_model._base_manager, pk=self.kwargs.get("menu_content_id")
         )
-        annotated_list = MenuItem.get_annotated_list(parent=menu_content.root)
+        annotated_list = self.menu_item_model.get_annotated_list(parent=menu_content.root)
         context.update({
             "annotated_list": annotated_list,
-            "opts": MenuItem._meta
+            "opts": self.menu_item_model._meta
         })
         return context
 

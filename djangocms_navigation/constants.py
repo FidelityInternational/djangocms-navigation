@@ -19,10 +19,3 @@ def get_templates():
     choices = [(TEMPLATE_DEFAULT, _("Default"))]
     choices += getattr(settings, "DJANGOCMS_NAVIGATION_TEMPLATES", [])
     return choices
-
-
-PLUGIN_URL_NAME_PREFIX = "djangocms_navigation"
-
-SELECT2_CONTENT_OBJECT_URL_NAME = "{}_select2_content_object".format(
-    PLUGIN_URL_NAME_PREFIX
-)
