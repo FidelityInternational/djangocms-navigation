@@ -6,8 +6,6 @@ from django.urls import reverse
 
 from menus.menu_pool import menu_pool
 
-from .models import MenuContent
-
 
 def get_admin_name(model, name):
     name = '{}_{}_{}'.format(

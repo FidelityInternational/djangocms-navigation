@@ -11,7 +11,9 @@ class NavigationToolbar(PlaceholderToolbar):
     menu_model = MenuContent
 
     def _add_navigation_menu(self):
-        if not self.request.user.has_perm(f"{self.menu_model._meta.app_label}.change_menucontent"):
+        if not self.request.user.has_perm(
+            f"{self.menu_model._meta.app_label}.change_menucontent"
+        ):
             return
         admin_menu = self.toolbar.get_or_create_menu(ADMIN_MENU_IDENTIFIER)
         url = reverse(f"admin:{self.menu_model._meta.app_label}_menucontent_changelist")
