@@ -12,12 +12,7 @@ class NavigationCMSExtension(CMSAppExtension):
     def __init__(self):
         self.navigation_apps_models = {}
 
-        print("Configuring django cms navigation congi")
-
-
     def configure_app(self, cms_config):
-
-
         if hasattr(cms_config, "navigation_models"):
             navigation_app_models = getattr(cms_config, "navigation_models")
             if isinstance(navigation_app_models, dict):
