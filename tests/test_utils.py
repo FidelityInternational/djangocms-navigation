@@ -42,9 +42,9 @@ class SupportedModelsTestCase(TestCase):
             spec=[], cms_extension=Mock(spec=[], navigation_apps_models=models)
         )
         with patch.object(apps, "get_app_config", return_value=app_config):
-            supported_models()
+            supported_models(MenuContent)
         with patch.object(apps, "get_app_config") as mock:
-            supported_models()
+            supported_models(MenuContent)
             mock.assert_not_called()
 
 
