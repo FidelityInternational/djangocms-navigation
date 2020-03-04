@@ -130,6 +130,11 @@ class MenuItemAdmin(TreeAdmin):
         info = self.model._meta.app_label, self.model._meta.model_name
         return [
             url(
+                r"^$",
+                self.admin_site.admin_view(self.changelist_view),
+                name="{}_{}_changelist".format(*info),
+            ),
+            url(
                 r"^(?P<menu_content_id>\d+)/$",
                 self.admin_site.admin_view(self.changelist_view),
                 name="{}_{}_list".format(*info),
@@ -155,7 +160,9 @@ class MenuItemAdmin(TreeAdmin):
             ),
             url(
                 r"^select2/$",
-                self.admin_site.admin_view(ContentObjectSelect2View.as_view()),
+                self.admin_site.admin_view(ContentObjectSelect2View.as_view(
+                    menu_content_model=self.menu_content_model,
+                )),
                 name=f"{self.model._meta.app_label}_select2_content_object"
             ),
             url(
@@ -338,7 +345,7 @@ class MenuItemAdmin(TreeAdmin):
         """Helper property to check if versioning is enabled for navigation"""
 
         return apps.get_app_config(
-            {self.model._meta.app_label}
+            self.model._meta.app_label
         ).cms_config.djangocms_versioning_enabled
 
 

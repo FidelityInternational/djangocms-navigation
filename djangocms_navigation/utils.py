@@ -25,7 +25,7 @@ def reverse_admin_name(model, name, args=None, kwargs=None):
 
 
 @lru_cache(maxsize=1)
-def supported_models(model=MenuContent):
+def supported_models(model):
     try:
         app_config = apps.get_app_config(model._meta.app_label)
     except LookupError:
@@ -36,7 +36,7 @@ def supported_models(model=MenuContent):
 
 
 @lru_cache(maxsize=1)
-def supported_content_type_pks(model=MenuContent):
+def supported_content_type_pks(model):
     app_config = apps.get_app_config(model._meta.app_label)
     models = app_config.cms_extension.navigation_apps_models
     content_type_dict = ContentType.objects.get_for_models(*models)
@@ -44,9 +44,9 @@ def supported_content_type_pks(model=MenuContent):
 
 
 @lru_cache(maxsize=1)
-def is_model_supported(model):
+def is_model_supported(app_model, model):
     """Return bool value if model is in supported_models"""
-    return model in supported_models(model).keys()
+    return model in supported_models(app_model).keys()
 
 
 def get_versionable_for_content(content):

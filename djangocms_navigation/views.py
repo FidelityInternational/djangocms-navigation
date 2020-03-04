@@ -28,6 +28,8 @@ class MenuContentPreviewView(TemplateView):
 
 
 class ContentObjectSelect2View(View):
+    menu_content_model = None
+
     def get(self, request, *args, **kwargs):
 
         content_type_id = self.request.GET.get("content_type_id", None)
@@ -43,7 +45,7 @@ class ContentObjectSelect2View(View):
 
         # return http bad request if content type is not registered to use navigation app
         model = content_object.model_class()
-        if not is_model_supported(model):
+        if not is_model_supported(self.menu_content_model, model):
             return HttpResponseBadRequest()
 
         data = {
@@ -89,7 +91,7 @@ class ContentObjectSelect2View(View):
             else:
                 # Non page model should work using filter against field in queryset
                 options = {}
-                search_fields = supported_models().get(model)
+                search_fields = supported_models(self.menu_content_model).get(model)
                 if search_fields:
                     for field in search_fields:
                         options[field] = query
