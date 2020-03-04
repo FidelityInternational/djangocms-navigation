@@ -238,7 +238,7 @@ class MenuItemAdmin(TreeAdmin):
                 purge_menu_cache(site_id=menu_content.menu.site_id)
 
             extra_context["list_url"] = reverse(
-                f"admin:{self.model._meta.app_label}_menuitem_list",
+                "admin:{}_menuitem_list".format(self.model._meta.app_label),
                 kwargs={"menu_content_id": menu_content_id},
             )
 
