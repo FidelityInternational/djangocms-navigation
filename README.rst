@@ -32,7 +32,7 @@ Running Tests
 
 You can run all the tests by executing:
 
-    python -m venv myvirtualenvironmentname
+    python -m venv venv
     source venv/bin/activate
     python setup.py test
 
