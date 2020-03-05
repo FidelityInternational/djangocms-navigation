@@ -266,14 +266,14 @@ class MenuItemAdmin(TreeAdmin):
 
     def response_change(self, request, obj):
         url = reverse(
-            f"admin:{self.model._meta.app_label}_menuitem_list",
+            "admin:{}_menuitem_list".format(self.model._meta.app_label),
             kwargs={"menu_content_id": request.menu_content_id},
         )
         return HttpResponseRedirect(url)
 
     def response_add(self, request, obj, post_url_continue=None):
         url = reverse(
-            f"admin:{self.model._meta.app_label}_menuitem_list",
+            "admin:{}_menuitem_list".format(self.model._meta.app_label),
             kwargs={"menu_content_id": request.menu_content_id},
         )
         return HttpResponseRedirect(url)
