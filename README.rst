@@ -40,11 +40,6 @@ You can run all the tests by executing:
     pip install -r tests/requirements.txt
     python tests.settings.py
 
-    # Or on MacOS use Pyenv:
-    pyenv virtualenv myvirtualenvironmentname
-    pyenv activate myvirtualenvironmentname
-
-
 App Integration
 ===============
 
