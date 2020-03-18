@@ -1,4 +1,5 @@
 from django.apps import apps
+from django.core import urlresolvers
 from django.conf.urls import url
 from django.contrib import admin, messages
 from django.contrib.admin.utils import quote
@@ -6,13 +7,19 @@ from django.contrib.admin.views.main import ChangeList
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
 from django.urls import reverse
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.views.i18n import JavaScriptCatalog
 
+from cms.toolbar.utils import get_object_preview_url
 from treebeard.admin import TreeAdmin
+
+from djangocms_pageadmin.helpers import proxy_model
+
+from djangocms_versioning.constants import DRAFT, PUBLISHED
 
 from .constants import SELECT2_CONTENT_OBJECT_URL_NAME
 from .forms import MenuContentForm, MenuItemForm
@@ -45,9 +52,87 @@ class MenuItemChangeList(ChangeList):
 
 
 class MenuContentAdmin(admin.ModelAdmin):
+    """
+    The portions of this class that deal with rendering additional icons pertinent to versioning are taken from
+    djangocms pagedmin which can be found here:
+    https://github.com/FidelityInternational/djangocms-pageadmin/blob/master/djangocms_pageadmin/admin.py
+    """
     form = MenuContentForm
-    list_display = ["title", "get_menuitem_link", "get_preview_link"]
+    list_display = ["title", ]
     list_display_links = None
+
+    def get_version(self, obj):
+        """
+        Taken from djangocms pageadmin
+        """
+        return obj.versions.all()[0]
+
+    def _list_actions(self, request):
+        """A closure that makes it possible to pass request object to
+        list action button functions.
+
+        Taken from djangocms pageadmin
+        """
+
+        def list_actions(obj):
+            """Display links to state change endpoints
+            """
+            return format_html_join(
+                "",
+                "{}",
+                ((action(obj, request),) for action in self.get_list_actions()),
+            )
+
+        list_actions.short_description = _("actions")
+        return list_actions
+
+    def get_list_actions(self):
+        """
+        Taken from djangocms pageadmin
+        """
+        return [
+            self._get_preview_link,
+            self._get_edit_link,
+        ]
+
+    def get_list_display(self, request):
+        """
+        Taken from djangocms pageadmin
+        """
+        return self.list_display + [self._list_actions(request)]
+
+    def _get_preview_link(self, obj, request, disabled=False):
+        """
+        Taken from djangocms pageadmin
+        """
+        return render_to_string(
+            "djangocms_pageadmin/admin/icons/preview.html",
+            {"url": obj.get_preview_url(), "disabled": disabled},
+        )
+
+    def _get_edit_link(self, obj, request, disabled=False):
+        """
+        Taken from djangocms pageadmin
+        """
+        version = proxy_model(self.get_version(obj))
+
+        if version.state not in (DRAFT, PUBLISHED):
+            # Don't display the link if it can't be edited
+            return ""
+
+        if not version.check_edit_redirect.as_bool(request.user):
+            disabled = True
+
+        url = reverse(
+            "admin:{app}_{model}_list".format(
+                app=obj._meta.app_label, model=MenuItem._meta.model_name
+            ),
+            args=[obj.pk],
+        )
+        return render_to_string(
+            "djangocms_pageadmin/admin/icons/edit.html",
+            {"url": url, "disabled": disabled, "post": False},
+        )
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -68,13 +153,14 @@ class MenuContentAdmin(admin.ModelAdmin):
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         meta = MenuItem._meta
-        return HttpResponseRedirect(
-            reverse(
-                "admin:{app}_{model}_list".format(
-                    app=meta.app_label, model=meta.model_name
-                ),
-                args=[object_id],
-            )
+        extra_context = extra_context or {}
+        form_url = reverse(
+            "admin:{app}_{model}_list".format(
+                app=meta.app_label, model=meta.model_name
+            ), args=[object_id],
+        )
+        return super(MenuContentAdmin, self).change_view(
+            request, object_id, form_url=form_url, extra_context=extra_context
         )
 
     def get_menuitem_link(self, obj):
@@ -103,6 +189,9 @@ class MenuContentAdmin(admin.ModelAdmin):
             obj.get_preview_url(),
             _("Preview"),
         )
+
+    class Media:
+        css = {"all": ("djangocms_pageadmin/css/actions.css",)}
 
     get_menuitem_link.short_description = _("Menu Preview")
 
@@ -225,6 +314,7 @@ class MenuItemAdmin(TreeAdmin):
                     messages.error(request, str(error))
                     return HttpResponseRedirect(version_list_url(menu_content))
             extra_context["menu_content"] = menu_content
+            extra_context["title"] = "Edit Menu: {}".format(menu_content.__str__())
             extra_context["versioning_enabled_for_nav"] = self._versioning_enabled
 
         return super().changelist_view(request, extra_context)
