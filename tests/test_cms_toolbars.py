@@ -68,9 +68,7 @@ class TestCMSToolbars(TestCase):
         self.assertIsInstance(navigation_menu_item, SideframeItem)
         self.assertEqual(navigation_menu_item.url, url)
 
-    def test_navigation_menu_not_added_to_admin_menu_if_user_doesnt_have_permissions(
-        self
-    ):
+    def test_navigation_menu_not_added_to_admin_menu_if_user_doesnt_have_permissions(self):
         user = factories.UserFactory()
         page_content = factories.PageContentFactory()
         toolbar = self._get_toolbar(page_content, preview_mode=True, user=user)
@@ -78,6 +76,5 @@ class TestCMSToolbars(TestCase):
         toolbar.post_template_populate()
         cms_toolbar = toolbar.toolbar
         navigation_menu_item = self._find_menu_item("Navigation...", cms_toolbar)
-        url = reverse("admin:djangocms_navigation_menucontent_changelist")
 
         self.assertIsNone(navigation_menu_item)

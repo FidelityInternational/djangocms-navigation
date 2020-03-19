@@ -68,7 +68,7 @@ class AppRegistrationTestCase(TestCase, UsefulAssertsMixin):
 class NavigationIntegrationTestCase(TestCase):
 
     def test_config_with_multiple_apps(self):
-        registered_models = supported_models()
+        registered_models = supported_models(MenuContent)
 
         expected_models = {
             TestModel1: [],

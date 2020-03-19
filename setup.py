@@ -4,7 +4,7 @@ import djangocms_navigation
 
 
 INSTALL_REQUIREMENTS = [
-    "Django>=1.11,<2.0",
+    "Django>=1.11,<2.2",
     "django-cms>=3.5.0",
     "django-treebeard>=4.3",
 ]
@@ -43,6 +43,6 @@ setup(
         "http://github.com/divio/django-cms/tarball/release/4.0.x#egg=django-cms-4.0.0",
         "http://github.com/divio/djangocms-versioning/tarball/master#egg=djangocms-versioning-0.0.23",
         "http://github.com/divio/djangocms-moderation/tarball/release/1.0.x#egg=djangocms-moderation-1.0.x",
-        "http://github.com/FidelityInternational/djangocms-version-locking/tarball/master#egg=djangocms-version-locking-0.0.13",
+        "http://github.com/FidelityInternational/djangocms-version-locking/tarball/master#egg=djangocms-version-locking-0.0.13",  # noqa
     ]
 )
