@@ -14,12 +14,11 @@ from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.views.i18n import JavaScriptCatalog
 
-from cms.toolbar.utils import get_object_preview_url
 from treebeard.admin import TreeAdmin
 
 from djangocms_pageadmin.helpers import proxy_model
-
 from djangocms_versioning.constants import DRAFT, PUBLISHED
+from djangocms_version_locking.helpers import version_is_locked
 
 from .constants import SELECT2_CONTENT_OBJECT_URL_NAME
 from .forms import MenuContentForm, MenuItemForm
@@ -58,7 +57,9 @@ class MenuContentAdmin(admin.ModelAdmin):
     https://github.com/FidelityInternational/djangocms-pageadmin/blob/master/djangocms_pageadmin/admin.py
     """
     form = MenuContentForm
-    list_display = ["title", ]
+    list_display = [
+        "title", "get_versioning_state", "get_author", "get_modified_date", "get_state_display", "is_locked"
+    ]
     list_display_links = None
 
     def get_version(self, obj):
@@ -66,6 +67,34 @@ class MenuContentAdmin(admin.ModelAdmin):
         Taken from djangocms pageadmin
         """
         return obj.versions.all()[0]
+
+    def get_versioning_state(self, obj):
+        return self.get_version(obj).get_state_display()
+
+    get_versioning_state.short_description = _("Lock Status")
+
+    def is_locked(self, obj):
+        version = self.get_version(obj)
+        if version.state == DRAFT and version_is_locked(version):
+            return render_to_string("djangocms_version_locking/admin/locked_icon.html")
+        return ""
+
+    is_locked.short_description = _("Lock Status")
+
+    def get_state_display(self, obj):
+        return self.get_version(obj).get_state_display()
+
+    get_state_display.short_description = _("State")
+
+    def get_author(self, obj):
+        return self.get_version(obj).created_by
+
+    get_author.short_description = _("Author")
+
+    def get_modified_date(self, obj):
+        return self.get_version(obj).modified
+
+    get_modified_date.short_description = _("Modified")
 
     def _list_actions(self, request):
         """A closure that makes it possible to pass request object to
@@ -191,9 +220,9 @@ class MenuContentAdmin(admin.ModelAdmin):
         )
 
     class Media:
-        css = {"all": ("djangocms_pageadmin/css/actions.css",)}
+        css = {"all": ("djangocms_pageadmin/css/actions.css", "djangocms_version_locking/css/version-locking.css",)}
 
-    get_menuitem_link.short_description = _("Menu Preview")
+
 
 
 class MenuItemAdmin(TreeAdmin):
