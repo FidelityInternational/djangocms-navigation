@@ -24,7 +24,6 @@ class AbstractMenu(models.Model):
     identifier = models.CharField(verbose_name=_("identifier"), max_length=100)
 
     class Meta:
-        abstract = True
         unique_together = (("identifier", "site"),)
 
     def __str__(self):
@@ -35,6 +34,9 @@ class AbstractMenu(models.Model):
         """Returns the id of the root MenuItem as it will be in the
         NavigationNode instance"""
         return "root-" + self.identifier
+
+    class Meta:
+        abstract = True
 
 
 class AbstractMenuContent(models.Model):

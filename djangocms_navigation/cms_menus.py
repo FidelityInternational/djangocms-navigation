@@ -12,14 +12,11 @@ from .utils import get_versionable_for_content
 
 
 class CMSMenu(Menu):
-    menu_content_model = MenuContent
-    menu_item_model = MenuItem
-
     def get_roots(self, request):
-        queryset = self.menu_item_model.get_root_nodes().filter(
+        queryset = MenuItem.get_root_nodes().filter(
             menucontent__menu__site=get_current_site()
         )
-        versionable = get_versionable_for_content(self.menu_content_model)
+        versionable = get_versionable_for_content(MenuContent)
         if versionable:
             inner_filter = {"versions__state__in": [PUBLISHED]}
             if self.renderer.draft_mode_active:
@@ -33,7 +30,7 @@ class CMSMenu(Menu):
         path_q = Q()
         for path in root_paths:
             path_q |= Q(path__startswith=path) & ~Q(path=path)
-        return self.menu_item_model.get_tree().filter(path_q).order_by("path")
+        return MenuItem.get_tree().filter(path_q).order_by("path")
 
     def get_navigation_nodes(self, nodes, root_ids):
         for node in nodes:
