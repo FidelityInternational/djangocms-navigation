@@ -40,21 +40,23 @@ class MenuItemChangelistTestCase(CMSTestCase):
         request = RequestFactory().get("/admin/djangocms_navigation/")
         request.user = self.user
         request.menu_content_id = menu_content.pk
+        request.user = self.get_superuser()
         model_admin = self.site._registry[MenuItem]
+
         args = [
-            request,
-            MenuItem,
-            None,
-            None,
-            [],
-            None,
-            None,
-            None,
-            100,
-            250,
-            None,
-            model_admin,
-            'id',
+            request,  # request
+            MenuItem,  # model
+            None,  # list_display
+            None,  # list_display_links
+            [admin_field, ],  # list_filter
+            None,  # date_hierarchy
+            None,  # search_fields
+            None,  # list_select_related
+            100,  # list_per_page
+            250,  # list_max_show_all
+            None,  # list_editable
+            model_admin,  # model_admin
+            admin_field,  # sortable_by
         ]
         if not GTE_DJ21:
             args.pop()

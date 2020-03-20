@@ -6,7 +6,8 @@ import djangocms_navigation
 INSTALL_REQUIREMENTS = [
     "Django>=1.11,<3.0",
     "django-treebeard>=4.3",
-    "django-cms"
+    "django-cms",
+    "djangocms-pageadmin",
 ]
 
 TEST_REQUIREMENTS = [
@@ -15,7 +16,8 @@ TEST_REQUIREMENTS = [
     "djangocms_version_locking",
     "djangocms-moderation",
     "factory_boy",
-    "django_cms"
+    "django_cms",
+    "djangocms_pageadmin",
 ]
 
 
@@ -44,5 +46,6 @@ setup(
         "http://github.com/divio/djangocms-versioning/tarball/master#egg=djangocms-versioning-0.0.23",
         "http://github.com/divio/djangocms-moderation/tarball/release/1.0.x#egg=djangocms-moderation-1.0.x",
         "http://github.com/FidelityInternational/djangocms-version-locking/tarball/master#egg=djangocms-version-locking-0.0.13",  # noqa
+        "https://github.com/FidelityInternational/djangocms-pageadmin/tarball/master#egg=djangocms-pageadmin-0.0.10",  #noqa
     ]
 )
