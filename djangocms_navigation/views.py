@@ -87,7 +87,7 @@ class ContentObjectSelect2View(View):
             # TODO: filter by language and publish state
             # For Page model filter query by pagecontent title
             if model == Page:
-                queryset = queryset.filter(pagecontent_set__title__contains=query)
+                queryset = queryset.filter(pagecontent_set__title__icontains=query)
             else:
                 # Non page model should work using filter against field in queryset
                 options = {}
