@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+import django
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
@@ -24,22 +25,28 @@ from djangocms_navigation.test_utils import factories
 from .utils import UsefulAssertsMixin, disable_versioning_for_navigation
 
 
-class MenuItemChangelistTestCase(TestCase):
+version = list(map(int, django.__version__.split('.')))
+GTE_DJ21 = version[0] >= 2 and version[1] >= 1
+
+
+class MenuItemChangelistTestCase(CMSTestCase):
     def setUp(self):
+        self.user = self.get_superuser()
         self.site = admin.AdminSite()
         self.site.register(MenuItem, MenuItemAdmin)
 
     def _get_changelist_instance(self, menu_content):
         """Helper to instantiate a MenuItemChangeList simply"""
         request = RequestFactory().get("/admin/djangocms_navigation/")
+        request.user = self.user
         request.menu_content_id = menu_content.pk
         model_admin = self.site._registry[MenuItem]
-        return MenuItemChangeList(
+        args = [
             request,
             MenuItem,
             None,
             None,
-            None,
+            [],
             None,
             None,
             None,
@@ -47,7 +54,12 @@ class MenuItemChangelistTestCase(TestCase):
             250,
             None,
             model_admin,
-        )
+            'id',
+        ]
+        if not GTE_DJ21:
+            args.pop()
+
+        return MenuItemChangeList(*args)
 
     def test_menuitem_changelist(self):
         request = RequestFactory().get("/admin/djangocms_navigation/menuitem/36/")
