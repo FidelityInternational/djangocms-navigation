@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from django.apps import apps
 from django.conf.urls import url
 from django.contrib import admin, messages
@@ -13,17 +15,20 @@ from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.views.i18n import JavaScriptCatalog
 
+from cms.models import PageContent
+
+from djangocms_version_locking.helpers import version_is_locked
+from djangocms_versioning import versionables
+from djangocms_versioning.constants import DRAFT, PUBLISHED
 from treebeard.admin import TreeAdmin
 
-from djangocms_pageadmin.helpers import proxy_model
-
-from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
-from djangocms_version_locking.helpers import version_is_locked
-
-from .forms import MenuContentForm, MenuItemForm
-from .models import Menu, MenuContent, MenuItem
-from .utils import purge_menu_cache, reverse_admin_name
-from .views import ContentObjectSelect2View, MenuContentPreviewView
+from djangocms_navigation.forms import MenuContentForm, MenuItemForm
+from djangocms_navigation.models import Menu, MenuContent, MenuItem
+from djangocms_navigation.utils import purge_menu_cache, reverse_admin_name
+from djangocms_navigation.views import (
+    ContentObjectSelect2View,
+    MenuContentPreviewView,
+)
 
 
 # TODO: Tests to be added
@@ -46,6 +51,13 @@ except ImportError:
     LOCK_MESSAGE = _("You don't have permission to change this item")
 
 
+def proxy_model(obj):
+    versionable = versionables.for_content(PageContent)
+    obj_ = deepcopy(obj)
+    obj_.__class__ = versionable.version_model_proxy
+    return obj_
+
+
 class MenuItemChangeList(ChangeList):
     def __init__(self, request, *args, **kwargs):
         self.menu_content_id = request.menu_content_id
@@ -61,10 +73,6 @@ class MenuItemChangeList(ChangeList):
 
 
 class MenuContentAdmin(admin.ModelAdmin):
-    """
-    The methods pertinent to logos in this class come from djangocms-pageadmin
-    https://github.com/FidelityInternational/djangocms-pageadmin/blob/master/djangocms_pageadmin/admin.py
-    """
     form = MenuContentForm
     menu_model = Menu
     menu_item_model = MenuItem
@@ -75,18 +83,27 @@ class MenuContentAdmin(admin.ModelAdmin):
 
     def get_version(self, obj):
         """
-        Taken from djangocms pageadmin
+        Return the latest version of a given object
+        :param obj: MenuContent instance
+        :return: Latest Version linked with MenuContent instance
         """
         return obj.versions.all()[0]
 
     def get_versioning_state(self, obj):
+        """
+        Return the current state of a version (DRAFT, PUBLISHED or ARCHIVED)
+        :param obj: Version instance
+        :return: Version status
+        """
         return self.get_version(obj).get_state_display()
 
     get_versioning_state.short_description = _("Lock Status")
 
     def is_locked(self, obj):
         """
-        Taken from djangocms pageadmin
+        Render the lock item if the item is in a draft state and version locked
+        :param obj: MenuContent instance
+        :return: string to render
         """
         version = self.get_version(obj)
         if version.state == DRAFT and version_is_locked(version):
@@ -96,16 +113,31 @@ class MenuContentAdmin(admin.ModelAdmin):
     is_locked.short_description = _("Lock Status")
 
     def get_state_display(self, obj):
+        """
+        Return the current state of the version
+        :param obj: MenuContent Instance
+        :return: State
+        """
         return self.get_version(obj).get_state_display()
 
     get_state_display.short_description = _("State")
 
     def get_author(self, obj):
+        """
+        Return the author who created a version
+        :param obj: MenuContent Instance
+        :return: Author
+        """
         return self.get_version(obj).created_by
 
     get_author.short_description = _("Author")
 
     def get_modified_date(self, obj):
+        """
+        Get the last modified date of a version
+        :param obj: MenuContent Instance
+        :return: Modified Date
+        """
         return self.get_version(obj).modified
 
     get_modified_date.short_description = _("Modified")
@@ -130,9 +162,6 @@ class MenuContentAdmin(admin.ModelAdmin):
         return list_actions
 
     def get_list_actions(self):
-        """
-        Taken from djangocms pageadmin
-        """
         return [
             self._get_preview_link,
             self._get_edit_link,
@@ -140,23 +169,19 @@ class MenuContentAdmin(admin.ModelAdmin):
 
     def get_list_display(self, request):
         """
-        Taken from djangocms pageadmin
+        Extend list display with additional icons
+        :param request: request object
+        :return: list_display
         """
         return self.list_display + [self._list_actions(request)]
 
     def _get_preview_link(self, obj, request, disabled=False):
-        """
-        Taken from djangocms pageadmin
-        """
         return render_to_string(
             "djangocms_navigation/admin/icons/preview.html",
             {"url": obj.get_preview_url(), "disabled": disabled},
         )
 
     def _get_edit_link(self, obj, request, disabled=False):
-        """
-        Taken from djangocms pageadmin
-        """
         version = proxy_model(self.get_version(obj))
 
         if version.state not in (DRAFT, PUBLISHED):
