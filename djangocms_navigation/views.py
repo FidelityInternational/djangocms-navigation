@@ -1,9 +1,6 @@
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
-from django.http import (
-    HttpResponseBadRequest,
-    JsonResponse,
-)
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, View
 
@@ -11,26 +8,28 @@ from cms.models import Page
 
 from djangocms_navigation.utils import is_model_supported, supported_models
 
-from .models import MenuContent, MenuItem
-
 
 class MenuContentPreviewView(TemplateView):
+    menu_content_model = None
+    menu_item_model = None
     template_name = "admin/djangocms_navigation/menucontent/preview.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         menu_content = get_object_or_404(
-            MenuContent._base_manager, pk=self.kwargs.get("menu_content_id")
+            self.menu_content_model._base_manager, pk=self.kwargs.get("menu_content_id")
         )
-        annotated_list = MenuItem.get_annotated_list(parent=menu_content.root)
+        annotated_list = self.menu_item_model.get_annotated_list(parent=menu_content.root)
         context.update({
             "annotated_list": annotated_list,
-            "opts": MenuItem._meta
+            "opts": self.menu_item_model._meta
         })
         return context
 
 
 class ContentObjectSelect2View(View):
+    menu_content_model = None
+
     def get(self, request, *args, **kwargs):
 
         content_type_id = self.request.GET.get("content_type_id", None)
@@ -46,7 +45,7 @@ class ContentObjectSelect2View(View):
 
         # return http bad request if content type is not registered to use navigation app
         model = content_object.model_class()
-        if not is_model_supported(model):
+        if not is_model_supported(self.menu_content_model, model):
             return HttpResponseBadRequest()
 
         data = {
@@ -88,11 +87,11 @@ class ContentObjectSelect2View(View):
             # TODO: filter by language and publish state
             # For Page model filter query by pagecontent title
             if model == Page:
-                queryset = queryset.filter(pagecontent_set__title__contains=query)
+                queryset = queryset.filter(pagecontent_set__title__icontains=query)
             else:
                 # Non page model should work using filter against field in queryset
                 options = {}
-                search_fields = supported_models().get(model)
+                search_fields = supported_models(self.menu_content_model).get(model)
                 if search_fields:
                     for field in search_fields:
                         options[field] = query
