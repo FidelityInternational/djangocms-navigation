@@ -6,13 +6,12 @@ from django.shortcuts import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from cms.models import CMSPlugin
+from cms.utils.i18n import get_default_language
 
 from treebeard.mp_tree import MP_Node
 
 from .constants import TARGETS, TEMPLATE_DEFAULT, get_templates
 
-
-from cms.utils.i18n import get_default_language
 
 __all__ = ["Menu", "MenuContent", "MenuItem", "NavigationPlugin"]
 
