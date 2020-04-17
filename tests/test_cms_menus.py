@@ -1,11 +1,10 @@
-from unittest.mock import patch
 from django.test import RequestFactory, TestCase
+
+from menus.menu_pool import menu_pool
 
 from djangocms_navigation.cms_menus import CMSMenu
 from djangocms_navigation.test_utils import factories
-from menus.base import Menu
-from menus.menu_pool import MenuRenderer
-from menus.menu_pool import menu_pool
+
 from .utils import disable_versioning_for_navigation
 
 
@@ -138,11 +137,11 @@ class CMSMenuTestCase(TestCase):
         when renderer draft_mode_active is false
         """
         menucontent_1_v1 = factories.MenuVersionFactory(state=ARCHIVED)
-        menucontent_1_v2 = factories.MenuVersionFactory(
+        factories.MenuVersionFactory(
             content__menu=menucontent_1_v1.content.menu, state=DRAFT
         )
         menucontent_2_v1 = factories.MenuVersionFactory(state=PUBLISHED)
-        menucontent_3_v1 = factories.MenuVersionFactory(state=UNPUBLISHED)
+        factories.MenuVersionFactory(state=UNPUBLISHED)
         # Assert to check draft_mode_active is false
         self.assertFalse(self.menu.renderer.draft_mode_active)
         roots = self.menu.get_roots(self.request)
@@ -161,7 +160,7 @@ class CMSMenuTestCase(TestCase):
             content__menu=menucontent_1_v1.content.menu, state=DRAFT
         )
         menucontent_2_v1 = factories.MenuVersionFactory(state=PUBLISHED)
-        menucontent_3_v1 = factories.MenuVersionFactory(state=UNPUBLISHED)
+        factories.MenuVersionFactory(state=UNPUBLISHED)
 
         # Getting renderer to set draft_mode_active
         renderer = self.renderer
@@ -183,8 +182,8 @@ class CMSMenuTestCase(TestCase):
         menucontent_2 = factories.MenuContentFactory()
         menucontent_3 = factories.MenuContentFactory()
         child1 = factories.ChildMenuItemFactory(parent=menucontent_1.root)
-        child2 = factories.ChildMenuItemFactory(parent=menucontent_2.root)
-        grandchild = factories.ChildMenuItemFactory(parent=child1)
+        factories.ChildMenuItemFactory(parent=menucontent_2.root)
+        factories.ChildMenuItemFactory(parent=child1)
 
         roots = self.menu.get_roots(self.request)
         self.assertEqual(roots.count(), 3)
