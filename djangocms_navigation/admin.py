@@ -15,8 +15,6 @@ from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.views.i18n import JavaScriptCatalog
 
-from cms.models import PageContent
-
 from djangocms_version_locking.helpers import version_is_locked
 from djangocms_versioning import versionables
 from djangocms_versioning.constants import DRAFT, PUBLISHED
@@ -52,7 +50,7 @@ except ImportError:
 
 
 def proxy_model(obj):
-    versionable = versionables.for_content(PageContent)
+    versionable = versionables.for_content(MenuContent)
     obj_ = deepcopy(obj)
     obj_.__class__ = versionable.version_model_proxy
     return obj_
@@ -144,7 +142,6 @@ class MenuContentAdmin(admin.ModelAdmin):
 
     def _list_actions(self, request):
         """
-        Taken from djangocms pageadmin
         A closure that makes it possible to pass request object to
         list action button functions.
         """

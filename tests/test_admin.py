@@ -1,3 +1,4 @@
+from functools import partial
 from unittest.mock import patch
 
 import django
@@ -8,8 +9,10 @@ from django.contrib.sites.models import Site
 from django.shortcuts import reverse
 from django.test import RequestFactory, TestCase
 
+from cms.toolbar.utils import get_object_preview_url
 from cms.test_utils.testcases import CMSTestCase
 
+from bs4 import BeautifulSoup
 from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.exceptions import ConditionFailed
 from djangocms_versioning.helpers import version_list_url
@@ -24,6 +27,7 @@ from djangocms_navigation.test_utils import factories
 
 from .utils import UsefulAssertsMixin, disable_versioning_for_navigation
 
+parse_html = partial(BeautifulSoup, features="lxml")
 
 version = list(map(int, django.__version__.split('.')))
 GTE_DJ21 = version[0] >= 2 and version[1] >= 1
@@ -1034,3 +1038,65 @@ class MenuItemPermissionTestCase(CMSTestCase):
         request = RequestFactory().get("/admin")
         request.user = self.get_superuser()
         self.assertFalse(model_admin.has_change_permission(request))
+
+
+class ListActionsTestCase(CMSTestCase):
+    def setUp(self):
+        self.modeladmin = admin.site._registry[MenuContent]
+
+    def test_preview_link(self):
+        menu = factories.MenuFactory()
+        version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
+        factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
+        menu_content = version.content
+        func = self.modeladmin._list_actions(self.get_request("/"))
+        response = func(menu_content)
+        soup = parse_html(response)
+        element = soup.find("a", {"class": "cms-versioning-admin-action-preview"})
+        self.assertEqual(element, None)
+        self.assertEqual(element["title"], "Preview")
+        self.assertEqual(element["href"], get_object_preview_url(menu))
+
+    def test_edit_link(self):
+        menu = factories.MenuFactory()
+        version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
+        request = self.get_request("/")
+        request.user = self.get_superuser()
+        func = self.modeladmin._list_actions(request)
+        menu_content = version.content
+        response = func(menu_content)
+        soup = parse_html(response)
+        element = soup.find("a", {"class": "cms-versioning-admin-action-edit"})
+        self.assertEqual(element, None)
+        self.assertEqual(element["title"], "Edit")
+        self.assertEqual(
+            element["href"],
+            reverse(
+                "admin:djangocms_versioning_menucontentversion_edit_redirect",
+                args=(version.pk,),
+            ),
+        )
+
+    def test_edit_link_inactive(self):
+        menu = factories.MenuFactory()
+        version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
+        func = self.modeladmin._list_actions(self.get_request("/"))
+        menu_content = version.content
+        response = func(menu_content)
+        soup = parse_html(response)
+        element = soup.find("a", {"class": "cms-versioning-admin-action-edit"})
+        self.assertNone(element)
+        self.assertEqual(element["title"], "Edit")
+        self.assertIn("inactive", element["class"])
+        self.assertNotIn("href", element)
+
+    def test_edit_link_not_shown(self):
+        menu = factories.MenuFactory()
+        version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
+        func = self.modeladmin._list_actions(self.get_request("/"))
+        response = func(version.content)
+        soup = parse_html(response)
+        element = soup.find("a", {"class": "cms-versioning-admin-action-edit"})
+        self.assertIsNot(
+            element, "Element a.cms-versioning-admin-action-edit is shown when it shouldn't"
+        )

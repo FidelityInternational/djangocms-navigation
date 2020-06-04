@@ -10,11 +10,13 @@ INSTALL_REQUIREMENTS = [
 ]
 
 TEST_REQUIREMENTS = [
+    "beautifulsoup4",
     "djangocms_helper",
     "djangocms_versioning",
     "djangocms_version_locking",
     "djangocms-moderation",
     "factory_boy",
+    "lxml",
     "django_cms",
 ]
 
