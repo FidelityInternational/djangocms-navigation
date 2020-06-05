@@ -248,6 +248,8 @@ class MenuContentAdmin(admin.ModelAdmin):
             _("Preview"),
         )
 
+    get_preview_link.short_description = _("Preview")
+
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         queryset = queryset.prefetch_related('menu').filter(
