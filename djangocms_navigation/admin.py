@@ -15,9 +15,6 @@ from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.views.i18n import JavaScriptCatalog
 
-from djangocms_version_locking.helpers import version_is_locked
-from djangocms_versioning import versionables
-from djangocms_versioning.constants import DRAFT, PUBLISHED
 from treebeard.admin import TreeAdmin
 
 from djangocms_navigation.forms import MenuContentForm, MenuItemForm
@@ -27,6 +24,9 @@ from djangocms_navigation.views import (
     ContentObjectSelect2View,
     MenuContentPreviewView,
 )
+from djangocms_version_locking.helpers import version_is_locked
+from djangocms_versioning import versionables
+from djangocms_versioning.constants import DRAFT, PUBLISHED
 
 
 # TODO: Tests to be added
