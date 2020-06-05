@@ -173,12 +173,29 @@ class MenuContentAdmin(admin.ModelAdmin):
         return self.list_display + [self._list_actions(request)]
 
     def _get_preview_link(self, obj, request, disabled=False):
+        """
+        Return a user friendly button for previewing the menu contents
+
+        :param obj: Instance of Versioned MenuContent
+        :param request: The request to admin menu
+        :param disabled: Should the link be marked disabled?
+        :return: Preview icon template
+        """
         return render_to_string(
             "djangocms_navigation/admin/icons/preview.html",
             {"url": obj.get_preview_url(), "disabled": disabled},
         )
 
     def _get_edit_link(self, obj, request, disabled=False):
+        """
+        Return a user friendly button for editing the menu contents
+        - mark disabled if user doesn't have permission
+        - hide completely if instance cannot be edited
+        :param obj: Instance of Versioned MenuContent
+        :param request: The request to admin menu
+        :param disabled: Should the link be marked disabled?
+        :return: Preview icon template
+        """
         version = proxy_model(self.get_version(obj))
 
         if version.state not in (DRAFT, PUBLISHED):
@@ -190,7 +207,7 @@ class MenuContentAdmin(admin.ModelAdmin):
 
         url = reverse(
             "admin:{app}_{model}_list".format(
-                app=obj._meta.app_label, model=MenuItem._meta.model_name
+                app=obj._meta.app_label, model=self.menu_item_model.meta.model_name
             ),
             args=[obj.pk],
         )
@@ -200,9 +217,14 @@ class MenuContentAdmin(admin.ModelAdmin):
         )
 
     def get_menuitem_link(self, obj):
+        """
+        Return an admin link to the menuitem
+        :param obj: MenuItem Instance
+        :return: Url
+        """
         object_menuitem_url = reverse(
             "admin:{app}_{model}_list".format(
-                app=obj._meta.app_label, model=MenuItem._meta.model_name
+                app=obj._meta.app_label, model=self.menu_item_model._meta.model_name
             ),
             args=[obj.pk],
         )
