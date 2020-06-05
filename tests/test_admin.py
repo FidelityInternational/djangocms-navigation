@@ -1049,17 +1049,20 @@ class ListActionsTestCase(CMSTestCase):
         version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
         factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
         menu_content = version.content
-        func = self.modeladmin._list_actions(self.get_request("/"))
+        func = self.modeladmin._list_actions(self.get_request("/admin"))
         response = func(menu_content)
         soup = parse_html(response)
         element = soup.find("a", {"class": "cms-versioning-admin-action-preview"})
-        self.assertEqual(element, None)
+        self.assertIsNotNone(element, "Missing a.cms-versioning-admin-action-preview element")
         self.assertEqual(element["title"], "Preview")
-        self.assertEqual(element["href"], get_object_preview_url(menu))
+        self.assertEqual(element["href"], reverse(
+                "admin:djangocms_navigation_menuitem_preview",
+                args=(version.pk,),
+            ),)
 
     def test_edit_link(self):
         menu = factories.MenuFactory()
-        version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
+        version = factories.MenuVersionFactory(content__menu=menu, state=DRAFT)
         request = self.get_request("/")
         request.user = self.get_superuser()
         func = self.modeladmin._list_actions(request)
@@ -1067,25 +1070,18 @@ class ListActionsTestCase(CMSTestCase):
         response = func(menu_content)
         soup = parse_html(response)
         element = soup.find("a", {"class": "cms-versioning-admin-action-edit"})
-        self.assertEqual(element, None)
+        self.assertIsNotNone(element, "Missing a.cms-versioning-admin-action-edit element")
         self.assertEqual(element["title"], "Edit")
-        self.assertEqual(
-            element["href"],
-            reverse(
-                "admin:djangocms_versioning_menucontentversion_edit_redirect",
-                args=(version.pk,),
-            ),
-        )
 
     def test_edit_link_inactive(self):
         menu = factories.MenuFactory()
-        version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
-        func = self.modeladmin._list_actions(self.get_request("/"))
-        menu_content = version.content
-        response = func(menu_content)
+        version = factories.MenuVersionFactory(content__menu=menu, state=DRAFT)
+        request = self.get_request("/")
+        func = self.modeladmin._list_actions(request)
+        response = func(version.content)
         soup = parse_html(response)
         element = soup.find("a", {"class": "cms-versioning-admin-action-edit"})
-        self.assertNone(element)
+        self.assertIsNotNone(element, "Missing a.cms-versioning-admin-action-preview element")
         self.assertEqual(element["title"], "Edit")
         self.assertIn("inactive", element["class"])
         self.assertNotIn("href", element)
@@ -1097,6 +1093,6 @@ class ListActionsTestCase(CMSTestCase):
         response = func(version.content)
         soup = parse_html(response)
         element = soup.find("a", {"class": "cms-versioning-admin-action-edit"})
-        self.assertIsNot(
+        self.assertIsNone(
             element, "Element a.cms-versioning-admin-action-edit is shown when it shouldn't"
         )
