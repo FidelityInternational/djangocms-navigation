@@ -10,7 +10,6 @@ INSTALL_REQUIREMENTS = [
 ]
 
 TEST_REQUIREMENTS = [
-    "beautifulsoup4",
     "djangocms_helper",
     "djangocms_versioning",
     "djangocms_version_locking",

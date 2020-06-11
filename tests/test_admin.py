@@ -1,4 +1,6 @@
 from functools import partial
+from io import StringIO, BytesIO
+from lxml import etree
 from unittest.mock import patch
 
 import django
@@ -11,7 +13,6 @@ from django.test import RequestFactory, TestCase
 
 from cms.test_utils.testcases import CMSTestCase
 
-from bs4 import BeautifulSoup
 from djangocms_navigation.admin import (
     MenuContentAdmin,
     MenuItemAdmin,
@@ -25,8 +26,6 @@ from djangocms_versioning.helpers import version_list_url
 
 from .utils import UsefulAssertsMixin, disable_versioning_for_navigation
 
-
-parse_html = partial(BeautifulSoup, features="lxml")
 
 version = list(map(int, django.__version__.split('.')))
 GTE_DJ21 = version[0] >= 2 and version[1] >= 1
@@ -1043,21 +1042,33 @@ class ListActionsTestCase(CMSTestCase):
     def setUp(self):
         self.modeladmin = admin.site._registry[MenuContent]
 
+    def check_elements(self, elements, search_value):
+        """
+        Finds a search term within a html tag sub element, returns True and element if hit.
+        """
+        for element in elements:
+            for value in element.values():
+                if search_value in value:
+                    return True, element
+
     def test_preview_link(self):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
         factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
         menu_content = version.content
         func = self.modeladmin._list_actions(self.get_request("/admin"))
+
         response = func(menu_content)
-        soup = parse_html(response)
-        element = soup.find("a", {"class": "cms-versioning-admin-action-preview"})
-        self.assertIsNotNone(element, "Missing a.cms-versioning-admin-action-preview element")
-        self.assertEqual(element["title"], "Preview")
-        self.assertEqual(element["href"], reverse(
-                "admin:djangocms_navigation_menuitem_preview",
-                args=(version.pk,),
-            ),)
+        parser = etree.HTMLParser()
+        tree = etree.parse(StringIO(response), parser)
+        elements = tree.findall("//a")
+        element_present, test_element = self.check_elements(elements, "cms-versioning-admin-action-preview")
+
+        self.assertTrue(element_present, "Missing a.cms-versioning-admin-action-preview element")
+        self.assertEqual(test_element.values()[0], "Preview")
+        self.assertIn(reverse("admin:djangocms_navigation_menuitem_preview", args=(version.pk,),),
+                      test_element.values()[2],
+                      )
 
     def test_edit_link(self):
         menu = factories.MenuFactory()
@@ -1066,32 +1077,44 @@ class ListActionsTestCase(CMSTestCase):
         request.user = self.get_superuser()
         func = self.modeladmin._list_actions(request)
         menu_content = version.content
+
         response = func(menu_content)
-        soup = parse_html(response)
-        element = soup.find("a", {"class": "cms-versioning-admin-action-edit"})
-        self.assertIsNotNone(element, "Missing a.cms-versioning-admin-action-edit element")
-        self.assertEqual(element["title"], "Edit")
+        parser = etree.HTMLParser()
+        tree = etree.parse(StringIO(response), parser)
+        elements = tree.findall("//a")
+        element_present, test_element = self.check_elements(elements, "cms-versioning-admin-action-edit")
+
+        self.assertTrue(element_present, "Missing a.cms-versioning-admin-action-edit element")
+        self.assertEqual(test_element.values()[0], "Edit")
 
     def test_edit_link_inactive(self):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=DRAFT)
         request = self.get_request("/")
         func = self.modeladmin._list_actions(request)
+        parser = etree.HTMLParser()
         response = func(version.content)
-        soup = parse_html(response)
-        element = soup.find("a", {"class": "cms-versioning-admin-action-edit"})
-        self.assertIsNotNone(element, "Missing a.cms-versioning-admin-action-preview element")
-        self.assertEqual(element["title"], "Edit")
-        self.assertIn("inactive", element["class"])
-        self.assertNotIn("href", element)
+
+        tree = etree.parse(StringIO(response), parser)
+        elements = tree.findall("//a")
+        element_present, test_element = self.check_elements(elements, "cms-versioning-admin-action-edit")
+
+        self.assertTrue(element_present, "Missing a.cms-versioning-admin-action-edit element")
+        self.assertEqual(test_element.values()[0], "Edit")
+        self.assertIn("inactive", test_element.values()[1])
+        self.assertNotIn("href", test_element.values())
 
     def test_edit_link_not_shown(self):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
         func = self.modeladmin._list_actions(self.get_request("/"))
+
         response = func(version.content)
-        soup = parse_html(response)
-        element = soup.find("a", {"class": "cms-versioning-admin-action-edit"})
-        self.assertIsNone(
+        parser = etree.HTMLParser()
+        tree = etree.parse(StringIO(response), parser)
+        element =tree.find("//a")
+        element = "cms-versioning-admin-action-edit" in element.values()
+
+        self.assertFalse(
             element, "Element a.cms-versioning-admin-action-edit is shown when it shouldn't"
         )

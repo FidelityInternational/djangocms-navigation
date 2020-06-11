@@ -207,7 +207,7 @@ class MenuContentAdmin(admin.ModelAdmin):
 
         url = reverse(
             "admin:{app}_{model}_list".format(
-                app=obj._meta.app_label, model=self.menu_item_model.meta.model_name
+                app=obj._meta.app_label, model=self.menu_item_model._meta.model_name
             ),
             args=[obj.pk],
         )
