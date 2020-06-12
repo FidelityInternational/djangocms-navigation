@@ -1,6 +1,4 @@
-from functools import partial
-from io import StringIO, BytesIO
-from lxml import etree
+from io import StringIO
 from unittest.mock import patch
 
 import django
@@ -23,6 +21,7 @@ from djangocms_navigation.test_utils import factories
 from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.exceptions import ConditionFailed
 from djangocms_versioning.helpers import version_list_url
+from lxml import etree
 
 from .utils import UsefulAssertsMixin, disable_versioning_for_navigation
 
@@ -1112,7 +1111,7 @@ class ListActionsTestCase(CMSTestCase):
         response = func(version.content)
         parser = etree.HTMLParser()
         tree = etree.parse(StringIO(response), parser)
-        element =tree.find("//a")
+        element = tree.find("//a")
         element = "cms-versioning-admin-action-edit" in element.values()
 
         self.assertFalse(
