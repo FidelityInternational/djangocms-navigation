@@ -11,6 +11,10 @@ from django.test import RequestFactory, TestCase
 
 from cms.test_utils.testcases import CMSTestCase
 
+from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
+from djangocms_versioning.exceptions import ConditionFailed
+from djangocms_versioning.helpers import version_list_url
+
 from djangocms_navigation.admin import (
     MenuContentAdmin,
     MenuItemAdmin,
@@ -18,9 +22,7 @@ from djangocms_navigation.admin import (
 )
 from djangocms_navigation.models import Menu, MenuContent, MenuItem
 from djangocms_navigation.test_utils import factories
-from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
-from djangocms_versioning.exceptions import ConditionFailed
-from djangocms_versioning.helpers import version_list_url
+
 from lxml import etree
 
 from .utils import UsefulAssertsMixin, disable_versioning_for_navigation
