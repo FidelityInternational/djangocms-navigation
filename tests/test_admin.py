@@ -22,7 +22,6 @@ from djangocms_navigation.admin import (
 )
 from djangocms_navigation.models import Menu, MenuContent, MenuItem
 from djangocms_navigation.test_utils import factories
-
 from lxml import etree
 
 from .utils import UsefulAssertsMixin, disable_versioning_for_navigation
