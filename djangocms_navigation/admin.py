@@ -57,6 +57,7 @@ def proxy_model(obj):
 
 
 class MenuItemChangeList(ChangeList):
+
     def __init__(self, request, *args, **kwargs):
         self.menu_content_id = request.menu_content_id
         super().__init__(request, *args, **kwargs)
@@ -78,6 +79,9 @@ class MenuContentAdmin(admin.ModelAdmin):
         "title", "get_versioning_state", "get_author", "get_modified_date", "get_state_display", "is_locked"
     ]
     list_display_links = None
+
+    class Media:
+        css = {"all": ("djangocms_versioning/css/actions.css", "djangocms_version_locking/css/version-locking.css",)}
 
     def get_version(self, obj):
         """
@@ -212,7 +216,7 @@ class MenuContentAdmin(admin.ModelAdmin):
             args=[obj.pk],
         )
         return render_to_string(
-            "djangocms_navigation/admin/icons/edit.html",
+            "djangocms_versioning/admin/edit_icon.html",
             {"url": url, "disabled": disabled, "post": False},
         )
 
@@ -527,6 +531,9 @@ class MenuItemAdmin(TreeAdmin):
         return apps.get_app_config(
             self.model._meta.app_label
         ).cms_config.djangocms_versioning_enabled
+
+    class Media:
+        css = {"all": ("djangocms_versioning/css/actions.css",)}
 
 
 admin.site.register(MenuContent, MenuContentAdmin)
