@@ -227,7 +227,7 @@ class MenuItemAdminVersionLocked(CMSTestCase, UsefulAssertsMixin):
         if nav_admin.using_version_lock:
             actual_message = msg[0].message
             expected_message = "The item is currently locked or you don't have permission to change it"
-            status_code = 200
+            status_code = 302
         else:
             actual_message = msg
             expected_message = []
