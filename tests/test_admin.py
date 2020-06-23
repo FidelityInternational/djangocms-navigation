@@ -15,6 +15,7 @@ from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.exceptions import ConditionFailed
 from djangocms_versioning.helpers import version_list_url
 
+from djangocms_navigation import admin as nav_admin
 from djangocms_navigation.admin import (
     MenuContentAdmin,
     MenuItemAdmin,
@@ -221,17 +222,35 @@ class MenuItemAdminVersionLocked(CMSTestCase, UsefulAssertsMixin):
     def test_visit_change_view_when_node_is_version_locked_fails(self):
         """It fails as super user is not the person who created the version"""
         response = self.client.get(self.change_url)
-        msg = list(get_messages(response.wsgi_request))[0]
+        msg = list(get_messages(response.wsgi_request))
 
-        self.assertEquals(msg.message, "The item is currently locked or you don't have permission to change it")
-        self.assertEquals(response.status_code, 302)
+        if nav_admin.using_version_lock:
+            actual_message = msg[0].message
+            expected_message = "The item is currently locked or you don't have permission to change it"
+            status_code = 200
+        else:
+            actual_message = msg
+            expected_message = []
+            status_code = 200
+
+        self.assertEquals(actual_message, expected_message)
+        self.assertEquals(response.status_code, status_code)
 
     def test_moving_node_that_is_version_locked_fails(self):
+        """
+        Check that moving node does not wotk if version is locked, also ensure it works if version locking not enabled
+        """
         response = self.client.post(self.move_url, data=self.data)
         content = response.content.decode('utf-8')
-        msg = "The item is currently locked or you don't have permission to change it"
 
-        self.assertEquals(response.status_code, 400)
+        if nav_admin.using_version_lock:
+            msg = "The item is currently locked or you don't have permission to change it"
+            response_code = 400
+        else:
+            msg = "OK"
+            response_code = 200
+
+        self.assertEquals(response.status_code, response_code)
         self.assertEquals(content, msg)
 
     @patch('djangocms_navigation.admin.using_version_lock', False)
@@ -1126,3 +1145,16 @@ class ListActionsTestCase(CMSTestCase):
         self.assertFalse(
             element, "Element a.cms-versioning-action-edit is shown when it shouldn't"
         )
+
+
+class AdminVersionLockingSwitchTestCase(CMSTestCase):
+    def disable_version_locking(self):
+        admin_class = nav_admin
+        admin_class.using_version_lock = False
+        return admin_class
+
+    def test_no_version_locking(self):
+        admin_class = self.disable_version_locking()
+
+
+
