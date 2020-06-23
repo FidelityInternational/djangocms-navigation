@@ -108,7 +108,9 @@ class MenuContentAdmin(admin.ModelAdmin):
         :return: string to render
         """
         version = self.get_version(obj)
-        if version.state == DRAFT and version_is_locked(version):
+        if not using_version_lock:
+            return ""
+        elif version.state == DRAFT and version_is_locked(version):
             return render_to_string("djangocms_version_locking/admin/locked_icon.html")
         return ""
 
@@ -321,6 +323,11 @@ class MenuItemAdmin(TreeAdmin):
                 name="{}_{}_list".format(*info),
             ),
             url(
+                r"^(?P<menu_content_id>\d+)/$",
+                self.admin_site.admin_view(self.preview_view),
+                name="{}_{}_list".format(*info),
+            ),
+            url(
                 r"^(?P<menu_content_id>\d+)/add/$",
                 self.admin_site.admin_view(self.add_view),
                 name="{}_{}_add".format(*info),
@@ -424,6 +431,32 @@ class MenuItemAdmin(TreeAdmin):
             )
 
         return super().add_view(request, form_url=form_url, extra_context=extra_context)
+
+    def preview_view(self, request, menu_content_id=None, form_url="", extra_context=None):
+        extra_context = extra_context or {}
+        if menu_content_id:
+            request.menu_content_id = menu_content_id
+            if self._versioning_enabled:
+                menu_content = get_object_or_404(
+                    self.menu_content_model._base_manager, id=menu_content_id
+                )
+                version = Version.objects.get_for_content(menu_content)
+                try:
+                    version.check_view(request.user)
+                except ConditionFailed as error:
+                    messages.error(request, str(error))
+                    return HttpResponseRedirect(version_list_url(menu_content))
+                # purge menu cache
+                purge_menu_cache(site_id=menu_content.menu.site_id)
+
+            extra_context["list_url"] = reverse(
+                "admin:{}_menuitem_list".format(self.model._meta.app_label),
+                kwargs={"menu_content_id": menu_content_id},
+            )
+        if request.GET.get("content_type_id"):
+            return True
+        else:
+            return False
 
     def changelist_view(self, request, menu_content_id=None, extra_context=None):
         extra_context = extra_context or {}
@@ -531,9 +564,6 @@ class MenuItemAdmin(TreeAdmin):
         return apps.get_app_config(
             self.model._meta.app_label
         ).cms_config.djangocms_versioning_enabled
-
-    class Media:
-        css = {"all": ("djangocms_versioning/css/actions.css",)}
 
 
 admin.site.register(MenuContent, MenuContentAdmin)
