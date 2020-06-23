@@ -1145,16 +1145,3 @@ class ListActionsTestCase(CMSTestCase):
         self.assertFalse(
             element, "Element a.cms-versioning-action-edit is shown when it shouldn't"
         )
-
-
-class AdminVersionLockingSwitchTestCase(CMSTestCase):
-    def disable_version_locking(self):
-        admin_class = nav_admin
-        admin_class.using_version_lock = False
-        return admin_class
-
-    def test_no_version_locking(self):
-        admin_class = self.disable_version_locking()
-
-
-
