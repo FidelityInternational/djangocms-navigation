@@ -45,6 +45,8 @@ class MenuItemChangelistTestCase(CMSTestCase):
         request.menu_content_id = menu_content.pk
         request.user = self.get_superuser()
         model_admin = self.site._registry[MenuItem]
+        import pdb
+        pdb.set_trace()
         admin_field = "title"
 
         args = [
@@ -168,6 +170,17 @@ class MenuContentAdminViewTestCase(CMSTestCase):
 
             self.assertEqual(site3_query_result.count(), 1)
             self.assertEqual(site3_query_result.first(), site_3_menu_version.content)
+
+    @patch("djangocms_navigation.cms_config.versioning_enabled", False)
+    def test_list_display_without_version_locking(self):
+        request = self.get_request("/")
+        model_admin = self.site._registry[MenuContent]
+        request.user = self.get_superuser()
+        func = model_admin._list_actions(self.get_request("/admin"))
+
+        import pdb
+        pdb.set_trace()
+
 
 
 class MenuItemModelAdminTestCase(TestCase):
@@ -1145,3 +1158,4 @@ class ListActionsTestCase(CMSTestCase):
         self.assertFalse(
             element, "Element a.cms-versioning-action-edit is shown when it shouldn't"
         )
+

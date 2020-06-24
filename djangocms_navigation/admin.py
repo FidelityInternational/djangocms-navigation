@@ -15,11 +15,11 @@ from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.views.i18n import JavaScriptCatalog
 
-from djangocms_version_locking.helpers import version_is_locked
 from djangocms_versioning import versionables
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 from treebeard.admin import TreeAdmin
 
+from djangocms_navigation.cms_config import NavigationCMSAppConfig
 from djangocms_navigation.forms import MenuContentForm, MenuItemForm
 from djangocms_navigation.models import Menu, MenuContent, MenuItem
 from djangocms_navigation.utils import purge_menu_cache, reverse_admin_name
@@ -38,7 +38,7 @@ except ImportError:
     pass
 
 try:
-    from djangocms_version_locking.helpers import content_is_unlocked_for_user
+    from djangocms_version_locking.helpers import content_is_unlocked_for_user, version_is_locked
     using_version_lock = True
     LOCK_MESSAGE = _(
         "The item is currently locked or you don't "
@@ -79,6 +79,7 @@ class MenuContentAdmin(admin.ModelAdmin):
         "title", "get_versioning_state", "get_author", "get_modified_date", "get_state_display", "is_locked"
     ]
     list_display_links = None
+    versioning_enabled = NavigationCMSAppConfig.djangocms_versioning_enabled
 
     class Media:
         css = {"all": ("djangocms_versioning/css/actions.css", "djangocms_version_locking/css/version-locking.css",)}
@@ -172,11 +173,15 @@ class MenuContentAdmin(admin.ModelAdmin):
 
     def get_list_display(self, request):
         """
-        Extend list display with additional icons
+        Extend list display with additional icons if versioning is enabled
         :param request: request object
         :return: list_display
         """
-        return self.list_display + [self._list_actions(request)]
+        if self.versioning_enabled:
+            return self.list_display + [self._list_actions(request)]
+        else:
+            # Title is the only value being displayed which is not reliant on versioning
+            return ["title", ]
 
     def _get_preview_link(self, obj, request, disabled=False):
         """
@@ -571,5 +576,4 @@ class MenuItemAdmin(TreeAdmin):
         ).cms_config.djangocms_versioning_enabled
 
 
-admin.site.register(MenuContent, MenuContentAdmin)
 admin.site.register(MenuItem, MenuItemAdmin)
