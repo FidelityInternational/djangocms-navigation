@@ -61,7 +61,7 @@ class MenuContentAdmin(admin.ModelAdmin):
     menu_item_model = MenuItem
     list_display = ["title", "get_menuitem_link", "get_preview_link"]
     list_display_links = None
-    list_filter = (LanguageFilter)
+    list_filter = (LanguageFilter, )
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
