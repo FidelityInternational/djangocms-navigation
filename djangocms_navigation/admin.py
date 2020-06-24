@@ -14,6 +14,7 @@ from django.views.i18n import JavaScriptCatalog
 
 from treebeard.admin import TreeAdmin
 
+from.filters import LanguageFilter
 from .forms import MenuContentForm, MenuItemForm
 from .models import Menu, MenuContent, MenuItem
 from .utils import purge_menu_cache, reverse_admin_name
@@ -60,6 +61,7 @@ class MenuContentAdmin(admin.ModelAdmin):
     menu_item_model = MenuItem
     list_display = ["title", "get_menuitem_link", "get_preview_link"]
     list_display_links = None
+    list_filter = (LanguageFilter)
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
