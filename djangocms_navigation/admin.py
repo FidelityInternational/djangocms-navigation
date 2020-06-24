@@ -14,7 +14,7 @@ from django.views.i18n import JavaScriptCatalog
 
 from treebeard.admin import TreeAdmin
 
-from.filters import LanguageFilter
+from .filters import LanguageFilter
 from .forms import MenuContentForm, MenuItemForm
 from .models import Menu, MenuContent, MenuItem
 from .utils import purge_menu_cache, reverse_admin_name
