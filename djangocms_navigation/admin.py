@@ -29,7 +29,6 @@ from djangocms_navigation.views import (
 )
 
 
-# TODO: Tests to be added
 try:
     from djangocms_versioning.exceptions import ConditionFailed
     from djangocms_versioning.helpers import version_list_url
@@ -75,11 +74,18 @@ class MenuContentAdmin(admin.ModelAdmin):
     form = MenuContentForm
     menu_model = Menu
     menu_item_model = MenuItem
-    list_display = [
-        "title", "get_versioning_state", "get_author", "get_modified_date", "get_state_display", "is_locked"
-    ]
     list_display_links = None
-    versioning_enabled = NavigationCMSAppConfig.djangocms_versioning_enabled
+
+    # Due to compatibility without versioning and version locking we must dynamically change list_display
+    if NavigationCMSAppConfig.djangocms_versioning_enabled:
+        if using_version_lock:
+            menu_content_list_display = [
+                "title", "get_versioning_state", "get_author", "get_modified_date", "get_state_display", "is_locked"
+            ]
+        else:
+            menu_content_list_display = ["title", "get_menuitem_link", "get_preview_link"]
+    else:
+        menu_content_list_display = ["title", ]
 
     class Media:
         css = {"all": ("djangocms_versioning/css/actions.css", "djangocms_version_locking/css/version-locking.css",)}
@@ -177,11 +183,11 @@ class MenuContentAdmin(admin.ModelAdmin):
         :param request: request object
         :return: list_display
         """
-        if self.versioning_enabled:
-            return self.list_display + [self._list_actions(request)]
+        if NavigationCMSAppConfig.djangocms_versioning_enabled and using_version_lock:
+            return self.menu_content_list_display + [self._list_actions(request)]
         else:
             # Title is the only value being displayed which is not reliant on versioning
-            return ["title", ]
+            return self.menu_content_list_display
 
     def _get_preview_link(self, obj, request, disabled=False):
         """
