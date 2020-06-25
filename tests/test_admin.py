@@ -171,15 +171,12 @@ class MenuContentAdminViewTestCase(CMSTestCase):
             self.assertEqual(site3_query_result.count(), 1)
             self.assertEqual(site3_query_result.first(), site_3_menu_version.content)
 
-    @patch("djangocms_navigation.cms_config.versioning_enabled", False)
+    @patch("djangocms_navigation.cms_config.djangocms_versioning_enabled", False)
     def test_list_display_without_version_locking(self):
         request = self.get_request("/")
         model_admin = self.site._registry[MenuContent]
         request.user = self.get_superuser()
         func = model_admin._list_actions(self.get_request("/admin"))
-
-        import pdb
-        pdb.set_trace()
 
 
 
