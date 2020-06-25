@@ -577,3 +577,4 @@ class MenuItemAdmin(TreeAdmin):
 
 
 admin.site.register(MenuItem, MenuItemAdmin)
+admin.site.register(MenuContent, MenuContentAdmin)
