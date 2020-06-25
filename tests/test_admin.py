@@ -45,8 +45,6 @@ class MenuItemChangelistTestCase(CMSTestCase):
         request.menu_content_id = menu_content.pk
         request.user = self.get_superuser()
         model_admin = self.site._registry[MenuItem]
-        import pdb
-        pdb.set_trace()
         admin_field = "title"
 
         args = [
