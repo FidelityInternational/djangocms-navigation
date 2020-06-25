@@ -47,6 +47,15 @@ def is_model_supported(app_model, model):
     return model in supported_models(app_model).keys()
 
 
+def is_versioning_enabled(model):
+    try:
+        app_config = apps.get_app_config(model._meta.app_label)
+    except LookupError:
+        return False
+    else:
+        return app_config.djangocms_versioning_enabled
+
+
 def get_versionable_for_content(content):
     try:
         from djangocms_versioning import versionables

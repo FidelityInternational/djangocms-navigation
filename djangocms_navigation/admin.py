@@ -22,7 +22,7 @@ from treebeard.admin import TreeAdmin
 from djangocms_navigation.cms_config import NavigationCMSAppConfig
 from djangocms_navigation.forms import MenuContentForm, MenuItemForm
 from djangocms_navigation.models import Menu, MenuContent, MenuItem
-from djangocms_navigation.utils import purge_menu_cache, reverse_admin_name
+from djangocms_navigation.utils import purge_menu_cache, reverse_admin_name, is_versioning_enabled
 from djangocms_navigation.views import (
     ContentObjectSelect2View,
     MenuContentPreviewView,
@@ -75,17 +75,6 @@ class MenuContentAdmin(admin.ModelAdmin):
     menu_model = Menu
     menu_item_model = MenuItem
     list_display_links = None
-
-    # Due to compatibility without versioning and version locking we must dynamically change list_display
-    if NavigationCMSAppConfig.djangocms_versioning_enabled:
-        if using_version_lock:
-            menu_content_list_display = [
-                "title", "get_versioning_state", "get_author", "get_modified_date", "get_state_display", "is_locked"
-            ]
-        else:
-            menu_content_list_display = ["title", "get_menuitem_link", "get_preview_link"]
-    else:
-        menu_content_list_display = ["title", ]
 
     class Media:
         css = {"all": ("djangocms_versioning/css/actions.css", "djangocms_version_locking/css/version-locking.css",)}
@@ -178,16 +167,18 @@ class MenuContentAdmin(admin.ModelAdmin):
         ]
 
     def get_list_display(self, request):
-        """
-        Extend list display with additional icons if versioning is enabled
-        :param request: request object
-        :return: list_display
-        """
-        if NavigationCMSAppConfig.djangocms_versioning_enabled and using_version_lock:
-            return self.menu_content_list_display + [self._list_actions(request)]
-        else:
-            # Title is the only value being displayed which is not reliant on versioning
-            return self.menu_content_list_display
+        menu_content_list_display = ["title"]
+        versioning_enabled = is_versioning_enabled(self.model)
+
+        if versioning_enabled:
+            if using_version_lock:
+                menu_content_list_display.extend(self._list_actions(request))
+                menu_content_list_display.extend(
+                    ["get_versioning_state", "get_author", "get_modified_date", "get_state_display", "is_locked"])
+            else:
+                menu_content_list_display.extend(["get_menuitem_link", "get_preview_link"])
+
+        return menu_content_list_display
 
     def _get_preview_link(self, obj, request, disabled=False):
         """
