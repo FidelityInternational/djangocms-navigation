@@ -184,7 +184,7 @@ class MenuContentAdminViewTestCase(CMSTestCase):
         request.user = self.get_superuser()
         menu_content_admin = MenuContentAdmin(MenuContent, admin.AdminSite())
         self.assertEqual(len(menu_content_admin.get_list_display(request)), 1)
-        self.assertEqual(menu_content_admin, ["title", ])
+        self.assertEqual(menu_content_admin.get_list_display(request), ["title", ])
 
 
 class MenuItemModelAdminTestCase(TestCase):

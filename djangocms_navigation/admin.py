@@ -172,7 +172,7 @@ class MenuContentAdmin(admin.ModelAdmin):
 
         if versioning_enabled:
             if using_version_lock:
-                menu_content_list_display.extend(self._list_actions(request))
+                menu_content_list_display.extend([self._list_actions(request)])
                 menu_content_list_display.extend(
                     ["get_versioning_state", "get_author", "get_modified_date", "get_state_display", "is_locked"])
             else:

@@ -49,7 +49,7 @@ def is_model_supported(app_model, model):
 
 def is_versioning_enabled(model):
     try:
-        app_config = apps.get_app_config(model._meta.app_label)
+        app_config = apps.get_app_config(model._meta.app_label).cms_config
     except LookupError:
         return False
     else:
