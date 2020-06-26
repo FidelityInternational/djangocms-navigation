@@ -19,7 +19,6 @@ from djangocms_versioning import versionables
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 from treebeard.admin import TreeAdmin
 
-from djangocms_navigation.cms_config import NavigationCMSAppConfig
 from djangocms_navigation.forms import MenuContentForm, MenuItemForm
 from djangocms_navigation.models import Menu, MenuContent, MenuItem
 from djangocms_navigation.utils import purge_menu_cache, reverse_admin_name, is_versioning_enabled
