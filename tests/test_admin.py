@@ -1168,4 +1168,3 @@ class ListActionsTestCase(CMSTestCase):
         self.assertFalse(
             element, "Element a.cms-versioning-action-edit is shown when it shouldn't"
         )
-

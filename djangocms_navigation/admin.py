@@ -21,7 +21,10 @@ from treebeard.admin import TreeAdmin
 
 from djangocms_navigation.forms import MenuContentForm, MenuItemForm
 from djangocms_navigation.models import Menu, MenuContent, MenuItem
-from djangocms_navigation.utils import purge_menu_cache, reverse_admin_name, is_versioning_enabled
+from djangocms_navigation.utils import (
+    is_versioning_enabled,
+    purge_menu_cache,
+)
 from djangocms_navigation.views import (
     ContentObjectSelect2View,
     MenuContentPreviewView,
