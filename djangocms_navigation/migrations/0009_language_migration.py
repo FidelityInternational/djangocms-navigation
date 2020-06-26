@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def add_navigation_languages(apps, schema_editor):
     db_alias = schema_editor.connection.alias
     MenuContent = apps.get_model("djangocms_navigation", "MenuContent")
-    navigation_queryset = MenuContent.objects.using(db_alias).filter(language_exact="")
+    navigation_queryset = MenuContent.objects.using(db_alias).filter(language__exact="")
     for model in navigation_queryset:
         model.language = get_default_language_for_site(model.site)
         model.save()
@@ -27,7 +27,7 @@ def add_navigation_languages(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('djangocms_navigation', '0007_auto_20200302_0853'),
+        ('djangocms_navigation', '0008_menucontent_language'),
     ]
     operations = [
         migrations.RunPython(
