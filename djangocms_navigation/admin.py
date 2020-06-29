@@ -24,6 +24,7 @@ from djangocms_navigation.models import Menu, MenuContent, MenuItem
 from djangocms_navigation.utils import (
     is_versioning_enabled,
     purge_menu_cache,
+    reverse_admin_name,
 )
 from djangocms_navigation.views import (
     ContentObjectSelect2View,
