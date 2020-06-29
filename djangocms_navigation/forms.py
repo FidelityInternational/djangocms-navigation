@@ -4,7 +4,7 @@ from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-from cms.utils.i18n import get_languages, get_language_tuple
+from cms.utils.i18n import get_language_tuple
 from cms.utils.urlutils import admin_reverse
 
 from treebeard.forms import MoveNodeForm, _get_exclude_for_model
