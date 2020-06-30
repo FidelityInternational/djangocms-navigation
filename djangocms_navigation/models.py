@@ -6,7 +6,6 @@ from django.shortcuts import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from cms.models import CMSPlugin
-from cms.utils.i18n import get_default_language
 
 from treebeard.mp_tree import MP_Node
 
