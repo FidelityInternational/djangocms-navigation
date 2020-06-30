@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='menucontent',
             name='language',
-            field=models.CharField(db_index=True, default=cms.utils.i18n.get_default_language, max_length=15, verbose_name='language'),
+            field=models.CharField(db_index=True, default="", max_length=15, verbose_name='language', blank=True),
         ),
     ]

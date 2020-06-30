@@ -40,7 +40,7 @@ class AbstractMenu(models.Model):
 
 class AbstractMenuContent(models.Model):
     # There is an additional migration (0008_language_migration) to handle existing unpopulated database entries
-    language = models.CharField(_("language"), max_length=15, db_index=True, default=get_default_language)
+    language = models.CharField(_("language"), max_length=15, db_index=True)
 
     class Meta:
         abstract = True

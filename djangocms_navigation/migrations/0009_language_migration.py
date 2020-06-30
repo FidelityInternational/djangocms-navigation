@@ -15,7 +15,7 @@ def add_navigation_languages(apps, schema_editor):
     MenuContent = apps.get_model("djangocms_navigation", "MenuContent")
     navigation_queryset = MenuContent.objects.using(db_alias).filter(language__exact="")
     for model in navigation_queryset:
-        model.language = get_default_language_for_site(model.site)
+        model.language = get_default_language_for_site(model.menu.site)
         model.save()
         logger.info(
             "Added default language {} to model {}".format(
