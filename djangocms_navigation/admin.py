@@ -19,17 +19,11 @@ from djangocms_versioning import versionables
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 from treebeard.admin import TreeAdmin
 
-from djangocms_navigation.forms import MenuContentForm, MenuItemForm
-from djangocms_navigation.models import Menu, MenuContent, MenuItem
-from djangocms_navigation.utils import (
-    is_versioning_enabled,
-    purge_menu_cache,
-    reverse_admin_name,
-)
-from djangocms_navigation.views import (
-    ContentObjectSelect2View,
-    MenuContentPreviewView,
-)
+from .filters import LanguageFilter
+from .forms import MenuContentForm, MenuItemForm
+from .models import Menu, MenuContent, MenuItem
+from .utils import is_versioning_enabled, purge_menu_cache, reverse_admin_name
+from .views import ContentObjectSelect2View, MenuContentPreviewView
 
 
 try:
@@ -78,6 +72,7 @@ class MenuContentAdmin(admin.ModelAdmin):
     menu_model = Menu
     menu_item_model = MenuItem
     list_display_links = None
+    list_filter = (LanguageFilter, )
 
     class Media:
         css = {"all": ("djangocms_versioning/css/actions.css", "djangocms_version_locking/css/version-locking.css",)}
