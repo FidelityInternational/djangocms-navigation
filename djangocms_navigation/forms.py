@@ -1,8 +1,10 @@
 from django import forms
+from django.contrib.sites.models import Site
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
+from cms.utils.i18n import get_language_tuple
 from cms.utils.urlutils import admin_reverse
 
 from treebeard.forms import MoveNodeForm, _get_exclude_for_model
@@ -20,10 +22,19 @@ class NavigationPluginForm(forms.ModelForm):
 
 class MenuContentForm(forms.ModelForm):
     title = forms.CharField(label=_("Menu Title"), max_length=100)
+    language = forms.ChoiceField(choices=())
 
     class Meta:
         model = MenuContent
-        fields = ["title"]
+        fields = ["title", "language"]
+
+    def __init__(self, *args, **kwargs):
+        """
+        Override the language choices to ensure only those available on a given site are shown.
+        """
+        super().__init__(*args, **kwargs)
+        site = Site.objects.get_current()
+        self.fields["language"].choices = tuple(get_language_tuple(site_id=site.pk))
 
 
 class Select2Mixin:

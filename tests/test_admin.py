@@ -88,7 +88,7 @@ class MenuContentAdminViewTestCase(CMSTestCase):
     def test_menucontent_add_view(self):
         add_url = reverse("admin:djangocms_navigation_menucontent_add")
 
-        response = self.client.post(add_url, {"title": "My Title"})
+        response = self.client.post(add_url, {"title": "My Title", "language": "en"})
 
         self.assertRedirects(
             response, reverse("admin:djangocms_navigation_menucontent_changelist")
