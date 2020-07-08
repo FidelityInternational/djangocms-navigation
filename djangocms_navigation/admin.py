@@ -85,31 +85,6 @@ class MenuContentAdmin(admin.ModelAdmin):
         """
         return obj.versions.all()[0]
 
-    def get_versioning_state(self, obj):
-        """
-        Return the current state of a version (DRAFT, PUBLISHED or ARCHIVED)
-        :param obj: Version instance
-        :return: Version status
-        """
-        return self.get_version(obj).get_state_display()
-
-    get_versioning_state.short_description = _("Lock Status")
-
-    def is_locked(self, obj):
-        """
-        Render the lock item if the item is in a draft state and version locked
-        :param obj: MenuContent instance
-        :return: string to render
-        """
-        version = self.get_version(obj)
-        if not using_version_lock:
-            return ""
-        elif version.state == DRAFT and version_is_locked(version):
-            return render_to_string("djangocms_version_locking/admin/locked_icon.html")
-        return ""
-
-    is_locked.short_description = _("Lock Status")
-
     def get_state_display(self, obj):
         """
         Return the current state of the version
@@ -169,10 +144,14 @@ class MenuContentAdmin(admin.ModelAdmin):
         versioning_enabled = is_versioning_enabled(self.model)
 
         if versioning_enabled:
+            menu_content_list_display.extend(
+                ["get_author", "get_modified_date"]
+            )
+            # Add version locking specific items
             if using_version_lock:
+                menu_content_list_display.extend(["get_state_display"])
+                # Ensure actions are the last items
                 menu_content_list_display.extend([self._list_actions(request)])
-                menu_content_list_display.extend(
-                    ["get_versioning_state", "get_author", "get_modified_date", "get_state_display", "is_locked"])
             else:
                 menu_content_list_display.extend(["get_menuitem_link", "get_preview_link"])
 
