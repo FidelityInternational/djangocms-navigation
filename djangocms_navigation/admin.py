@@ -85,15 +85,13 @@ class MenuContentAdmin(admin.ModelAdmin):
         """
         return obj.versions.all()[0]
 
-    def get_state_display(self, obj):
+    def get_versioning_state(self, obj):
         """
-        Return the current state of the version
-        :param obj: MenuContent Instance
-        :return: State
+        Return the state of a given version
         """
         return self.get_version(obj).get_state_display()
 
-    get_state_display.short_description = _("State")
+    get_versioning_state.short_description = _("State")
 
     def get_author(self, obj):
         """
@@ -145,17 +143,25 @@ class MenuContentAdmin(admin.ModelAdmin):
 
         if versioning_enabled:
             menu_content_list_display.extend(
-                ["get_author", "get_modified_date"]
+                ["get_author", "get_modified_date", "get_versioning_state"]
             )
             # Add version locking specific items
             if using_version_lock:
-                menu_content_list_display.extend(["get_state_display"])
+                menu_content_list_display.extend(["is_locked"])
                 # Ensure actions are the last items
                 menu_content_list_display.extend([self._list_actions(request)])
             else:
                 menu_content_list_display.extend(["get_menuitem_link", "get_preview_link"])
 
         return menu_content_list_display
+
+    def is_locked(self, obj):
+        version = self.get_version(obj)
+        if version.state == DRAFT and version_is_locked(version):
+            return render_to_string("djangocms_version_locking/admin/locked_icon.html")
+        return ""
+
+    is_locked.short_description = _("Lock State")
 
     def _get_preview_link(self, obj, request, disabled=False):
         """
