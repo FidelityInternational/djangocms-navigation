@@ -1,0 +1,23 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls static admin_modify cms_static %}
+
+{% block extrahead %}
+    <script src="{% static_with_version "cms/js/dist/bundle.admin.base.min.js" %}" type="text/javascript"></script>
+    <script type="text/javascript">
+        if (!window.jQuery) {
+            window.jQuery = CMS.$;
+            window.$ = window.jQuery;
+        }
+    </script>
+    {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+&rsaquo; {% if has_change_permission %}<a href="{{ list_url }}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
+&rsaquo; {% if add %}{% blocktrans with name=opts.verbose_name %}Add {{ name }}{% endblocktrans %}{% else %}{{ original|truncatewords:"18" }}{% endif %}
+</div>
+{% endblock %}
+

@@ -1,0 +1,23 @@
+{# Used for MP and NS trees #}
+{% extends "admin/tree_change_list.html" %}
+{% load admin_list admin_urls admin_tree i18n djangocms_versioning %}
+
+{% block object-tools-items %}
+<li>
+    <a href="{% url opts|admin_urlname:'add' menu_content.pk %}" class="addlink">
+        {% blocktrans with cl.opts.verbose_name as name %}Add  {{ name }}{% endblocktrans %}
+    </a>
+</li>
+<li>
+    <a href="{% url opts|admin_urlname:'preview' menu_content.pk %}" class="cms-btn-group">
+        {% trans "Preview" %}
+    </a>
+</li>
+{% if versioning_enabled_for_nav %}
+<li>
+    <a href="{{ menu_content|url_version_list }}">
+        {% trans "Versions" %}
+    </a>
+</li>
+{% endif %}
+{% endblock %}
