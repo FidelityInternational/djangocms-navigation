@@ -179,8 +179,10 @@ class MenuContentAdminViewTestCase(CMSTestCase):
         menu_content_admin = nav_admin.MenuContentAdmin(MenuContent, admin.AdminSite())
         list_display = menu_content_admin.get_list_display(request)
 
-        self.assertEqual(len(list_display), 4)
-        self.assertEqual(list_display, ["title", "get_author", "get_modified_date", "get_versioning_state"])
+        self.assertEqual(len(list_display), 5)
+        self.assertEqual(
+            list_display, ["title", "get_author", "get_modified_date", "get_versioning_state", menu_content_admin._list_actions(request)]
+        )
 
     @override_settings(DJANGOCMS_NAVIGATION_VERSIONING_ENABLED=False)
     @disable_versioning_for_navigation()
