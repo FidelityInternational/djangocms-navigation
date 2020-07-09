@@ -181,7 +181,10 @@ class MenuContentAdminViewTestCase(CMSTestCase):
 
         self.assertEqual(len(list_display), 5)
         self.assertEqual(
-            list_display, ["title", "get_author", "get_modified_date", "get_versioning_state", menu_content_admin._list_actions(request)]
+            list_display,
+            [
+                "title", "get_author", "get_modified_date",
+                "get_versioning_state", menu_content_admin._list_actions(request)]
         )
 
     @override_settings(DJANGOCMS_NAVIGATION_VERSIONING_ENABLED=False)
