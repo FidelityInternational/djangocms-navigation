@@ -177,12 +177,16 @@ class MenuContentAdminViewTestCase(CMSTestCase):
         nav_admin.using_version_lock = False
 
         menu_content_admin = nav_admin.MenuContentAdmin(MenuContent, admin.AdminSite())
-        import pdb
-        pdb.set_trace()
         list_display = menu_content_admin.get_list_display(request)
 
         self.assertEqual(len(list_display), 6)
-        self.assertEqual(list_display, ["title", "get_menuitem_link", "get_preview_link"])
+        self.assertEqual(
+            list_display,
+            [
+                "title", "get_author", "get_modified_date", "get_versioning_state",
+                "get_menuitem_link", "get_preview_link"
+             ]
+        )
 
     @patch('djangocms_navigation.admin.using_version_lock', False)
     @disable_versioning_for_navigation()
