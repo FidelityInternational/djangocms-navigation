@@ -149,7 +149,7 @@ class MenuContentAdmin(admin.ModelAdmin):
             if using_version_lock:
                 menu_content_list_display.extend(["is_locked"])
                 # Ensure actions are the last items
-                menu_content_list_display.extend([self._list_actions(request)])
+            menu_content_list_display.extend([self._list_actions(request)])
         else:
             menu_content_list_display.extend(["get_menuitem_link", "get_preview_link"])
 
