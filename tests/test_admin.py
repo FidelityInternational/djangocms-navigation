@@ -8,6 +8,7 @@ from django.contrib.messages import get_messages
 from django.contrib.sites.models import Site
 from django.shortcuts import reverse
 from django.test import RequestFactory, TestCase
+from django.test.utils import override_settings
 
 from cms.test_utils.testcases import CMSTestCase
 
@@ -169,16 +170,18 @@ class MenuContentAdminViewTestCase(CMSTestCase):
             self.assertEqual(site3_query_result.count(), 1)
             self.assertEqual(site3_query_result.first(), site_3_menu_version.content)
 
-    @patch('djangocms_navigation.admin.using_version_lock', False)
+    @override_settings(DJANGOCMS_NAVIGATION_VERSIONING_ENABLED=False)
     def test_list_display_without_version_locking(self):
         request = self.get_request("/")
         request.user = self.get_superuser()
         nav_admin.using_version_lock = False
 
         menu_content_admin = nav_admin.MenuContentAdmin(MenuContent, admin.AdminSite())
+        import pdb
+        pdb.set_trace()
         list_display = menu_content_admin.get_list_display(request)
 
-        self.assertEqual(len(list_display), 3)
+        self.assertEqual(len(list_display), 6)
         self.assertEqual(list_display, ["title", "get_menuitem_link", "get_preview_link"])
 
     @patch('djangocms_navigation.admin.using_version_lock', False)
