@@ -175,17 +175,27 @@ class MenuContentAdminViewTestCase(CMSTestCase):
         request = self.get_request("/")
         request.user = self.get_superuser()
         nav_admin.using_version_lock = False
+        site_2 = Site.objects.create(domain="site_2.com", name="site_2")
+        menu_1 = factories.MenuFactory(site=site_2)
+        site_2_menu_version = factories.MenuVersionFactory(content__menu=menu_1, state=PUBLISHED)
 
         menu_content_admin = nav_admin.MenuContentAdmin(MenuContent, admin.AdminSite())
+        func = menu_content_admin._list_actions(request)
+        list_display_icons = func(site_2_menu_version.content)
         list_display = menu_content_admin.get_list_display(request)
+        list_display[-1] = list_display_icons
 
         self.assertEqual(len(list_display), 5)
         self.assertEqual(
-            list_display,
-            [
-                "title", "get_author", "get_modified_date",
-                "get_versioning_state", menu_content_admin._list_actions(request)]
+            list_display[0:4],
+            ["title", "get_author", "get_modified_date", "get_versioning_state"]
         )
+        self.assertIn("cms-versioning-action-btn", list_display[-1])
+        self.assertIn("cms-versioning-action-preview", list_display[-1])
+        self.assertIn("cms-form-get-method", list_display[-1])
+        self.assertIn("js-versioning-action", list_display[-1])
+        self.assertIn("js-versioning-admin-keep-sideframe", list_display[-1])
+        self.assertIn("btn cms-versioning-action-btn js-versioning-action", list_display[-1])
 
     @override_settings(DJANGOCMS_NAVIGATION_VERSIONING_ENABLED=False)
     @disable_versioning_for_navigation()
