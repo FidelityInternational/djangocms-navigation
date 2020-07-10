@@ -135,6 +135,7 @@ class MenuContentAdmin(admin.ModelAdmin):
         return [
             self._get_preview_link,
             self._get_edit_link,
+            self._get_manage_versions_link,
         ]
 
     def get_list_display(self, request):
@@ -205,6 +206,13 @@ class MenuContentAdmin(admin.ModelAdmin):
         return render_to_string(
             "djangocms_versioning/admin/edit_icon.html",
             {"url": url, "disabled": disabled, "post": False},
+        )
+
+    def _get_manage_versions_link(self, obj, request, disabled=False):
+        url = version_list_url(obj)
+        return render_to_string(
+            "djangocms_navigation/admin/icons/manage_versions.html",
+            {"url": url, "disabled": disabled, "action": False},
         )
 
     def get_menuitem_link(self, obj):
