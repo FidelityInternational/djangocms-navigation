@@ -15,7 +15,6 @@ TEST_REQUIREMENTS = [
     "djangocms_version_locking",
     "djangocms-moderation",
     "factory_boy",
-    "lxml",
     "django_cms",
 ]
 

@@ -24,7 +24,6 @@ from djangocms_navigation.admin import (
 )
 from djangocms_navigation.models import Menu, MenuContent, MenuItem
 from djangocms_navigation.test_utils import factories
-from lxml import etree
 
 from .utils import UsefulAssertsMixin, disable_versioning_for_navigation
 
@@ -1102,21 +1101,6 @@ class ListActionsTestCase(CMSTestCase):
     def setUp(self):
         self.modeladmin = admin.site._registry[MenuContent]
 
-    def check_elements(self, elements, search_value, additional_search_value=None):
-        """
-        Finds a search term within a html tag sub element, returns True and element if hit.
-        """
-        additional_hit = True
-        if additional_search_value:
-            additional_hit = False
-        for element in elements:
-            for value in element.values():
-                if search_value in value:
-                    if additional_hit:
-                        return True, element
-                    else:
-                        additional_hit = True
-
     def test_preview_link(self):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
@@ -1125,16 +1109,11 @@ class ListActionsTestCase(CMSTestCase):
         func = self.modeladmin._list_actions(self.get_request("/admin"))
 
         response = func(menu_content)
-        parser = etree.HTMLParser()
-        tree = etree.parse(StringIO(response), parser)
-        elements = tree.findall("//a")
 
-        element_present, test_element = self.check_elements(elements, "cms-versioning-action-preview")
-
-        self.assertTrue(element_present, "Missing a.cms-versioning-action-preview element")
-        self.assertEqual(test_element.values()[0], "Preview")
+        self.assertIn("cms-versioning-action-preview", response)
+        self.assertIn('title="Preview"', response)
         self.assertIn(reverse("admin:djangocms_navigation_menuitem_preview", args=(version.pk,),),
-                      test_element.values()[2],
+                      response,
                       )
 
     def test_edit_link(self):
@@ -1146,31 +1125,21 @@ class ListActionsTestCase(CMSTestCase):
         menu_content = version.content
 
         response = func(menu_content)
-        parser = etree.HTMLParser()
-        tree = etree.parse(StringIO(response), parser)
-        elements = tree.findall("//a")
 
-        element_present, test_element = self.check_elements(elements, "cms-versioning-action-btn", "Edit d")
-
-        self.assertTrue(element_present, "Missing a.cms-versioning-action-btn Edit")
-        self.assertEqual(test_element.values()[2], "Edit")
+        self.assertIn("cms-versioning-action-btn", response)
+        self.assertIn("Edit", response)
 
     def test_edit_link_inactive(self):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=DRAFT)
         request = self.get_request("/")
         func = self.modeladmin._list_actions(request)
-        parser = etree.HTMLParser()
+
         response = func(version.content)
 
-        tree = etree.parse(StringIO(response), parser)
-        elements = tree.findall("//a")
-        element_present, test_element = self.check_elements(elements, "cms-versioning-action-btn", "Edit")
-
-        self.assertTrue(element_present, "Missing a.cms-versioning-action-edit element")
-        self.assertIn("inactive", test_element.values()[0])
-        self.assertEqual(test_element.values()[1], "Edit")
-        self.assertNotIn("href", test_element.values())
+        self.assertIn("cms-versioning-action-btn inactive", response)
+        self.assertIn("inactive", response)
+        self.assertIn("Edit", response)
 
     def test_edit_link_not_shown(self):
         menu = factories.MenuFactory()
@@ -1178,11 +1147,8 @@ class ListActionsTestCase(CMSTestCase):
         func = self.modeladmin._list_actions(self.get_request("/"))
 
         response = func(version.content)
-        parser = etree.HTMLParser()
-        tree = etree.parse(StringIO(response), parser)
-        element = tree.find("//a")
-        element = "cms-versioning-action-edit" in element.values()
 
-        self.assertFalse(
-            element, "Element a.cms-versioning-action-edit is shown when it shouldn't"
+        self.assertNotIn(
+            "cms-versioning-action-edit ",
+            response
         )
