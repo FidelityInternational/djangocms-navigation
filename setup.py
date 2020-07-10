@@ -6,7 +6,7 @@ import djangocms_navigation
 INSTALL_REQUIREMENTS = [
     "Django>=1.11,<3.0",
     "django-treebeard>=4.3",
-    "django-cms"
+    "django-cms",
 ]
 
 TEST_REQUIREMENTS = [
@@ -15,7 +15,7 @@ TEST_REQUIREMENTS = [
     "djangocms_version_locking",
     "djangocms-moderation",
     "factory_boy",
-    "django_cms"
+    "django_cms",
 ]
 
 

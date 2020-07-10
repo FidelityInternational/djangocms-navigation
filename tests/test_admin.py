@@ -7,6 +7,7 @@ from django.contrib.messages import get_messages
 from django.contrib.sites.models import Site
 from django.shortcuts import reverse
 from django.test import RequestFactory, TestCase
+from django.test.utils import override_settings
 
 from cms.test_utils.testcases import CMSTestCase
 
@@ -14,6 +15,7 @@ from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.exceptions import ConditionFailed
 from djangocms_versioning.helpers import version_list_url
 
+from djangocms_navigation import admin as nav_admin
 from djangocms_navigation.admin import (
     MenuContentAdmin,
     MenuItemAdmin,
@@ -40,21 +42,24 @@ class MenuItemChangelistTestCase(CMSTestCase):
         request = RequestFactory().get("/admin/djangocms_navigation/")
         request.user = self.user
         request.menu_content_id = menu_content.pk
+        request.user = self.get_superuser()
         model_admin = self.site._registry[MenuItem]
+        admin_field = "title"
+
         args = [
-            request,
-            MenuItem,
-            None,
-            None,
-            [],
-            None,
-            None,
-            None,
-            100,
-            250,
-            None,
-            model_admin,
-            'id',
+            request,  # request
+            MenuItem,  # model
+            None,  # list_display
+            None,  # list_display_links
+            [admin_field, ],  # list_filter
+            None,  # date_hierarchy
+            None,  # search_fields
+            None,  # list_select_related
+            100,  # list_per_page
+            250,  # list_max_show_all
+            None,  # list_editable
+            model_admin,  # model_admin
+            admin_field,  # sortable_by
         ]
         if not GTE_DJ21:
             args.pop()
@@ -163,6 +168,46 @@ class MenuContentAdminViewTestCase(CMSTestCase):
             self.assertEqual(site3_query_result.count(), 1)
             self.assertEqual(site3_query_result.first(), site_3_menu_version.content)
 
+    @patch('djangocms_navigation.admin.using_version_lock', False)
+    def test_list_display_without_version_locking(self):
+        request = self.get_request("/")
+        request.user = self.get_superuser()
+        nav_admin.using_version_lock = False
+        site_2 = Site.objects.create(domain="site_2.com", name="site_2")
+        menu_1 = factories.MenuFactory(site=site_2)
+        site_2_menu_version = factories.MenuVersionFactory(content__menu=menu_1, state=PUBLISHED)
+
+        menu_content_admin = nav_admin.MenuContentAdmin(MenuContent, admin.AdminSite())
+        func = menu_content_admin._list_actions(request)
+        list_display_icons = func(site_2_menu_version.content)
+        list_display = menu_content_admin.get_list_display(request)
+        list_display[-1] = list_display_icons
+
+        self.assertEqual(len(list_display), 5)
+        self.assertEqual(
+            list_display[0:4],
+            ["title", "get_author", "get_modified_date", "get_versioning_state"]
+        )
+        self.assertIn("cms-versioning-action-btn", list_display[-1])
+        self.assertIn("cms-versioning-action-preview", list_display[-1])
+        self.assertIn("cms-form-get-method", list_display[-1])
+        self.assertIn("js-versioning-action", list_display[-1])
+        self.assertIn("js-versioning-admin-keep-sideframe", list_display[-1])
+        self.assertIn("btn cms-versioning-action-btn js-versioning-action", list_display[-1])
+
+    @override_settings(DJANGOCMS_NAVIGATION_VERSIONING_ENABLED=False)
+    @disable_versioning_for_navigation()
+    def test_list_display_without_versioning(self):
+        request = self.get_request("/")
+        request.user = self.get_superuser()
+
+        menu_content_admin = MenuContentAdmin(MenuContent, admin.AdminSite())
+
+        self.assertEqual(len(menu_content_admin.get_list_display(request)), 3)
+        self.assertEqual(
+            menu_content_admin.get_list_display(request), ["title", "get_menuitem_link", "get_preview_link"]
+        )
+
 
 class MenuItemModelAdminTestCase(TestCase):
     def setUp(self):
@@ -216,17 +261,35 @@ class MenuItemAdminVersionLocked(CMSTestCase, UsefulAssertsMixin):
     def test_visit_change_view_when_node_is_version_locked_fails(self):
         """It fails as super user is not the person who created the version"""
         response = self.client.get(self.change_url)
-        msg = list(get_messages(response.wsgi_request))[0]
+        msg = list(get_messages(response.wsgi_request))
 
-        self.assertEquals(msg.message, "The item is currently locked or you don't have permission to change it")
-        self.assertEquals(response.status_code, 302)
+        if nav_admin.using_version_lock:
+            actual_message = msg[0].message
+            expected_message = "The item is currently locked or you don't have permission to change it"
+            status_code = 302
+        else:
+            actual_message = msg
+            expected_message = []
+            status_code = 200
+
+        self.assertEquals(actual_message, expected_message)
+        self.assertEquals(response.status_code, status_code)
 
     def test_moving_node_that_is_version_locked_fails(self):
+        """
+        Check that moving node does not wotk if version is locked, also ensure it works if version locking not enabled
+        """
         response = self.client.post(self.move_url, data=self.data)
         content = response.content.decode('utf-8')
-        msg = "The item is currently locked or you don't have permission to change it"
 
-        self.assertEquals(response.status_code, 400)
+        if nav_admin.using_version_lock:
+            msg = "The item is currently locked or you don't have permission to change it"
+            response_code = 400
+        else:
+            msg = "OK"
+            response_code = 200
+
+        self.assertEquals(response.status_code, response_code)
         self.assertEquals(content, msg)
 
     @patch('djangocms_navigation.admin.using_version_lock', False)
@@ -1031,3 +1094,60 @@ class MenuItemPermissionTestCase(CMSTestCase):
         request = RequestFactory().get("/admin")
         request.user = self.get_superuser()
         self.assertFalse(model_admin.has_change_permission(request))
+
+
+class ListActionsTestCase(CMSTestCase):
+    def setUp(self):
+        self.modeladmin = admin.site._registry[MenuContent]
+
+    def test_preview_link(self):
+        menu = factories.MenuFactory()
+        version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
+        factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
+        menu_content = version.content
+        func = self.modeladmin._list_actions(self.get_request("/admin"))
+
+        response = func(menu_content)
+
+        self.assertIn("cms-versioning-action-preview", response)
+        self.assertIn('title="Preview"', response)
+        self.assertIn(reverse("admin:djangocms_navigation_menuitem_preview", args=(version.pk,),),
+                      response,
+                      )
+
+    def test_edit_link(self):
+        menu = factories.MenuFactory()
+        request = self.get_request("/")
+        request.user = self.get_superuser()
+        version = factories.MenuVersionFactory(content__menu=menu, state=DRAFT, created_by=request.user)
+        func = self.modeladmin._list_actions(request)
+        menu_content = version.content
+
+        response = func(menu_content)
+
+        self.assertIn("cms-versioning-action-btn", response)
+        self.assertIn("Edit", response)
+
+    def test_edit_link_inactive(self):
+        menu = factories.MenuFactory()
+        version = factories.MenuVersionFactory(content__menu=menu, state=DRAFT)
+        request = self.get_request("/")
+        func = self.modeladmin._list_actions(request)
+
+        response = func(version.content)
+
+        self.assertIn("cms-versioning-action-btn inactive", response)
+        self.assertIn("inactive", response)
+        self.assertIn("Edit", response)
+
+    def test_edit_link_not_shown(self):
+        menu = factories.MenuFactory()
+        version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
+        func = self.modeladmin._list_actions(self.get_request("/"))
+
+        response = func(version.content)
+
+        self.assertNotIn(
+            "cms-versioning-action-edit ",
+            response
+        )
