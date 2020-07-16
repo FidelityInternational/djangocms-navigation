@@ -2,7 +2,9 @@ from django.conf import settings
 
 from cms.test_utils.testcases import CMSTestCase
 
-from djangocms_navigation.helpers import get_content_object_from_navigation_tree
+from djangocms_navigation.helpers import (
+    get_content_object_from_navigation_tree,
+)
 from djangocms_navigation.test_utils import factories
 from djangocms_navigation.test_utils.polls.models import Poll, PollContent
 
