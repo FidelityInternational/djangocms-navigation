@@ -44,6 +44,5 @@ setup(
         "http://github.com/divio/djangocms-versioning/tarball/master#egg=djangocms-versioning-0.0.23",
         "http://github.com/divio/djangocms-moderation/tarball/release/1.0.x#egg=djangocms-moderation-1.0.x",
         "http://github.com/FidelityInternational/djangocms-version-locking/tarball/master#egg=djangocms-version-locking-0.0.13",  # noqa
-        "-e git+https://github.com/divio/django-cms.git@release/4.0.x#egg=django-cms",
     ]
 )
