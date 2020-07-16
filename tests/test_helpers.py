@@ -1,5 +1,6 @@
-from cms.test_utils.testcases import CMSTestCase
 from django.conf import settings
+
+from cms.test_utils.testcases import CMSTestCase
 
 from djangocms_navigation.helpers import search_content_object_from_node_tree
 from djangocms_navigation.test_utils import factories
@@ -16,7 +17,7 @@ class NodeTreeSearchTestCase(CMSTestCase):
         Test to ensure correct node mapped to page content object is returned from node tree search
         """
         menu_contents = factories.MenuContentFactory()
-        child1 = factories.ChildMenuItemFactory(parent=menu_contents.root)
+        factories.ChildMenuItemFactory(parent=menu_contents.root)
         page_content = factories.PageContentWithVersionFactory(
             language=self.language, version__created_by=self.get_superuser()
         )
@@ -35,7 +36,7 @@ class NodeTreeSearchTestCase(CMSTestCase):
         page_content = factories.PageContentWithVersionFactory(
             language=self.language, version__created_by=self.get_superuser()
         )
-        child2 = factories.ChildMenuItemFactory(parent=menu_contents.root)
+        factories.ChildMenuItemFactory(parent=menu_contents.root)
         grandchild = factories.ChildMenuItemFactory(parent=child1)
         grandchild1 = factories.ChildMenuItemFactory(parent=grandchild)
         grandchild2 = factories.ChildMenuItemFactory(parent=grandchild1, content=page_content)
@@ -53,7 +54,7 @@ class NodeTreeSearchTestCase(CMSTestCase):
         page_content = factories.PageContentWithVersionFactory(
             language=self.language, version__created_by=self.get_superuser()
         )
-        child2 = factories.ChildMenuItemFactory(parent=menu_contents.root)
+        factories.ChildMenuItemFactory(parent=menu_contents.root)
 
         result = search_content_object_from_node_tree(menu_contents, page_content)
 
@@ -61,7 +62,7 @@ class NodeTreeSearchTestCase(CMSTestCase):
 
         grandchild = factories.ChildMenuItemFactory(parent=child1)
         grandchild1 = factories.ChildMenuItemFactory(parent=grandchild)
-        grandchild2 = factories.ChildMenuItemFactory(parent=grandchild1)
+        factories.ChildMenuItemFactory(parent=grandchild1)
 
         result = search_content_object_from_node_tree(menu_contents, page_content)
 
@@ -76,11 +77,11 @@ class NodeTreeSearchTestCase(CMSTestCase):
         page_content = factories.PageContentWithVersionFactory(
             language=self.language, version__created_by=self.get_superuser()
         )
-        child2 = factories.ChildMenuItemFactory(parent=menu_contents.root)
+        factories.ChildMenuItemFactory(parent=menu_contents.root)
 
         grandchild = factories.ChildMenuItemFactory(parent=child1, content=page_content)
         grandchild1 = factories.ChildMenuItemFactory(parent=grandchild)
-        grandchild2 = factories.ChildMenuItemFactory(parent=grandchild1, content=page_content)
+        factories.ChildMenuItemFactory(parent=grandchild1, content=page_content)
 
         result = search_content_object_from_node_tree(menu_contents, page_content)
 
@@ -96,7 +97,7 @@ class NodeTreeSearchTestCase(CMSTestCase):
             poll=poll, language="en", text="example"
         )
         menu_contents = factories.MenuContentFactory()
-        child1 = factories.ChildMenuItemFactory(parent=menu_contents.root)
+        factories.ChildMenuItemFactory(parent=menu_contents.root)
         child2 = factories.ChildMenuItemFactory(parent=menu_contents.root, content=poll_content)
 
         result = search_content_object_from_node_tree(menu_contents, poll_content)
@@ -118,7 +119,7 @@ class NodeTreeSearchTestCase(CMSTestCase):
         )
         menu_contents = factories.MenuContentFactory()
         child1 = factories.ChildMenuItemFactory(parent=menu_contents.root)
-        child2 = factories.ChildMenuItemFactory(parent=menu_contents.root)
+        factories.ChildMenuItemFactory(parent=menu_contents.root)
 
         grandchild = factories.ChildMenuItemFactory(parent=child1, content=page_content)
         grandchild1 = factories.ChildMenuItemFactory(parent=grandchild)
