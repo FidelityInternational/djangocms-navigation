@@ -3,7 +3,7 @@ from django.conf import settings
 from cms.test_utils.testcases import CMSTestCase
 
 from djangocms_navigation.helpers import (
-    get_content_object_from_navigation_tree,
+    get_navigation_node_for_content_object,
 )
 from djangocms_navigation.test_utils import factories
 from djangocms_navigation.test_utils.polls.models import Poll, PollContent
@@ -25,7 +25,7 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         )
         child2 = factories.ChildMenuItemFactory(parent=menu_contents.root, content=page_content)
 
-        result = get_content_object_from_navigation_tree(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content)
 
         self.assertEqual(result, child2)
 
@@ -43,7 +43,7 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         grandchild1 = factories.ChildMenuItemFactory(parent=grandchild)
         grandchild2 = factories.ChildMenuItemFactory(parent=grandchild1, content=page_content)
 
-        result = get_content_object_from_navigation_tree(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content)
 
         self.assertEqual(result, grandchild2)
 
@@ -58,7 +58,7 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         )
         factories.ChildMenuItemFactory(parent=menu_contents.root)
 
-        result = get_content_object_from_navigation_tree(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content)
 
         self.assertFalse(result)
 
@@ -66,7 +66,7 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         grandchild1 = factories.ChildMenuItemFactory(parent=grandchild)
         factories.ChildMenuItemFactory(parent=grandchild1)
 
-        result = get_content_object_from_navigation_tree(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content)
 
         self.assertFalse(result)
 
@@ -85,7 +85,7 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         grandchild1 = factories.ChildMenuItemFactory(parent=grandchild)
         factories.ChildMenuItemFactory(parent=grandchild1, content=page_content)
 
-        result = get_content_object_from_navigation_tree(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content)
 
         self.assertEqual(result, grandchild)
 
@@ -101,7 +101,7 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         factories.ChildMenuItemFactory(parent=menu_contents.root)
         child2 = factories.ChildMenuItemFactory(parent=menu_contents.root, content=poll_content)
 
-        result = get_content_object_from_navigation_tree(menu_contents, poll_content)
+        result = get_navigation_node_for_content_object(menu_contents, poll_content)
 
         self.assertEqual(result, child2)
 
@@ -124,10 +124,10 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         grandchild1 = factories.ChildMenuItemFactory(parent=grandchild)
         grandchild2 = factories.ChildMenuItemFactory(parent=grandchild1, content=poll_content)
 
-        result = get_content_object_from_navigation_tree(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content)
 
         self.assertEqual(result, grandchild)
 
-        result = get_content_object_from_navigation_tree(menu_contents, poll_content)
+        result = get_navigation_node_for_content_object(menu_contents, poll_content)
 
         self.assertEqual(result, grandchild2)

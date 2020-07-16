@@ -3,14 +3,17 @@ from django.contrib.contenttypes.models import ContentType
 from .models import MenuItem
 
 
-def get_content_object_from_navigation_tree(menu_content, content_object):
+def get_navigation_node_for_content_object(menu_content, content_object, node_model=MenuItem):
     """
-    Search for the content_object in menu_content node tree
-    Input:  Menu content node tree , Content object to be searched
-    Output: Node mapped to Content object if found in Node Tree else return False
+    Find a navigation node that contains a content_object in a Navigation menu
+
+    :param menu_content: A MenuContent instance
+    :param content_object: A content object registered in the cms_config
+    :param node_model: A model used for a navigation item
+    :return: A navigation node or False
     """
 
-    root = MenuItem.get_root_nodes().filter(menucontent=menu_content).first()
+    root = node_model.get_root_nodes().filter(menucontent=menu_content).first()
     if root:
         content_object_content_type = ContentType.objects.get_for_model(content_object)
         child_nodes = root.get_descendants()
