@@ -14,7 +14,7 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
 
     def test_page_content_type_in_node_tree(self):
         """
-        Test to ensure the correct node mapped to poll content is returned by the helper"
+        The correct node mapped to page content object is returned by the helper
         """
         menu_contents = factories.MenuContentFactory()
         factories.ChildMenuItemFactory(parent=menu_contents.root)
@@ -29,7 +29,7 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
 
     def test_to_search_content_object_in_nested_node_tree_search(self):
         """
-        Test to ensure  the first node is returned by the helper if more than one node is mapped to content object
+        Correct node mapped is returned by the helper in nested node tree
         """
         menu_contents = factories.MenuContentFactory()
         child1 = factories.ChildMenuItemFactory(parent=menu_contents.root)
@@ -47,7 +47,7 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
 
     def test_content_object_not_found_in_node_tree(self):
         """
-        Test to ensure False if returned  by the helper when no node is mapped to content in node tree
+        False is returned  by the helper when no node is mapped to content in node tree
         """
         menu_contents = factories.MenuContentFactory()
         child1 = factories.ChildMenuItemFactory(parent=menu_contents.root)
@@ -70,7 +70,7 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
 
     def test_content_object_mapped_to_more_than_node(self):
         """
-        Test to ensure first node found returned by helper when more than one node is mapped to content object
+        The First node found is returned by helper when more than one node is mapped to content object
         in node tree
         """
         menu_contents = factories.MenuContentFactory()
@@ -89,7 +89,7 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
 
     def test_to_search_pollcontent_in_node_tree(self):
         """
-        Test to ensure correct node mapped to poll content is returned from node tree search
+        The correct node mapped to poll content is returned from node tree search
         """
         poll = Poll.objects.create(name="Test poll")
         poll_content = PollContent.objects.create(
