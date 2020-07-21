@@ -55,6 +55,8 @@ class AbstractMenuItem(MP_Node):
     )
     object_id = models.PositiveIntegerField(null=True, blank=True)
     content = GenericForeignKey("content_type", "object_id")
+    soft_root = models.BooleanField(_("soft root"), db_index=True, default=False,
+                                    help_text=_("All ancestors will not be displayed in the navigation"))
 
     def __str__(self):
         return self.title
