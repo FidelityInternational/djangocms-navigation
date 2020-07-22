@@ -1,6 +1,7 @@
 from django.conf import settings
 
 from cms.test_utils.testcases import CMSTestCase
+from cms.test_utils.util.fuzzy_int import FuzzyInt
 
 from djangocms_navigation.helpers import get_navigation_node_for_content_object
 from djangocms_navigation.test_utils import factories
@@ -154,11 +155,11 @@ class TestNavigationPerformance(CMSTestCase):
         factories.ChildMenuItemFactory(parent=child3)
         factories.ChildMenuItemFactory(parent=child3)
         factories.ChildMenuItemFactory(parent=child3)
-
+        max_queries = 10
         page_url = page_content.page.get_absolute_url()
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(FuzzyInt(3, max_queries)):
             self.client.get(page_url)
 
         child3.soft_root = True
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(FuzzyInt(3, max_queries)):
             self.client.get(page_url)
