@@ -156,9 +156,9 @@ class TestNavigationPerformance(CMSTestCase):
         factories.ChildMenuItemFactory(parent=child3)
 
         page_url = page_content.page.get_absolute_url()
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(5):
             self.client.get(page_url)
 
         child3.soft_root = True
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(5):
             self.client.get(page_url)
