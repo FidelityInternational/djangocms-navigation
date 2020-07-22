@@ -13,13 +13,16 @@ from .utils import get_versionable_for_content
 
 class MenuItemNavigationNode(NavigationNode):
 
+    def __init__(self, *args, **kwargs):
+        self.content = kwargs.pop('content')
+        super().__init__(*args, **kwargs)
+
     def is_selected(self, request):
         try:
             content = request.current_page
         except AttributeError:
             return False
-        #return page_id == self.id
-        return self.attr.get("content") == content
+        return content == self.content
 
 
 class CMSMenu(Menu):
@@ -59,7 +62,8 @@ class CMSMenu(Menu):
                 url=url,
                 id=node.pk,
                 parent_id=parent_id,
-                attr={"link_target": node.link_target},
+                content=node.content,
+                attr={"link_target": node.link_target, "soft_root": node.soft_root},
             )
 
     def get_nodes(self, request):
@@ -68,7 +72,7 @@ class CMSMenu(Menu):
         root_ids = {}
         for navigation in navigations:
             identifier = navigation.menucontent.menu.root_id
-            node = MenuItemNavigationNode(title="", url="", id=identifier)
+            node = MenuItemNavigationNode(title="", url="", id=identifier, content=None)
             root_navigation_nodes.append(node)
             root_ids[navigation.pk] = identifier
         menu_nodes = self.get_menu_nodes(navigations)

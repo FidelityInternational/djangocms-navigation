@@ -62,7 +62,7 @@ class CMSMenuTestCase(TestCase):
             url=child1.content.get_absolute_url(),
             id=child1.id,
             parent_id=menu_contents[0].menu.root_id,
-            attr={"link_target": child1.link_target},
+            attr={"link_target": child1.link_target, "soft_root": False},
         )
         self.assertNavigationNodeEqual(
             nodes[3],
@@ -70,7 +70,7 @@ class CMSMenuTestCase(TestCase):
             url=grandchild.content.get_absolute_url(),
             id=grandchild.id,
             parent_id=child1.id,
-            attr={"link_target": grandchild.link_target},
+            attr={"link_target": grandchild.link_target, "soft_root": False},
         )
         self.assertNavigationNodeEqual(
             nodes[4],
@@ -78,7 +78,7 @@ class CMSMenuTestCase(TestCase):
             url=child2.content.get_absolute_url(),
             id=child2.id,
             parent_id=menu_contents[1].menu.root_id,
-            attr={"link_target": child2.link_target},
+            attr={"link_target": child2.link_target, "soft_root": False},
         )
 
     def get_nodes_for_versioning_enabled(self):
@@ -112,7 +112,7 @@ class CMSMenuTestCase(TestCase):
             url=child1.content.get_absolute_url(),
             id=child1.id,
             parent_id=menu_versions[0].content.menu.root_id,
-            attr={"link_target": child1.link_target},
+            attr={"link_target": child1.link_target, "soft_root": False},
         )
         self.assertNavigationNodeEqual(
             nodes[3],
@@ -120,7 +120,7 @@ class CMSMenuTestCase(TestCase):
             url=grandchild.content.get_absolute_url(),
             id=grandchild.id,
             parent_id=child1.id,
-            attr={"link_target": grandchild.link_target},
+            attr={"link_target": grandchild.link_target, "soft_root": False},
         )
         self.assertNavigationNodeEqual(
             nodes[4],
@@ -128,7 +128,60 @@ class CMSMenuTestCase(TestCase):
             url=child2.content.get_absolute_url(),
             id=child2.id,
             parent_id=menu_versions[1].content.menu.root_id,
-            attr={"link_target": child2.link_target},
+            attr={"link_target": child2.link_target, "soft_root": False},
+        )
+
+    def get_nodes_with_soft_root_for_versioning_enabled(self):
+        """
+        Check getnodes with a soft root node
+        """
+        menu_versions = factories.MenuVersionFactory.create_batch(2, state=PUBLISHED)
+        child1 = factories.ChildMenuItemFactory(parent=menu_versions[0].content.root)
+        child2 = factories.ChildMenuItemFactory(parent=menu_versions[1].content.root)
+        grandchild = factories.ChildMenuItemFactory(parent=child1, soft_root=True)
+
+        nodes = self.menu.get_nodes(self.request)
+
+        self.assertEqual(len(nodes), 5)
+        self.assertNavigationNodeEqual(
+            nodes[0],
+            title="",
+            url="",
+            id=menu_versions[0].content.menu.root_id,
+            parent_id=None,
+            attr={},
+        )
+        self.assertNavigationNodeEqual(
+            nodes[1],
+            title="",
+            url="",
+            id=menu_versions[1].content.menu.root_id,
+            parent_id=None,
+            attr={},
+        )
+        self.assertNavigationNodeEqual(
+            nodes[2],
+            title=child1.title,
+            url=child1.content.get_absolute_url(),
+            id=child1.id,
+            parent_id=menu_versions[0].content.menu.root_id,
+            attr={"link_target": child1.link_target, "soft_root": False},
+        )
+        self.assertNavigationNodeEqual(
+            nodes[3],
+            title=grandchild.title,
+            url=grandchild.content.get_absolute_url(),
+            id=grandchild.id,
+            parent_id=child1.id,
+            attr={"link_target": grandchild.link_target, "soft_root": True},
+        )
+        self.assertNavigationNodeEqual(
+            nodes[4],
+            title=child2.title,
+            url=child2.content.get_absolute_url(),
+            id=child2.id,
+            parent_id=menu_versions[1].content.menu.root_id,
+            attr={"link_target": child2.link_target, "soft_root": False},
         )
 
     def test_get_roots_with_draft_mode_not_active(self):

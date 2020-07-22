@@ -1,23 +1,12 @@
 from django.conf import settings
-from django.test import RequestFactory, TestCase
-
-from menus.menu_pool import menu_pool
 
 from cms.test_utils.testcases import CMSTestCase
 
-from djangocms_navigation.cms_menus import CMSMenu
 from djangocms_navigation.helpers import get_navigation_node_for_content_object
 from djangocms_navigation.test_utils import factories
 from djangocms_navigation.test_utils.polls.models import Poll, PollContent
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.sites.models import Site
 
-from cms.models import Page, User
-from cms.test_utils.testcases import CMSTestCase
-from cms.utils.urlutils import admin_reverse
 
-from djangocms_navigation.constants import SELECT2_CONTENT_OBJECT_URL_NAME
-from djangocms_navigation.models import MenuItem
 class NavigationContentTypeSearchTestCase(CMSTestCase):
 
     def setUp(self):
@@ -145,37 +134,31 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
 class TestNavigationPerformance(CMSTestCase):
 
         def setUp(self):
-            self.request = RequestFactory().get("/")
-            self.user = factories.UserFactory()
-            self.request.user = self.user
-            self.renderer = menu_pool.get_renderer(self.request)
-            self.menu = CMSMenu(self.renderer)
+            self.language = 'en'
+            self.client.force_login(self.get_superuser())
 
+        def test_select_node_from_deeply_nested_nodes(self):
+            """
+            Performance check to retrieve a page from node with and without soft_root node
+            """
+            page_content = factories.PageContentWithVersionFactory(
+                version__created_by=self.get_superuser(),
+                title="test",
+                menu_title="test",
+                page_title="test",
+            )
+            menu_contents = factories.MenuContentFactory()
+            factories.ChildMenuItemFactory(parent=menu_contents.root, content=page_content)
+            factories.ChildMenuItemFactory(parent=menu_contents.root)
+            child3 = factories.ChildMenuItemFactory(parent=menu_contents.root)
+            factories.ChildMenuItemFactory(parent=child3)
+            factories.ChildMenuItemFactory(parent=child3)
+            factories.ChildMenuItemFactory(parent=child3)
 
-            def test_select_node_from_deeply_nested_nodes(self):
-                menu_contents = factories.MenuContentFactory()
+            page_url = page_content.page.get_absolute_url()
+            with self.assertNumQueries(5):
+                self.client.get(page_url)
 
-                factories.ChildMenuItemFactory.create_batch(1000, parent=menu_contents.root)
-                import pdb; pdb.set_trace()
-                nodes = self.menu.get_nodes(self.request)
-                nodes[501].__setattr__("soft_root", True)
-
-                page_content = factories.PageContentWithVersionFactory(
-                    language=self.language,
-                    version__created_by=self.get_superuser(),
-                    title="test",
-                    menu_title="test",
-                    page_title="test",
-                )
-
-                page_contenttype_id = ContentType.objects.get_for_model(Page).id
-
-                nodes[501].content = page_content
-                with self.login_user_context(self.superuser):
-                    with self.assertNumQueries(500):
-                        response = self.client.get(
-                            self.select2_endpoint,
-                            data={"content_type_id": page_contenttype_id, "query": "test2"},
-                        )
-
-                self.assertEqual(len(response.json()["results"]), 1)
+            child3.soft_root = True
+            with self.assertNumQueries(3):
+                self.client.get(page_url)
