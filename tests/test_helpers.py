@@ -133,32 +133,32 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
 
 class TestNavigationPerformance(CMSTestCase):
 
-        def setUp(self):
-            self.language = 'en'
-            self.client.force_login(self.get_superuser())
+    def setUp(self):
+        self.language = 'en'
+        self.client.force_login(self.get_superuser())
 
-        def test_select_node_from_deeply_nested_nodes(self):
-            """
-            Performance check to retrieve a page from node with and without soft_root node
-            """
-            page_content = factories.PageContentWithVersionFactory(
-                version__created_by=self.get_superuser(),
-                title="test",
-                menu_title="test",
-                page_title="test",
-            )
-            menu_contents = factories.MenuContentFactory()
-            factories.ChildMenuItemFactory(parent=menu_contents.root, content=page_content)
-            factories.ChildMenuItemFactory(parent=menu_contents.root)
-            child3 = factories.ChildMenuItemFactory(parent=menu_contents.root)
-            factories.ChildMenuItemFactory(parent=child3)
-            factories.ChildMenuItemFactory(parent=child3)
-            factories.ChildMenuItemFactory(parent=child3)
+    def test_select_node_from_deeply_nested_nodes(self):
+        """
+        Performance check to retrieve a page from node with and without soft_root node
+        """
+        page_content = factories.PageContentWithVersionFactory(
+            version__created_by=self.get_superuser(),
+            title="test",
+            menu_title="test",
+            page_title="test",
+        )
+        menu_contents = factories.MenuContentFactory()
+        factories.ChildMenuItemFactory(parent=menu_contents.root, content=page_content)
+        factories.ChildMenuItemFactory(parent=menu_contents.root)
+        child3 = factories.ChildMenuItemFactory(parent=menu_contents.root)
+        factories.ChildMenuItemFactory(parent=child3)
+        factories.ChildMenuItemFactory(parent=child3)
+        factories.ChildMenuItemFactory(parent=child3)
 
-            page_url = page_content.page.get_absolute_url()
-            with self.assertNumQueries(7):
-                self.client.get(page_url)
+        page_url = page_content.page.get_absolute_url()
+        with self.assertNumQueries(7):
+            self.client.get(page_url)
 
-            child3.soft_root = True
-            with self.assertNumQueries(7):
-                self.client.get(page_url)
+        child3.soft_root = True
+        with self.assertNumQueries(7):
+            self.client.get(page_url)
