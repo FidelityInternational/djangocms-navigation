@@ -360,14 +360,13 @@ class SoftrootTests(CMSTestCase):
         """
         Tree in fixture :
                root
-                   aaa ( Soft_root)
+                   aaa
                        aaa1
                            ccc
                                ddd
                        aaa2
                    bbb
-                       333
-                       444
+
         tag: show_menu 0 100 0 100
 
         expected result 1:
@@ -380,8 +379,8 @@ class SoftrootTests(CMSTestCase):
                   6:bbb
         """
         page_url = self.aaa_pagecontent.page.get_absolute_url()
-        self.aaa.soft_root = True
-        response = self.get_context(page_url)
+        # response = self.client.get(page_url)
+        response = self.get_context(page_url, page=self.aaa_pagecontent.page)
         # response = Context(self.client.get(page_url).rendered_content)
         # context.rendered_comtent has the page data , which need to be rendered to a template
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 0 100 %}")
@@ -402,29 +401,29 @@ class SoftrootTests(CMSTestCase):
         ]
         self.assertTreeQuality(hard_root, mock_tree)
 
-    def test_menu_with_softroot(self):
-        """
-        tag: show_menu 0 100 0 100
-
-        expected result:
-                     1:aaa1
-                        2:ccc
-                           3:ddd
-                     4:aaa2
-        """
-        page_url = self.aaa_pagecontent.page.get_absolute_url()
-        response = self.get_context(page_url)
-        # response = Context(self.client.get(page_url).rendered_content)
-        # context.rendered_comtent has the page data , which need to be rendered to a template
-        tpl = Template("{% load menu_tags %}{% show_menu 0 100 0 100 %}")
-        tpl.render(response)
-        soft_root = response['children']
-        mock_tree = [
-                    AttributeObject(title='aaa1', level=3, children=[
-                        AttributeObject(title='ccc', level=4, children=[
-                            AttributeObject(title='ddd', level=5, children=[])
-                        ])
-                    ]),
-                    AttributeObject(title='aaa2', level=3, children=[])
-        ]
-        self.assertTreeQuality(soft_root, mock_tree)
+    # def test_menu_with_softroot(self):
+    #     """
+    #     tag: show_menu 0 100 0 100
+    #
+    #     expected result:
+    #                  1:aaa1
+    #                     2:ccc
+    #                        3:ddd
+    #                  4:aaa2
+    #     """
+    #     page_url = self.aaa_pagecontent.page.get_absolute_url()
+    #     response = self.get_context(page_url)
+    #     # response = Context(self.client.get(page_url).rendered_content)
+    #     # context.rendered_comtent has the page data , which need to be rendered to a template
+    #     tpl = Template("{% load menu_tags %}{% show_menu 0 100 0 100 %}")
+    #     tpl.render(response)
+    #     soft_root = response['children']
+    #     mock_tree = [
+    #                 AttributeObject(title='aaa1', level=3, children=[
+    #                     AttributeObject(title='ccc', level=4, children=[
+    #                         AttributeObject(title='ddd', level=5, children=[])
+    #                     ])
+    #                 ]),
+    #                 AttributeObject(title='aaa2', level=3, children=[])
+    #     ]
+    #     self.assertTreeQuality(soft_root, mock_tree)
