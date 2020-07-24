@@ -7,6 +7,11 @@ from djangocms_navigation.helpers import get_navigation_node_for_content_object
 from djangocms_navigation.test_utils import factories
 from djangocms_navigation.test_utils.polls.models import Poll, PollContent
 
+try:
+    from djangocms_versioning.constants import PUBLISHED
+except ImportError:
+    PUBLISHED = None
+
 
 class NavigationContentTypeSearchTestCase(CMSTestCase):
 
@@ -147,13 +152,12 @@ class TestNavigationPerformance(CMSTestCase):
             title="test",
             menu_title="test",
             page_title="test",
+            version__state=PUBLISHED
         )
-        menu_contents = factories.MenuContentFactory()
-        factories.ChildMenuItemFactory(parent=menu_contents.root, content=page_content)
-        factories.ChildMenuItemFactory(parent=menu_contents.root)
-        child3 = factories.ChildMenuItemFactory(parent=menu_contents.root)
-        factories.ChildMenuItemFactory(parent=child3)
-        factories.ChildMenuItemFactory(parent=child3)
+        menuversions=factories.MenuVersionFactory(state=PUBLISHED)
+        factories.ChildMenuItemFactory(parent=menuversions.content.root, content=page_content)
+        factories.ChildMenuItemFactory(parent=menuversions.content.root)
+        child3 = factories.ChildMenuItemFactory(parent=menuversions.content.root)
         factories.ChildMenuItemFactory(parent=child3)
         max_queries = 10
         page_url = page_content.page.get_absolute_url()
