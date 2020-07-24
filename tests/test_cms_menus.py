@@ -1,30 +1,20 @@
 from django.test import RequestFactory, TestCase
+from django.template import Template
 
-from menus.menu_pool import menu_pool
 from cms.test_utils.util.mock import AttributeObject
+from cms.test_utils.testcases import CMSTestCase
 
 from djangocms_navigation.cms_menus import CMSMenu
 from djangocms_navigation.test_utils import factories
 
 from .utils import disable_versioning_for_navigation
 
+from menus.menu_pool import menu_pool
 
 try:
     from djangocms_versioning.constants import ARCHIVED, DRAFT, UNPUBLISHED, PUBLISHED
 except ImportError:
     ARCHIVED, DRAFT, UNPUBLISHED, PUBLISHED = None
-
-
-
-from django.template import Template, TemplateSyntaxError
-from django.template.context import Context
-from django.test.utils import override_settings
-from django.utils.translation import activate, override as force_language
-from cms.apphook_pool import apphook_pool
-from menus.base import NavigationNode
-from menus.menu_pool import menu_pool, _build_nodes_inner_for_one_menu
-from menus.models import CacheKey
-from cms.test_utils.testcases import CMSTestCase
 
 
 class CMSMenuTestCase(TestCase):
@@ -258,8 +248,6 @@ class CMSMenuTestCase(TestCase):
         )
 
 
-
-
 class SoftrootTests(CMSTestCase):
     """
        Tree in fixture :
@@ -352,7 +340,6 @@ class SoftrootTests(CMSTestCase):
         factories.ChildMenuItemFactory(parent=self.aaa, content=self.aaa2_pagecontent)
         factories.ChildMenuItemFactory(parent=self.menu_versions.content.root, content=self.bbb_pagecontent)
 
-
     def assertTreeQuality(self, a, b, *attrs):
         """
         Checks that the node-lists a and b are the same for attrs.
@@ -441,7 +428,3 @@ class SoftrootTests(CMSTestCase):
                     AttributeObject(title='aaa2', level=3, children=[])
         ]
         self.assertTreeQuality(soft_root, mock_tree)
-
-
-
-
