@@ -23,7 +23,6 @@ class MenuItemNavigationNode(NavigationNode):
         except AttributeError:
             language = get_language_from_request(request)
             content = request.current_page.get_title_obj(language)
-            return False
         return content == self.content
 
 
