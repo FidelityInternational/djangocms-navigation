@@ -10,7 +10,12 @@ from djangocms_navigation.test_utils import factories
 
 from .utils import disable_versioning_for_navigation
 
-from djangocms_versioning.constants import ARCHIVED, DRAFT, UNPUBLISHED, PUBLISHED
+from djangocms_versioning.constants import (
+    ARCHIVED,
+    DRAFT,
+    PUBLISHED,
+    UNPUBLISHED,
+)
 
 
 class CMSMenuTestCase(TestCase):

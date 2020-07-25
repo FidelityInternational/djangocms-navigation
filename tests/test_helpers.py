@@ -9,6 +9,7 @@ from djangocms_navigation.test_utils.polls.models import Poll, PollContent
 
 from djangocms_versioning.constants import PUBLISHED
 
+
 class NavigationContentTypeSearchTestCase(CMSTestCase):
 
     def setUp(self):
