@@ -7,11 +7,7 @@ from djangocms_navigation.helpers import get_navigation_node_for_content_object
 from djangocms_navigation.test_utils import factories
 from djangocms_navigation.test_utils.polls.models import Poll, PollContent
 
-try:
-    from djangocms_versioning.constants import PUBLISHED
-except ImportError:
-    PUBLISHED = None
-
+from djangocms_versioning.constants import PUBLISHED
 
 class NavigationContentTypeSearchTestCase(CMSTestCase):
 
