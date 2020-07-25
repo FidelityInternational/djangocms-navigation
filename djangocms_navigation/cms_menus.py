@@ -19,9 +19,10 @@ class MenuItemNavigationNode(NavigationNode):
 
     def is_selected(self, request):
         try:
-            content = request.current_page
+            content = request.toolbar.obj
         except AttributeError:
-            return False
+            language = get_language_from_request(request)
+            content = request.current_page.get_title_obj(language)
         return content == self.content
 
 

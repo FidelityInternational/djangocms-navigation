@@ -154,7 +154,7 @@ class TestNavigationPerformance(CMSTestCase):
             page_title="test",
             version__state=PUBLISHED
         )
-        menuversions=factories.MenuVersionFactory(state=PUBLISHED)
+        menuversions = factories.MenuVersionFactory(state=PUBLISHED)
         factories.ChildMenuItemFactory(parent=menuversions.content.root, content=page_content)
         factories.ChildMenuItemFactory(parent=menuversions.content.root)
         child3 = factories.ChildMenuItemFactory(parent=menuversions.content.root)

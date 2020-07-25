@@ -1,15 +1,14 @@
-from django.test import RequestFactory, TestCase
 from django.template import Template
+from django.test import RequestFactory, TestCase
 
-from cms.test_utils.util.mock import AttributeObject
 from cms.test_utils.testcases import CMSTestCase
+from cms.test_utils.util.mock import AttributeObject
+from menus.menu_pool import menu_pool
 
 from djangocms_navigation.cms_menus import CMSMenu
 from djangocms_navigation.test_utils import factories
 
 from .utils import disable_versioning_for_navigation
-
-from menus.menu_pool import menu_pool
 
 try:
     from djangocms_versioning.constants import ARCHIVED, DRAFT, UNPUBLISHED, PUBLISHED
@@ -369,9 +368,7 @@ class SoftrootTests(CMSTestCase):
                   6:bbb
         """
         page_url = self.aaa_pagecontent.page.get_absolute_url()
-        context = self.get_context(page_url, page=self.root_pagecontent.page)
-        # response = Context(self.client.get(page_url).rendered_content)
-        # context.rendered_comtent has the page data , which need to be rendered to a template
+        context = self.get_context(page_url, page=self.aaa_pagecontent.page)
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -393,40 +390,39 @@ class SoftrootTests(CMSTestCase):
     def test_menu_with_softroot(self):
         """
         Tree in fixture :
-               root (soft_root)
-                   aaa
+               root
+                   aaa (soft_root)
                        aaa1
                            ccc
                                ddd
                        aaa2
                    bbb
-        tag: show_menu 0 100 0 100
+        tag: show_menu 0 100 100 100
         expected result 1:
-               0:root
-                  1:aaa
-                     2:aaa1
-                        3:ccc
-                           4:ddd
-                     5:aaa2
-                  6:bbb
+                     1:aaa1
+                        2:ccc
+                           3:ddd
+                     3:aaa2
         """
-        self.root.soft_root = True
-        page_url = self.aaa_pagecontent.page.get_absolute_url()
-        context = self.get_context(page_url, page=self.root_pagecontent.page)
+        menu_content1 = factories.MenuContentWithVersionFactory(version__state=PUBLISHED)
+        root = factories.ChildMenuItemFactory(parent=menu_content1.root, content=self.root_pagecontent)
+        aaa = factories.ChildMenuItemFactory(parent=root, soft_root=True, content=self.aaa_pagecontent)
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent)
+        ddd = factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent)
+        aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent)
+        factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent)
+        page = self.aaa_pagecontent.page
+        context = self.get_context(page.get_absolute_url(), page=page)
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         soft_root = context['children']
         mock_tree = [
-            AttributeObject(title=self.root.title, level=0, children=[
-                AttributeObject(title=self.aaa.title, level=1, children=[
-                    AttributeObject(title=self.aaa1.title, level=2, children=[
-                        AttributeObject(title=self.ccc.title, level=3, children=[
-                            AttributeObject(title=self.ddd.title, level=4, children=[])
-                        ])
-                    ]),
-                    AttributeObject(title=self.aaa2.title, level=2, children=[])
+                AttributeObject(title=aaa1.title, level=0, children=[
+                    AttributeObject(title=ccc.title, level=1, children=[
+                        AttributeObject(title=ddd.title, level=2, children=[])
+                    ])
                 ]),
-                AttributeObject(title=self.bbb.title, level=1, children=[])
-            ])
+                AttributeObject(title=aaa2.title, level=0, children=[])
         ]
         self.assertTreeQuality(soft_root, mock_tree)
