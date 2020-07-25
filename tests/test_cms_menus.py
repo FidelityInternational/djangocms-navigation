@@ -5,17 +5,17 @@ from cms.test_utils.testcases import CMSTestCase
 from cms.test_utils.util.mock import AttributeObject
 from menus.menu_pool import menu_pool
 
-from djangocms_navigation.cms_menus import CMSMenu
-from djangocms_navigation.test_utils import factories
-
-from .utils import disable_versioning_for_navigation
-
 from djangocms_versioning.constants import (
     ARCHIVED,
     DRAFT,
     PUBLISHED,
     UNPUBLISHED,
 )
+
+from djangocms_navigation.cms_menus import CMSMenu
+from djangocms_navigation.test_utils import factories
+
+from .utils import disable_versioning_for_navigation
 
 
 class CMSMenuTestCase(TestCase):
