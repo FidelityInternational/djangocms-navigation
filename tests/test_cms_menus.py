@@ -262,9 +262,19 @@ class SoftrootTests(CMSTestCase):
        In the fixture, all pages are "in_navigation", "published" and
        NOT-"soft_root".
        What is a soft root?
-           If a page is a soft root, it becomes the root page in the menu if
-           we are currently on or under that page.
-           If we are above that page, the children of this page are not shown.
+           A soft root is a page that acts as the root for a menu navigation tree.
+
+        Typically, this will be a page that is the root of a significant new
+        section on your site.
+
+        When the soft root feature is enabled, the navigation menu for any page
+        will start at the nearest soft root, rather than at the real root of
+        the site’s page hierarchy.
+
+        This feature is useful when your site has deep page hierarchies (and
+        therefore multiple levels in its navigation trees). In such a case, you
+        usually don’t want to present site visitors with deep menus of nested
+        items.
        """
     def setUp(self):
         self.language = 'en'
@@ -389,7 +399,7 @@ class SoftrootTests(CMSTestCase):
         ]
         self.assertTreeQuality(hard_root, mock_tree)
 
-    def test_menu_with_softroot(self):
+    def test_menu_with_softroot_page_rendering(self):
         """
         Tree in fixture :
                root
@@ -428,3 +438,76 @@ class SoftrootTests(CMSTestCase):
                 AttributeObject(title=aaa2.title, level=0, children=[])
         ]
         self.assertTreeQuality(soft_root, mock_tree)
+
+    def test_menu_with_softroot_rendering_nested_softroot_child(self):
+        """
+        Tree in fixture :
+               root
+                   aaa (soft_root)
+                       aaa1
+                           ccc
+                               ddd
+                       aaa2
+                   bbb
+        tag: show_menu 0 100 100 100
+        expected result 1:
+                    0:aaa
+                     1:aaa1
+                        2:ccc
+                           3:ddd
+                     3:aaa2
+        """
+        menu_content1 = factories.MenuContentWithVersionFactory(version__state=PUBLISHED)
+        root = factories.ChildMenuItemFactory(parent=menu_content1.root, content=self.root_pagecontent)
+        aaa = factories.ChildMenuItemFactory(parent=root, soft_root=True, content=self.aaa_pagecontent)
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, soft_root=True, content=self.ccc_pagecontent)
+        ddd = factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent)
+        factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent)
+        factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent)
+        page = self.ddd_pagecontent.page
+        context = self.get_context(page.get_absolute_url(), page=page)
+        tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
+        tpl.render(context)
+        soft_root = context['children']
+        mock_tree = [
+            AttributeObject(title=ddd, level=0, children=[]),
+        ]
+        self.assertTreeQuality(soft_root, mock_tree)
+
+    def test_basic_projects_softroot_rendering_nodes(self):
+        """
+        Given the tree:
+
+        |- Home
+        | |- Projects (SOFTROOT)
+        | | |- django CMS
+        | | |- django Shop
+        | |- People
+
+        Expected menu when on "Projects" (0 100 100 100):
+
+        |- Projects (SOFTROOT)
+        | |- django CMS
+        | |- django Shop
+        """
+        menu_version = factories.MenuContentWithVersionFactory(version__state=PUBLISHED)
+        root = factories.ChildMenuItemFactory(parent=menu_version.root, content=self.root_pagecontent)
+        projects = factories.ChildMenuItemFactory(parent=root, soft_root=True, content=self.aaa_pagecontent)
+        djangocms = factories.ChildMenuItemFactory(parent=projects, content=self.aaa1_pagecontent)
+        djangoshop = factories.ChildMenuItemFactory(parent=djangocms, content=self.bbb_pagecontent)
+        factories.ChildMenuItemFactory(parent=root, content=self.ccc_pagecontent)
+        # On Projects
+        page = self.aaa_pagecontent.page
+        context = self.get_context(page.get_absolute_url(), page=page)
+        tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
+        tpl.render(context)
+        nodes = context['children']
+        # check everything
+        self.assertEqual(len(nodes), 1)
+        cmsnode = nodes[0]
+        self.assertEqual(cmsnode.id, djangocms.id)
+        self.assertEqual(len(cmsnode.children), 1)
+        shopnode = cmsnode.children[0]
+        self.assertEqual(shopnode.id, djangoshop.id)
+        self.assertEqual(len(shopnode.children), 0)
