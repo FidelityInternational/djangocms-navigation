@@ -98,6 +98,8 @@ class NavigationSelector(Modifier):
             # defaulting to first subtree
             tree_id = nodes[0].id
         root = next(n for n in nodes if n.id == tree_id)
+        if root.attr.get("soft_root", False):
+            return nodes
         return [self.make_roots(node, root) for node in root.children]
 
     def make_roots(self, node, previous_root):

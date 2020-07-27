@@ -487,12 +487,14 @@ class SoftrootTests(CMSTestCase):
         tpl.render(context)
         soft_root = context['children']
         mock_tree = [
-                AttributeObject(title=aaa1.title, level=0, children=[
-                    AttributeObject(title=ccc.title, level=1, children=[
-                        AttributeObject(title=ddd.title, level=2, children=[])
+            AttributeObject(title=aaa.title, level=0, children=[
+                AttributeObject(title=aaa1.title, level=1, children=[
+                    AttributeObject(title=ccc.title, level=2, children=[
+                        AttributeObject(title=ddd.title, level=3, children=[])
                     ])
                 ]),
-                AttributeObject(title=aaa2.title, level=0, children=[])
+                AttributeObject(title=aaa2.title, level=1, children=[]),
+                ])
         ]
         self.assertTreeQuality(soft_root, mock_tree)
 
@@ -585,7 +587,9 @@ class SoftrootTests(CMSTestCase):
         tpl.render(context)
         soft_root = context['children']
         mock_tree = [
-            AttributeObject(title=ddd, level=0, children=[]),
+            AttributeObject(title=ccc.title, level=0, children=[
+                AttributeObject(title=ddd, level=1, children=[])
+            ])
         ]
         self.assertTreeQuality(soft_root, mock_tree)
 
@@ -649,8 +653,8 @@ class SoftrootTests(CMSTestCase):
         root = factories.ChildMenuItemFactory(parent=menu_version.root, content=root_pagecontent.page)
         projects = factories.ChildMenuItemFactory(parent=root, soft_root=True, content=projects_pagecontent.page)
         djangocms = factories.ChildMenuItemFactory(parent=projects, content=djangocms_pagecontent.page)
-        djangoshop = factories.ChildMenuItemFactory(parent=djangocms, content=djangoshop_pagecontent.page)
-        factories.ChildMenuItemFactory(parent=root, content=people_pagecontent.page)
+        djangoshop = factories.ChildMenuItemFactory(parent=projects, content=djangoshop_pagecontent.page)
+        people=factories.ChildMenuItemFactory(parent=root, content=people_pagecontent.page)
         # On Projects
         page = projects_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
@@ -659,9 +663,11 @@ class SoftrootTests(CMSTestCase):
         nodes = context['children']
         # check everything
         self.assertEqual(len(nodes), 1)
-        cmsnode = nodes[0]
+        rootnode = nodes[0]
+        self.assertEqual(rootnode.id, projects.id)
+        self.assertEqual(len(rootnode.children), 2)
+        cmsnode, shopnode = rootnode.children
         self.assertEqual(cmsnode.id, djangocms.id)
-        self.assertEqual(len(cmsnode.children), 1)
-        shopnode = cmsnode.children[0]
         self.assertEqual(shopnode.id, djangoshop.id)
+        self.assertEqual(len(cmsnode.children), 0)
         self.assertEqual(len(shopnode.children), 0)
