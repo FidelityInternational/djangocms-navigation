@@ -24,9 +24,9 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         page_content = factories.PageContentWithVersionFactory(
             language=self.language, version__created_by=self.get_superuser()
         )
-        child2 = factories.ChildMenuItemFactory(parent=menu_contents.root, content=page_content)
+        child2 = factories.ChildMenuItemFactory(parent=menu_contents.root, content=page_content.page)
 
-        result = get_navigation_node_for_content_object(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content.page)
 
         self.assertEqual(result, child2)
 
@@ -42,9 +42,9 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         factories.ChildMenuItemFactory(parent=menu_contents.root)
         grandchild = factories.ChildMenuItemFactory(parent=child1)
         grandchild1 = factories.ChildMenuItemFactory(parent=grandchild)
-        grandchild2 = factories.ChildMenuItemFactory(parent=grandchild1, content=page_content)
+        grandchild2 = factories.ChildMenuItemFactory(parent=grandchild1, content=page_content.page)
 
-        result = get_navigation_node_for_content_object(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content.page)
 
         self.assertEqual(result, grandchild2)
 
@@ -59,7 +59,7 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         )
         factories.ChildMenuItemFactory(parent=menu_contents.root)
 
-        result = get_navigation_node_for_content_object(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content.page)
 
         self.assertFalse(result)
 
@@ -67,7 +67,7 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         grandchild1 = factories.ChildMenuItemFactory(parent=grandchild)
         factories.ChildMenuItemFactory(parent=grandchild1)
 
-        result = get_navigation_node_for_content_object(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content.page)
 
         self.assertFalse(result)
 
@@ -82,11 +82,11 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
             language=self.language, version__created_by=self.get_superuser()
         )
         factories.ChildMenuItemFactory(parent=menu_contents.root)
-        grandchild = factories.ChildMenuItemFactory(parent=child1, content=page_content)
+        grandchild = factories.ChildMenuItemFactory(parent=child1, content=page_content.page)
         grandchild1 = factories.ChildMenuItemFactory(parent=grandchild)
-        factories.ChildMenuItemFactory(parent=grandchild1, content=page_content)
+        factories.ChildMenuItemFactory(parent=grandchild1, content=page_content.page)
 
-        result = get_navigation_node_for_content_object(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content.page)
 
         self.assertEqual(result, grandchild)
 
@@ -121,11 +121,11 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         menu_contents = factories.MenuContentFactory()
         child1 = factories.ChildMenuItemFactory(parent=menu_contents.root)
         factories.ChildMenuItemFactory(parent=menu_contents.root)
-        grandchild = factories.ChildMenuItemFactory(parent=child1, content=page_content)
+        grandchild = factories.ChildMenuItemFactory(parent=child1, content=page_content.page)
         grandchild1 = factories.ChildMenuItemFactory(parent=grandchild)
         grandchild2 = factories.ChildMenuItemFactory(parent=grandchild1, content=poll_content)
 
-        result = get_navigation_node_for_content_object(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content.page)
 
         self.assertEqual(result, grandchild)
 
@@ -152,7 +152,7 @@ class TestNavigationPerformance(CMSTestCase):
             version__state=PUBLISHED
         )
         menuversions = factories.MenuVersionFactory(state=PUBLISHED)
-        factories.ChildMenuItemFactory(parent=menuversions.content.root, content=page_content)
+        factories.ChildMenuItemFactory(parent=menuversions.content.root, content=page_content.page)
         factories.ChildMenuItemFactory(parent=menuversions.content.root)
         child3 = factories.ChildMenuItemFactory(parent=menuversions.content.root)
         factories.ChildMenuItemFactory(parent=child3)

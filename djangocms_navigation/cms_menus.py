@@ -1,7 +1,7 @@
 from django.db.models import Q
 
 from cms.cms_menus import CMSMenu as OriginalCMSMenu
-from cms.utils import get_current_site, get_language_from_request
+from cms.utils import get_current_site
 from menus.base import Menu, Modifier, NavigationNode
 from menus.menu_pool import menu_pool
 
@@ -19,10 +19,9 @@ class MenuItemNavigationNode(NavigationNode):
 
     def is_selected(self, request):
         try:
-            content = request.toolbar.obj
+            content = request.current_page
         except AttributeError:
-            language = get_language_from_request(request)
-            content = request.current_page.get_title_obj(language)
+            return False
         return content == self.content
 
 

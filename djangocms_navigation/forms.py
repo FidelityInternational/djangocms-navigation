@@ -40,7 +40,7 @@ class MenuContentForm(forms.ModelForm):
 class Select2Mixin:
     class Media:
         css = {"all": ("cms/js/select2/select2.css",)}
-        js = ("cms/js/select2/select2.js", "djangocms_navigation/js/create_url.js")
+        js = ("admin/js/jquery.init.js", "cms/js/select2/select2.js", "djangocms_navigation/js/create_url.js")
 
 
 class ContentTypeObjectSelectWidget(Select2Mixin, forms.TextInput):
