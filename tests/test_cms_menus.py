@@ -385,6 +385,7 @@ class SoftrootTests(CMSTestCase):
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
+
         mock_tree = [
             AttributeObject(title=root.title, level=0, children=[
                 AttributeObject(title=aaa.title, level=1, children=[
@@ -398,6 +399,7 @@ class SoftrootTests(CMSTestCase):
                 AttributeObject(title=bbb.title, level=1, children=[])
             ])
         ]
+
         self.assertTreeQuality(hard_root, mock_tree)
 
     def test_menu_with_softroot_page_rendering(self):
@@ -481,11 +483,13 @@ class SoftrootTests(CMSTestCase):
         ddd = factories.ChildMenuItemFactory(parent=ccc, content=ddd_pagecontent.page)
         aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page)
         factories.ChildMenuItemFactory(parent=root, content=bbb_pagecontent.page)
+
         page = aaa_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         soft_root = context['children']
+
         mock_tree = [
             AttributeObject(title=aaa.title, level=0, children=[
                 AttributeObject(title=aaa1.title, level=1, children=[
@@ -496,6 +500,7 @@ class SoftrootTests(CMSTestCase):
                 AttributeObject(title=aaa2.title, level=1, children=[]),
                 ])
         ]
+
         self.assertTreeQuality(soft_root, mock_tree)
 
     def test_menu_with_softroot_rendering_nested_softroot_child(self):
@@ -572,7 +577,6 @@ class SoftrootTests(CMSTestCase):
             page_title="ccc",
             version__state=PUBLISHED
         )
-
         menu_content_version = factories.MenuContentWithVersionFactory(version__state=PUBLISHED)
         root = factories.ChildMenuItemFactory(parent=menu_content_version.root, content=root_pagecontent.page)
         aaa = factories.ChildMenuItemFactory(parent=root, soft_root=True, content=aaa_pagecontent.page)
@@ -581,16 +585,20 @@ class SoftrootTests(CMSTestCase):
         ddd = factories.ChildMenuItemFactory(parent=ccc, content=ddd_pagecontent.page)
         factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page)
         factories.ChildMenuItemFactory(parent=root, content=bbb_pagecontent.page)
+
         page = ddd_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
+
         soft_root = context['children']
+
         mock_tree = [
             AttributeObject(title=ccc.title, level=0, children=[
                 AttributeObject(title=ddd, level=1, children=[])
             ])
         ]
+
         self.assertTreeQuality(soft_root, mock_tree)
 
     def test_basic_projects_softroot_rendering_nodes(self):
@@ -654,20 +662,31 @@ class SoftrootTests(CMSTestCase):
         projects = factories.ChildMenuItemFactory(parent=root, soft_root=True, content=projects_pagecontent.page)
         djangocms = factories.ChildMenuItemFactory(parent=projects, content=djangocms_pagecontent.page)
         djangoshop = factories.ChildMenuItemFactory(parent=projects, content=djangoshop_pagecontent.page)
-        people=factories.ChildMenuItemFactory(parent=root, content=people_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=root, content=people_pagecontent.page)
         # On Projects
+
         page = projects_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
+
         nodes = context['children']
         # check everything
+
         self.assertEqual(len(nodes), 1)
+
         rootnode = nodes[0]
+
         self.assertEqual(rootnode.id, projects.id)
+
         self.assertEqual(len(rootnode.children), 2)
+
         cmsnode, shopnode = rootnode.children
+
         self.assertEqual(cmsnode.id, djangocms.id)
+
         self.assertEqual(shopnode.id, djangoshop.id)
+
         self.assertEqual(len(cmsnode.children), 0)
+
         self.assertEqual(len(shopnode.children), 0)
