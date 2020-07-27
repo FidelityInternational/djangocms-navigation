@@ -156,7 +156,7 @@ class TestNavigationPerformance(CMSTestCase):
         factories.ChildMenuItemFactory(parent=menuversions.content.root)
         child3 = factories.ChildMenuItemFactory(parent=menuversions.content.root)
         factories.ChildMenuItemFactory(parent=child3)
-        max_queries = 10
+        max_queries = 52
         page_url = page_content.page.get_absolute_url()
         with self.assertNumQueries(FuzzyInt(3, max_queries)):
             self.client.get(page_url)
