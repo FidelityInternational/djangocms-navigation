@@ -1,4 +1,5 @@
 from django.template import Template
+from django.template.context import Context
 from django.test import RequestFactory, TestCase
 
 from cms.test_utils.testcases import CMSTestCase
@@ -20,6 +21,7 @@ from .utils import disable_versioning_for_navigation
 
 class CMSMenuTestCase(TestCase):
     def setUp(self):
+        self.language = "en"
         self.request = RequestFactory().get("/")
         self.user = factories.UserFactory()
         self.request.user = self.user
@@ -36,7 +38,7 @@ class CMSMenuTestCase(TestCase):
 
     @disable_versioning_for_navigation()
     def test_get_nodes(self):
-        menu_contents = factories.MenuContentFactory.create_batch(2)
+        menu_contents = factories.MenuContentFactory.create_batch(2, language=self.language)
         child1 = factories.ChildMenuItemFactory(parent=menu_contents[0].root)
         child2 = factories.ChildMenuItemFactory(parent=menu_contents[1].root)
         grandchild = factories.ChildMenuItemFactory(parent=child1)
@@ -193,11 +195,11 @@ class CMSMenuTestCase(TestCase):
         of menu content and return latest of all distinct menu content
         when renderer draft_mode_active is false
         """
-        menucontent_1_v1 = factories.MenuVersionFactory(state=ARCHIVED)
+        menucontent_1_v1 = factories.MenuVersionFactory(content__language=self.language, state=ARCHIVED)
         factories.MenuVersionFactory(
-            content__menu=menucontent_1_v1.content.menu, state=DRAFT
+            content__menu=menucontent_1_v1.content.menu, content__language=self.language, state=DRAFT
         )
-        menucontent_2_v1 = factories.MenuVersionFactory(state=PUBLISHED)
+        menucontent_2_v1 = factories.MenuVersionFactory(content__language=self.language, state=PUBLISHED)
         factories.MenuVersionFactory(state=UNPUBLISHED)
         # Assert to check draft_mode_active is false
         self.assertFalse(self.menu.renderer.draft_mode_active)
@@ -212,12 +214,12 @@ class CMSMenuTestCase(TestCase):
         of menu content and return latest of all distinct menu content
         when renderer draft_mode_active is True
         """
-        menucontent_1_v1 = factories.MenuVersionFactory(state=ARCHIVED)
+        menucontent_1_v1 = factories.MenuVersionFactory(content__language=self.language, state=ARCHIVED)
         menucontent_1_v2 = factories.MenuVersionFactory(
-            content__menu=menucontent_1_v1.content.menu, state=DRAFT
+            content__menu=menucontent_1_v1.content.menu, content__language=self.language, state=DRAFT
         )
-        menucontent_2_v1 = factories.MenuVersionFactory(state=PUBLISHED)
-        factories.MenuVersionFactory(state=UNPUBLISHED)
+        menucontent_2_v1 = factories.MenuVersionFactory(content__language=self.language, state=PUBLISHED)
+        factories.MenuVersionFactory(content__language=self.language, state=UNPUBLISHED)
 
         # Getting renderer to set draft_mode_active
         renderer = self.renderer
@@ -235,9 +237,9 @@ class CMSMenuTestCase(TestCase):
         """This test will check while versioning disabled it should assert
         against all menu content created
         """
-        menucontent_1 = factories.MenuContentFactory()
-        menucontent_2 = factories.MenuContentFactory()
-        menucontent_3 = factories.MenuContentFactory()
+        menucontent_1 = factories.MenuContentFactory(language="en")
+        menucontent_2 = factories.MenuContentFactory(language="en")
+        menucontent_3 = factories.MenuContentFactory(language="en")
         child1 = factories.ChildMenuItemFactory(parent=menucontent_1.root)
         factories.ChildMenuItemFactory(parent=menucontent_2.root)
         factories.ChildMenuItemFactory(parent=child1)
@@ -293,7 +295,7 @@ class SoftrootTests(CMSTestCase):
                 a2 = getattr(n2, attr)
                 msg = '%r != %r with %r, %r (%s)' % (a1, a2, n1, n2, attr)
                 self.assertEqual(a1, a2, msg)
-            self.assertTreeQuality(n1.children, n2.children, 'level', 'title')
+            self.assertTreeQuality(n1.children, n2.children, *attrs)
 
     def test_menu_without_softroots(self):
         """
@@ -371,7 +373,7 @@ class SoftrootTests(CMSTestCase):
             page_title="ccc",
             version__state=PUBLISHED
         )
-        menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED)
+        menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         root = factories.ChildMenuItemFactory(parent=menu_content.root, content=root_pagecontent.page)
         aaa = factories.ChildMenuItemFactory(parent=root, content=aaa_pagecontent.page)
         aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page)
@@ -475,7 +477,7 @@ class SoftrootTests(CMSTestCase):
             page_title="ccc",
             version__state=PUBLISHED
         )
-        menu_content_ver = factories.MenuContentWithVersionFactory(version__state=PUBLISHED)
+        menu_content_ver = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         root = factories.ChildMenuItemFactory(parent=menu_content_ver.root, content=root_pagecontent.page)
         aaa = factories.ChildMenuItemFactory(parent=root, soft_root=True, content=aaa_pagecontent.page)
         aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page)
@@ -577,7 +579,7 @@ class SoftrootTests(CMSTestCase):
             page_title="ccc",
             version__state=PUBLISHED
         )
-        menu_content_version = factories.MenuContentWithVersionFactory(version__state=PUBLISHED)
+        menu_content_version = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         root = factories.ChildMenuItemFactory(parent=menu_content_version.root, content=root_pagecontent.page)
         aaa = factories.ChildMenuItemFactory(parent=root, soft_root=True, content=aaa_pagecontent.page)
         aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page)
@@ -657,13 +659,12 @@ class SoftrootTests(CMSTestCase):
             page_title="people",
             version__state=PUBLISHED
         )
-        menu_version = factories.MenuContentWithVersionFactory(version__state=PUBLISHED)
+        menu_version = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         root = factories.ChildMenuItemFactory(parent=menu_version.root, content=root_pagecontent.page)
         projects = factories.ChildMenuItemFactory(parent=root, soft_root=True, content=projects_pagecontent.page)
         djangocms = factories.ChildMenuItemFactory(parent=projects, content=djangocms_pagecontent.page)
         djangoshop = factories.ChildMenuItemFactory(parent=projects, content=djangoshop_pagecontent.page)
         factories.ChildMenuItemFactory(parent=root, content=people_pagecontent.page)
-        # On Projects
 
         page = projects_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
@@ -671,22 +672,114 @@ class SoftrootTests(CMSTestCase):
         tpl.render(context)
 
         nodes = context['children']
-        # check everything
 
         self.assertEqual(len(nodes), 1)
 
         rootnode = nodes[0]
 
         self.assertEqual(rootnode.id, projects.id)
-
         self.assertEqual(len(rootnode.children), 2)
 
         cmsnode, shopnode = rootnode.children
 
         self.assertEqual(cmsnode.id, djangocms.id)
-
         self.assertEqual(shopnode.id, djangoshop.id)
-
         self.assertEqual(len(cmsnode.children), 0)
-
         self.assertEqual(len(shopnode.children), 0)
+
+
+class MultisiteNavigationTests(CMSTestCase):
+
+    def assertTreeQuality(self, a, b, *attrs):
+        """
+        Checks that the node-lists a and b are the same for attrs.
+        This is recursive over the tree
+        """
+        msg = '%r != %r with %r, %r' % (len(a), len(b), a, b)
+        self.assertEqual(len(a), len(b), msg)
+        for n1, n2 in zip(a, b):
+            for attr in attrs:
+                a1 = getattr(n1, attr)
+                a2 = getattr(n2, attr)
+                msg = '%r != %r with %r, %r (%s)' % (a1, a2, n1, n2, attr)
+                self.assertEqual(a1, a2, msg)
+            self.assertTreeQuality(n1.children, n2.children, *attrs)
+
+    def test_menu_with_multiple_languages(self):
+        """
+        Tree in site 1 language 1 fixture :
+               root-en
+                   aaa
+                       aaa1
+        Tree in site 1 language 2 fixture :
+               root-it
+                   bbb
+                       bbb1
+        """
+        template = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
+        # Site page navigation menu
+        navigation_menu = factories.MenuFactory()
+        # English page navigation tree, same menu
+        root_pagecontent_en = factories.PageContentWithVersionFactory(
+            language="en",
+            version__created_by=self.get_superuser(),
+            title="root-en",
+            menu_title="root-en",
+            page_title="root-en",
+            version__state=PUBLISHED,
+        )
+        menu_content_en = factories.MenuContentWithVersionFactory(
+            menu=navigation_menu, language="en", version__state=PUBLISHED)
+        root_en = factories.ChildMenuItemFactory(
+            parent=menu_content_en.root, title="root_en", content=root_pagecontent_en.page)
+        aaa = factories.ChildMenuItemFactory(parent=root_en, title="aaa")
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, title="aaa1")
+        # Italian Page navigation tree, same menu
+        root_pagecontent_it = factories.PageContentWithVersionFactory(
+            language="it",
+            version__created_by=self.get_superuser(),
+            title="root-it",
+            menu_title="root-it",
+            page_title="root-it",
+            version__state=PUBLISHED,
+        )
+        menu_content_it = factories.MenuContentWithVersionFactory(
+            menu=navigation_menu, language="it", version__state=PUBLISHED)
+        root_it = factories.ChildMenuItemFactory(
+            parent=menu_content_it.root, title="root_it", content=root_pagecontent_it.page)
+        bbb = factories.ChildMenuItemFactory(parent=root_it, title="bbb")
+        bbb1 = factories.ChildMenuItemFactory(parent=bbb, title="bbb1")
+
+        context_en_raw = {
+            'request': self.get_request(
+                root_pagecontent_en.page.get_absolute_url(language="en"), language="en", page=root_pagecontent_en.page)
+        }
+        context_en = Context(context_en_raw)
+        template.render(context_en)
+
+        mock_en_tree = [
+            AttributeObject(title=root_en.title, level=0, children=[
+                AttributeObject(title=aaa.title, level=1, children=[
+                    AttributeObject(title=aaa1.title, level=2, children=[])
+                ])
+            ])
+        ]
+
+        self.assertTreeQuality(context_en['children'], mock_en_tree, 'title')
+
+        context_it_raw = {
+            'request': self.get_request(
+                root_pagecontent_it.page.get_absolute_url(language="it"), language="it", page=root_pagecontent_it.page)
+        }
+        context_it = Context(context_it_raw)
+        template.render(context_it)
+
+        mock_it_tree = [
+            AttributeObject(title=root_it.title, level=0, children=[
+                AttributeObject(title=bbb.title, level=1, children=[
+                    AttributeObject(title=bbb1.title, level=2, children=[])
+                ])
+            ])
+        ]
+
+        self.assertTreeQuality(context_it['children'], mock_it_tree, 'title')

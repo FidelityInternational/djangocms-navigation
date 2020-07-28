@@ -1,7 +1,7 @@
 from django.db.models import Q
 
 from cms.cms_menus import CMSMenu as OriginalCMSMenu
-from cms.utils import get_current_site
+from cms.utils import get_current_site, get_language_from_request
 from menus.base import Menu, Modifier, NavigationNode
 from menus.menu_pool import menu_pool
 
@@ -30,12 +30,16 @@ class CMSMenu(Menu):
     menu_item_model = MenuItem
 
     def get_roots(self, request):
+        language = get_language_from_request(request)
         queryset = self.menu_item_model.get_root_nodes().filter(
             menucontent__menu__site=get_current_site()
         )
         versionable = get_versionable_for_content(self.menu_content_model)
         if versionable:
-            inner_filter = {"versions__state__in": [PUBLISHED]}
+            inner_filter = {
+                "versions__state__in": [PUBLISHED],
+                "language": language,
+            }
             if self.renderer.draft_mode_active:
                 inner_filter["versions__state__in"] += [DRAFT]
             menucontents = versionable.distinct_groupers(**inner_filter)
