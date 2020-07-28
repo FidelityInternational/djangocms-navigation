@@ -142,11 +142,11 @@ class CMSMenuTestCase(TestCase):
         of menu content and return latest of all distinct menu content
         when renderer draft_mode_active is false
         """
-        menucontent_1_v1 = factories.MenuVersionFactory(content__language="en",state=ARCHIVED)
+        menucontent_1_v1 = factories.MenuVersionFactory(content__language=self.language,state=ARCHIVED)
         factories.MenuVersionFactory(
-            content__menu=menucontent_1_v1.content.menu, content__language="en", state=DRAFT
+            content__menu=menucontent_1_v1.content.menu, content__language=self.language, state=DRAFT
         )
-        menucontent_2_v1 = factories.MenuVersionFactory(content__language="en", state=PUBLISHED)
+        menucontent_2_v1 = factories.MenuVersionFactory(content__language=self.language, state=PUBLISHED)
         factories.MenuVersionFactory(state=UNPUBLISHED)
         # Assert to check draft_mode_active is false
         self.assertFalse(self.menu.renderer.draft_mode_active)
@@ -161,12 +161,12 @@ class CMSMenuTestCase(TestCase):
         of menu content and return latest of all distinct menu content
         when renderer draft_mode_active is True
         """
-        menucontent_1_v1 = factories.MenuVersionFactory(content__language="en", state=ARCHIVED)
+        menucontent_1_v1 = factories.MenuVersionFactory(content__language=self.language, state=ARCHIVED)
         menucontent_1_v2 = factories.MenuVersionFactory(
-            content__menu=menucontent_1_v1.content.menu, content__language="en", state=DRAFT
+            content__menu=menucontent_1_v1.content.menu, content__language=self.language, state=DRAFT
         )
-        menucontent_2_v1 = factories.MenuVersionFactory(content__language="en", state=PUBLISHED)
-        factories.MenuVersionFactory(content__language="en", state=UNPUBLISHED)
+        menucontent_2_v1 = factories.MenuVersionFactory(content__language=self.language, state=PUBLISHED)
+        factories.MenuVersionFactory(content__language=self.language, state=UNPUBLISHED)
 
         # Getting renderer to set draft_mode_active
         renderer = self.renderer
