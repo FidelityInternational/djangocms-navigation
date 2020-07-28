@@ -154,8 +154,8 @@ class NavigationPluginViewTestCase(CMSTestCase):
             language=self.language, version__created_by=self.get_superuser()
         )
         placeholder = factories.PlaceholderFactory(source=page_content)
-        menu_content1 = factories.MenuContentWithVersionFactory()
-        menu_content2 = factories.MenuContentWithVersionFactory()
+        menu_content1 = factories.MenuContentWithVersionFactory(language=self.language)
+        menu_content2 = factories.MenuContentWithVersionFactory(language=self.language)
         child = factories.ChildMenuItemFactory(parent=menu_content2.root)
         grandchild = factories.ChildMenuItemFactory(parent=child)
 
@@ -215,8 +215,8 @@ class NavigationPluginViewTestCase(CMSTestCase):
             language=self.language, version__created_by=self.get_superuser()
         )
         placeholder = factories.PlaceholderFactory(source=page_content)
-        menu_content1 = factories.MenuContentFactory()
-        menu_content2 = factories.MenuContentFactory()
+        menu_content1 = factories.MenuContentFactory(language=self.language)
+        menu_content2 = factories.MenuContentFactory(language=self.language)
         child = factories.ChildMenuItemFactory(parent=menu_content2.root)
         grandchild = factories.ChildMenuItemFactory(parent=child)
 
@@ -273,7 +273,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
             language=self.language, version__created_by=self.get_superuser()
         )
         placeholder = factories.PlaceholderFactory(source=page_content)
-        menu_content = factories.MenuContentWithVersionFactory()
+        menu_content = factories.MenuContentWithVersionFactory(language=self.language)
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         grandchild = factories.ChildMenuItemFactory(parent=child)
 
@@ -321,7 +321,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
             language=self.language, version__created_by=self.get_superuser()
         )
         placeholder = factories.PlaceholderFactory(source=page_content)
-        menu_content_version = factories.MenuVersionFactory()
+        menu_content_version = factories.MenuVersionFactory(content__language=self.language)
         menu_content = menu_content_version.content
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         # grandchild
@@ -366,7 +366,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
             language=self.language, version__created_by=self.get_superuser()
         )
         placeholder = factories.PlaceholderFactory(source=page_content)
-        menu_content_version = factories.MenuVersionFactory()
+        menu_content_version = factories.MenuVersionFactory(content__language=self.language)
         menu_content = menu_content_version.content
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         # grandchild
@@ -412,7 +412,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
             language=self.language, version__created_by=self.get_superuser()
         )
         placeholder = factories.PlaceholderFactory(source=page_content)
-        menu_content_version = factories.MenuVersionFactory()
+        menu_content_version = factories.MenuVersionFactory(content__language=self.language)
         menu_content = menu_content_version.content
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         # grandchild
