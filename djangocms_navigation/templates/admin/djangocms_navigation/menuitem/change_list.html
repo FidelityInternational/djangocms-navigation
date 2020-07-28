@@ -15,7 +15,7 @@
 </li>
 {% if versioning_enabled_for_nav %}
 <li>
-    <a href="{{ menu_content|url_version_list }}">
+    <a href="{{ menu_content|url_version_list|safe }}">
         {% trans "Versions" %}
     </a>
 </li>

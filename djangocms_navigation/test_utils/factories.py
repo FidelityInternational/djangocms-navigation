@@ -222,6 +222,7 @@ class SiblingMenuItemFactory(MenuItemFactory):
 class MenuContentFactory(factory.django.DjangoModelFactory):
     menu = factory.SubFactory(MenuFactory)
     root = factory.SubFactory(RootMenuItemFactory)
+    language = FuzzyChoice(["en", "fr", "it"])
 
     class Meta:
         model = MenuContent
