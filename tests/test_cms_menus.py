@@ -1,10 +1,9 @@
 from django.template import Template
-from django.test import RequestFactory, TestCase
 from django.template.context import Context
+from django.test import RequestFactory, TestCase
 
 from cms.test_utils.testcases import CMSTestCase
 from cms.test_utils.util.mock import AttributeObject
-
 from menus.menu_pool import menu_pool
 
 from djangocms_navigation.cms_menus import CMSMenu
@@ -142,7 +141,7 @@ class CMSMenuTestCase(TestCase):
         of menu content and return latest of all distinct menu content
         when renderer draft_mode_active is false
         """
-        menucontent_1_v1 = factories.MenuVersionFactory(content__language=self.language,state=ARCHIVED)
+        menucontent_1_v1 = factories.MenuVersionFactory(content__language=self.language, state=ARCHIVED)
         factories.MenuVersionFactory(
             content__menu=menucontent_1_v1.content.menu, content__language=self.language, state=DRAFT
         )
@@ -213,7 +212,7 @@ class MultisiteNavigationTests(CMSTestCase):
                 a2 = getattr(n2, attr)
                 msg = '%r != %r with %r, %r (%s)' % (a1, a2, n1, n2, attr)
                 self.assertEqual(a1, a2, msg)
-            self.assertTreeQuality(n1.children, n2.children)
+            self.assertTreeQuality(n1.children, n2.children, *attrs)
 
     def test_menu_with_multiple_languages(self):
         """
@@ -287,7 +286,7 @@ class MultisiteNavigationTests(CMSTestCase):
         mock_it_tree = [
             AttributeObject(title=root_it.title, level=0, children=[
                 AttributeObject(title=bbb.title, level=1, children=[
-                    AttributeObject(title=aaa1.title, level=2, children=[])
+                    AttributeObject(title=bbb1.title, level=2, children=[])
                 ])
             ])
         ]
