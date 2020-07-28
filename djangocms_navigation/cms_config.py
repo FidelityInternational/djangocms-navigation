@@ -3,6 +3,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 from cms.app_base import CMSAppConfig, CMSAppExtension
 from cms.models import Page
+from cms.utils.i18n import get_language_tuple
 
 from .models import MenuContent, MenuItem
 from .utils import purge_menu_cache
@@ -101,6 +102,8 @@ class NavigationCMSAppConfig(CMSAppConfig):
             VersionableItem(
                 content_model=MenuContent,
                 grouper_field_name="menu",
+                extra_grouping_fields=["language"],
+                version_list_filter_lookups={"language": get_language_tuple},
                 copy_function=copy_menu_content,
                 preview_url=MenuContent.get_preview_url,
                 on_publish=on_menu_content_publish,
