@@ -419,7 +419,7 @@ class MenuItemAdminChangeViewTestCase(CMSTestCase, UsefulAssertsMixin):
         response = self.client.get(change_url)
 
         # Redirect happened, error message displayed and check modify used
-        self.assertRedirectsToVersionList(response, menu_content.menu)
+        self.assertRedirectsToVersionList(response, menu_content)
         self.assertDjangoErrorMessage(
             "Go look at some cat pictures instead", mocked_messages
         )
@@ -442,7 +442,7 @@ class MenuItemAdminChangeViewTestCase(CMSTestCase, UsefulAssertsMixin):
         response = self.client.get(change_url)
 
         # Redirect happened and error message displayed
-        self.assertRedirectsToVersionList(response, menu)
+        self.assertRedirectsToVersionList(response, version.content)
         self.assertDjangoErrorMessage("Version is not a draft", mocked_messages)
 
     @patch("django.contrib.messages.error")
@@ -450,9 +450,9 @@ class MenuItemAdminChangeViewTestCase(CMSTestCase, UsefulAssertsMixin):
         self, mocked_messages
     ):
         menu = factories.MenuFactory()
-        version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
-        factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
-        factories.MenuVersionFactory(content__menu=menu, state=DRAFT)
+        version = factories.MenuVersionFactory(content__menu=menu, content__language="en", state=UNPUBLISHED)
+        factories.MenuVersionFactory(content__menu=menu, content__language="en", state=PUBLISHED)
+        factories.MenuVersionFactory(content__menu=menu, content__language="en", state=DRAFT)
         item = factories.ChildMenuItemFactory(parent=version.content.root)
         change_url = reverse(
             "admin:djangocms_navigation_menuitem_change",
@@ -472,7 +472,7 @@ class MenuItemAdminChangeViewTestCase(CMSTestCase, UsefulAssertsMixin):
         response = self.client.post(change_url, data)
 
         # Redirect happened and error message displayed
-        self.assertRedirectsToVersionList(response, menu)
+        self.assertRedirectsToVersionList(response, version.content)
         self.assertDjangoErrorMessage("Version is not a draft", mocked_messages)
         # Menu item object was not changed
         item.refresh_from_db()
@@ -587,7 +587,7 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
         response = self.client.post(add_url, data)
 
         # Redirect happened, error message displayed and check modify used
-        self.assertRedirectsToVersionList(response, menu_content.menu)
+        self.assertRedirectsToVersionList(response, menu_content)
         self.assertDjangoErrorMessage(
             "Go look at some cat pictures instead", mocked_messages
         )
@@ -608,7 +608,7 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
         response = self.client.get(add_url)
 
         # Redirect happened and error message displayed
-        self.assertRedirectsToVersionList(response, menu)
+        self.assertRedirectsToVersionList(response, version.content)
         self.assertDjangoErrorMessage("Version is not a draft", mocked_messages)
 
     @patch("django.contrib.messages.error")
@@ -637,7 +637,7 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
         response = self.client.post(add_url, data)
 
         # Redirect happened and error message displayed
-        self.assertRedirectsToVersionList(response, menu)
+        self.assertRedirectsToVersionList(response, version.content)
         self.assertDjangoErrorMessage("Version is not a draft", mocked_messages)
         # Menu item object was not added
         self.assertEqual(MenuItem.objects.filter(title="My new Title").count(), 0)
@@ -724,7 +724,7 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
 
         response = self.client.get(list_url)
 
-        self.assertIn(version_list_url(menu_content), str(response.content))
+        self.assertContains(response, version_list_url(menu_content))
 
     @patch("django.contrib.messages.error")
     @patch("djangocms_versioning.models.Version.check_modify")
@@ -742,7 +742,7 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
         response = self.client.get(list_url)
 
         # Redirect happened, error message displayed and check modify used
-        self.assertRedirectsToVersionList(response, menu_content.menu)
+        self.assertRedirectsToVersionList(response, menu_content)
         self.assertDjangoErrorMessage(
             "Go look at some cat pictures instead", mocked_messages
         )
@@ -761,7 +761,7 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
         response = self.client.get(list_url)
 
         # Redirect happened and error message displayed
-        self.assertRedirectsToVersionList(response, menu)
+        self.assertRedirectsToVersionList(response, version.content)
         self.assertDjangoErrorMessage("Version is not a draft", mocked_messages)
 
 

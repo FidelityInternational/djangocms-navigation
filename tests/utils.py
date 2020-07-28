@@ -5,14 +5,14 @@ from django.conf import UserSettingsHolder, settings
 from django.test.signals import setting_changed
 from django.test.utils import TestContextDecorator
 
-from djangocms_versioning.helpers import version_list_url_for_grouper
+from djangocms_versioning.helpers import version_list_url
 
 
 class UsefulAssertsMixin(object):
-    def assertRedirectsToVersionList(self, response, menu):
+    def assertRedirectsToVersionList(self, response, menu_content):
         """Asserts the response redirects to the menu content version list"""
-        version_list_url = version_list_url_for_grouper(menu)
-        self.assertRedirects(response, version_list_url)
+        endpoint = version_list_url(menu_content)
+        self.assertRedirects(response, endpoint)
 
     def assertDjangoErrorMessage(self, msg, mocked_messages):
         """Mock 'django.contrib.messages.error' to use this assert
