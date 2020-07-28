@@ -293,7 +293,7 @@ class SoftrootTests(CMSTestCase):
                 a2 = getattr(n2, attr)
                 msg = '%r != %r with %r, %r (%s)' % (a1, a2, n1, n2, attr)
                 self.assertEqual(a1, a2, msg)
-            self.assertTreeQuality(n1.children, n2.children)
+            self.assertTreeQuality(n1.children, n2.children, 'level', 'title')
 
     def test_menu_without_softroots(self):
         """
@@ -400,7 +400,7 @@ class SoftrootTests(CMSTestCase):
             ])
         ]
 
-        self.assertTreeQuality(hard_root, mock_tree)
+        self.assertTreeQuality(hard_root, mock_tree, 'level', 'title')
 
     def test_menu_with_softroot_page_rendering(self):
         """
@@ -501,7 +501,7 @@ class SoftrootTests(CMSTestCase):
                 ])
         ]
 
-        self.assertTreeQuality(soft_root, mock_tree)
+        self.assertTreeQuality(soft_root, mock_tree, 'level', 'title')
 
     def test_menu_with_softroot_rendering_nested_softroot_child(self):
         """
@@ -595,11 +595,11 @@ class SoftrootTests(CMSTestCase):
 
         mock_tree = [
             AttributeObject(title=ccc.title, level=0, children=[
-                AttributeObject(title=ddd, level=1, children=[])
+                AttributeObject(title=ddd.title, level=1, children=[])
             ])
         ]
 
-        self.assertTreeQuality(soft_root, mock_tree)
+        self.assertTreeQuality(soft_root, mock_tree, 'title', 'level')
 
     def test_basic_projects_softroot_rendering_nodes(self):
         """
