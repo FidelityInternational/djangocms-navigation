@@ -189,11 +189,13 @@ class MenuContentAdminViewTestCase(CMSTestCase):
             ["title", "get_author", "get_modified_date", "get_versioning_state"]
         )
         self.assertIn("cms-versioning-action-btn", list_display[-1])
+        # The preview button is present
         self.assertIn("cms-versioning-action-preview", list_display[-1])
+        # The edit button is present
+        self.assertIn("cms-versioning-action-edit", list_display[-1])
         self.assertIn("cms-form-get-method", list_display[-1])
         self.assertIn("js-versioning-action", list_display[-1])
         self.assertIn("js-versioning-admin-keep-sideframe", list_display[-1])
-        self.assertIn("btn cms-versioning-action-btn js-versioning-action", list_display[-1])
 
     @override_settings(DJANGOCMS_NAVIGATION_VERSIONING_ENABLED=False)
     @disable_versioning_for_navigation()
@@ -1105,40 +1107,42 @@ class ListActionsTestCase(CMSTestCase):
         version = factories.MenuVersionFactory(content__menu=menu, state=UNPUBLISHED)
         factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
         menu_content = version.content
-        func = self.modeladmin._list_actions(self.get_request("/admin"))
 
+        preview_endpoint = reverse("admin:djangocms_navigation_menuitem_preview", args=(version.pk,),)
+        func = self.modeladmin._list_actions(self.get_request("/admin"))
         response = func(menu_content)
 
         self.assertIn("cms-versioning-action-preview", response)
         self.assertIn('title="Preview"', response)
-        self.assertIn(reverse("admin:djangocms_navigation_menuitem_preview", args=(version.pk,),),
-                      response,
-                      )
+        self.assertIn(preview_endpoint, response)
 
     def test_edit_link(self):
         menu = factories.MenuFactory()
         request = self.get_request("/")
         request.user = self.get_superuser()
         version = factories.MenuVersionFactory(content__menu=menu, state=DRAFT, created_by=request.user)
-        func = self.modeladmin._list_actions(request)
         menu_content = version.content
 
+        func = self.modeladmin._list_actions(request)
+        edit_endpoint = reverse("admin:djangocms_versioning_menucontentversion_edit_redirect", args=(version.pk,),)
         response = func(menu_content)
 
         self.assertIn("cms-versioning-action-btn", response)
-        self.assertIn("Edit", response)
+        self.assertIn('title="Edit"', response)
+        self.assertIn(edit_endpoint, response)
 
     def test_edit_link_inactive(self):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=DRAFT)
         request = self.get_request("/")
-        func = self.modeladmin._list_actions(request)
 
+        func = self.modeladmin._list_actions(request)
+        edit_endpoint = reverse("admin:djangocms_versioning_menucontentversion_edit_redirect", args=(version.pk,),)
         response = func(version.content)
 
-        self.assertIn("cms-versioning-action-btn inactive", response)
         self.assertIn("inactive", response)
-        self.assertIn("Edit", response)
+        self.assertIn('title="Edit"', response)
+        self.assertNotIn(edit_endpoint, response)
 
     def test_edit_link_not_shown(self):
         menu = factories.MenuFactory()
@@ -1147,7 +1151,4 @@ class ListActionsTestCase(CMSTestCase):
 
         response = func(version.content)
 
-        self.assertNotIn(
-            "cms-versioning-action-edit ",
-            response
-        )
+        self.assertNotIn("cms-versioning-action-edit ", response)

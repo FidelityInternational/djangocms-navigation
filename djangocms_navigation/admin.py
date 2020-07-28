@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from django.apps import apps
 from django.conf.urls import url
 from django.contrib import admin, messages
@@ -15,12 +13,12 @@ from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.views.i18n import JavaScriptCatalog
 
-from djangocms_versioning import versionables
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 from treebeard.admin import TreeAdmin
 
 from .filters import LanguageFilter
 from .forms import MenuContentForm, MenuItemForm
+from .helpers import proxy_model
 from .models import Menu, MenuContent, MenuItem
 from .utils import is_versioning_enabled, purge_menu_cache, reverse_admin_name
 from .views import ContentObjectSelect2View, MenuContentPreviewView
@@ -43,13 +41,6 @@ try:
 except ImportError:
     using_version_lock = False
     LOCK_MESSAGE = _("You don't have permission to change this item")
-
-
-def proxy_model(obj):
-    versionable = versionables.for_content(MenuContent)
-    obj_ = deepcopy(obj)
-    obj_.__class__ = versionable.version_model_proxy
-    return obj_
 
 
 class MenuItemChangeList(ChangeList):
@@ -188,7 +179,7 @@ class MenuContentAdmin(admin.ModelAdmin):
         :param disabled: Should the link be marked disabled?
         :return: Preview icon template
         """
-        version = proxy_model(self.get_version(obj))
+        version = proxy_model(self.get_version(obj), self.model)
 
         if version.state not in (DRAFT, PUBLISHED):
             # Don't display the link if it can't be edited
@@ -198,13 +189,13 @@ class MenuContentAdmin(admin.ModelAdmin):
             disabled = True
 
         url = reverse(
-            "admin:{app}_{model}_list".format(
-                app=obj._meta.app_label, model=self.menu_item_model._meta.model_name
+            "admin:{app}_{model}_edit_redirect".format(
+                app=version._meta.app_label, model=version._meta.model_name
             ),
-            args=[obj.pk],
+            args=(version.pk,),
         )
         return render_to_string(
-            "djangocms_versioning/admin/edit_icon.html",
+            "djangocms_navigation/admin/icons/edit_icon.html",
             {"url": url, "disabled": disabled, "post": False},
         )
 
