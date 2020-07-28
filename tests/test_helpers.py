@@ -1,6 +1,9 @@
 from django.conf import settings
 
 from cms.test_utils.testcases import CMSTestCase
+from cms.test_utils.util.fuzzy_int import FuzzyInt
+
+from djangocms_versioning.constants import PUBLISHED
 
 from djangocms_navigation.helpers import get_navigation_node_for_content_object
 from djangocms_navigation.test_utils import factories
@@ -21,9 +24,9 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         page_content = factories.PageContentWithVersionFactory(
             language=self.language, version__created_by=self.get_superuser()
         )
-        child2 = factories.ChildMenuItemFactory(parent=menu_contents.root, content=page_content)
+        child2 = factories.ChildMenuItemFactory(parent=menu_contents.root, content=page_content.page)
 
-        result = get_navigation_node_for_content_object(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content.page)
 
         self.assertEqual(result, child2)
 
@@ -39,9 +42,9 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         factories.ChildMenuItemFactory(parent=menu_contents.root)
         grandchild = factories.ChildMenuItemFactory(parent=child1)
         grandchild1 = factories.ChildMenuItemFactory(parent=grandchild)
-        grandchild2 = factories.ChildMenuItemFactory(parent=grandchild1, content=page_content)
+        grandchild2 = factories.ChildMenuItemFactory(parent=grandchild1, content=page_content.page)
 
-        result = get_navigation_node_for_content_object(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content.page)
 
         self.assertEqual(result, grandchild2)
 
@@ -56,7 +59,7 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         )
         factories.ChildMenuItemFactory(parent=menu_contents.root)
 
-        result = get_navigation_node_for_content_object(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content.page)
 
         self.assertFalse(result)
 
@@ -64,7 +67,7 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         grandchild1 = factories.ChildMenuItemFactory(parent=grandchild)
         factories.ChildMenuItemFactory(parent=grandchild1)
 
-        result = get_navigation_node_for_content_object(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content.page)
 
         self.assertFalse(result)
 
@@ -79,11 +82,11 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
             language=self.language, version__created_by=self.get_superuser()
         )
         factories.ChildMenuItemFactory(parent=menu_contents.root)
-        grandchild = factories.ChildMenuItemFactory(parent=child1, content=page_content)
+        grandchild = factories.ChildMenuItemFactory(parent=child1, content=page_content.page)
         grandchild1 = factories.ChildMenuItemFactory(parent=grandchild)
-        factories.ChildMenuItemFactory(parent=grandchild1, content=page_content)
+        factories.ChildMenuItemFactory(parent=grandchild1, content=page_content.page)
 
-        result = get_navigation_node_for_content_object(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content.page)
 
         self.assertEqual(result, grandchild)
 
@@ -118,14 +121,48 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         menu_contents = factories.MenuContentFactory()
         child1 = factories.ChildMenuItemFactory(parent=menu_contents.root)
         factories.ChildMenuItemFactory(parent=menu_contents.root)
-        grandchild = factories.ChildMenuItemFactory(parent=child1, content=page_content)
+        grandchild = factories.ChildMenuItemFactory(parent=child1, content=page_content.page)
         grandchild1 = factories.ChildMenuItemFactory(parent=grandchild)
         grandchild2 = factories.ChildMenuItemFactory(parent=grandchild1, content=poll_content)
 
-        result = get_navigation_node_for_content_object(menu_contents, page_content)
+        result = get_navigation_node_for_content_object(menu_contents, page_content.page)
 
         self.assertEqual(result, grandchild)
 
         result = get_navigation_node_for_content_object(menu_contents, poll_content)
 
         self.assertEqual(result, grandchild2)
+
+
+class TestNavigationPerformance(CMSTestCase):
+
+    def setUp(self):
+        self.language = 'en'
+        self.client.force_login(self.get_superuser())
+
+    def test_select_node_from_deeply_nested_nodes(self):
+        """
+        Performance check to retrieve a page from node with and without soft_root node
+        """
+        page_content = factories.PageContentWithVersionFactory(
+            version__created_by=self.get_superuser(),
+            title="test",
+            menu_title="test",
+            page_title="test",
+            version__state=PUBLISHED
+        )
+
+        menuversions = factories.MenuVersionFactory(state=PUBLISHED, content__language=self.language)
+        factories.ChildMenuItemFactory(parent=menuversions.content.root, content=page_content.page)
+        factories.ChildMenuItemFactory(parent=menuversions.content.root)
+        child3 = factories.ChildMenuItemFactory(parent=menuversions.content.root)
+        factories.ChildMenuItemFactory(parent=child3)
+        max_queries = 52
+        page_url = page_content.page.get_absolute_url()
+
+        with self.assertNumQueries(FuzzyInt(3, max_queries)):
+            self.client.get(page_url)
+
+        child3.soft_root = True
+        with self.assertNumQueries(FuzzyInt(3, max_queries)):
+            self.client.get(page_url)
