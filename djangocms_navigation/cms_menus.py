@@ -11,6 +11,20 @@ from .models import MenuContent, MenuItem
 from .utils import get_versionable_for_content
 
 
+class MenuItemNavigationNode(NavigationNode):
+
+    def __init__(self, *args, **kwargs):
+        self.content = kwargs.pop('content')
+        super().__init__(*args, **kwargs)
+
+    def is_selected(self, request):
+        try:
+            content = request.current_page
+        except AttributeError:
+            return False
+        return content == self.content
+
+
 class CMSMenu(Menu):
     menu_content_model = MenuContent
     menu_item_model = MenuItem
@@ -43,12 +57,13 @@ class CMSMenu(Menu):
                 parent_id = root_ids[parent.id]
             else:
                 parent_id = parent.id
-            yield NavigationNode(
+            yield MenuItemNavigationNode(
                 title=node.title,
                 url=url,
                 id=node.pk,
                 parent_id=parent_id,
-                attr={"link_target": node.link_target},
+                content=node.content,
+                attr={"link_target": node.link_target, "soft_root": node.soft_root},
             )
 
     def get_nodes(self, request):
@@ -57,7 +72,7 @@ class CMSMenu(Menu):
         root_ids = {}
         for navigation in navigations:
             identifier = navigation.menucontent.menu.root_id
-            node = NavigationNode(title="", url="", id=identifier)
+            node = MenuItemNavigationNode(title="", url="", id=identifier, content=None)
             root_navigation_nodes.append(node)
             root_ids[navigation.pk] = identifier
         menu_nodes = self.get_menu_nodes(navigations)
@@ -83,6 +98,8 @@ class NavigationSelector(Modifier):
             # defaulting to first subtree
             tree_id = nodes[0].id
         root = next(n for n in nodes if n.id == tree_id)
+        if root.attr.get("soft_root", False):
+            return nodes
         return [self.make_roots(node, root) for node in root.children]
 
     def make_roots(self, node, previous_root):

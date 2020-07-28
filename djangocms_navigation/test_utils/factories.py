@@ -164,6 +164,7 @@ class MenuItemFactory(factory.django.DjangoModelFactory):
         lambda o: ContentType.objects.get_for_model(o.content)
     )
     content = factory.SubFactory(PageContentWithVersionFactory)
+    soft_root = False
 
     class Meta:
         model = MenuItem
