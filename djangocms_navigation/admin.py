@@ -198,13 +198,13 @@ class MenuContentAdmin(admin.ModelAdmin):
             disabled = True
 
         url = reverse(
-            "admin:{app}_{model}_list".format(
-                app=obj._meta.app_label, model=self.menu_item_model._meta.model_name
+            "admin:{app}_{model}_edit_redirect".format(
+                app=version._meta.app_label, model=version._meta.model_name
             ),
-            args=[obj.pk],
+            args=(version.pk,),
         )
         return render_to_string(
-            "djangocms_versioning/admin/edit_icon.html",
+            "djangocms_navigation/admin/icons/edit_icon.html",
             {"url": url, "disabled": disabled, "post": False},
         )
 
