@@ -1,4 +1,8 @@
+from copy import deepcopy
+
 from django.contrib.contenttypes.models import ContentType
+
+from djangocms_versioning import versionables
 
 from .models import MenuItem
 
@@ -22,3 +26,16 @@ def get_navigation_node_for_content_object(menu_content, content_object, node_mo
             return search_node
 
     return False
+
+
+def proxy_model(obj, content_model):
+    """
+    Get the proxy model from a
+
+    :param obj: A registered versionable object
+    :param content_model: A registered content model
+    """
+    versionable = versionables.for_content(content_model)
+    obj_ = deepcopy(obj)
+    obj_.__class__ = versionable.version_model_proxy
+    return obj_
