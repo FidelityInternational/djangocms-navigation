@@ -261,7 +261,7 @@ class SoftrootTests(CMSTestCase):
                                ddd
                        aaa2
                    bbb
-       In the fixture, all pages are "in_navigation", "published" and
+       In the fixture, all pages are visible, "published" and
        NOT-"soft_root".
        What is a soft root?
            A soft root is a page that acts as the root for a menu navigation tree.
@@ -409,7 +409,7 @@ class SoftrootTests(CMSTestCase):
         Tree in fixture :
                root
                    aaa
-                       aaa1( in_navigation = False) hidden node
+                       aaa1( Hide_node = True) hidden node
                            ccc
                                ddd
                        aaa2
@@ -420,7 +420,7 @@ class SoftrootTests(CMSTestCase):
                   1:aaa
                      5:aaa2
                   6:bbb
-        Note: If node has in_navigation False , node and its descendants are removed from tree
+        Note: If node has hide_node True , node and its descendants are removed from tree
         """
         root_pagecontent = factories.PageContentWithVersionFactory(
             language=self.language,
@@ -481,7 +481,7 @@ class SoftrootTests(CMSTestCase):
         menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         root = factories.ChildMenuItemFactory(parent=menu_content.root, content=root_pagecontent.page)
         aaa = factories.ChildMenuItemFactory(parent=root, content=aaa_pagecontent.page)
-        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page, in_navigation=False)
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page, hide_node=True)
         ccc = factories.ChildMenuItemFactory(parent=aaa1, content=ccc_pagecontent.page)
         factories.ChildMenuItemFactory(parent=ccc, content=ddd_pagecontent.page)
         aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page)
@@ -582,7 +582,7 @@ class SoftrootTests(CMSTestCase):
             parent=root,
             content=aaa_pagecontent.page,
             soft_root=True,
-            in_navigation=False,
+            hide_node=True,
         )
         aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page)
         ccc = factories.ChildMenuItemFactory(parent=aaa1, content=ccc_pagecontent.page)
@@ -683,7 +683,7 @@ class SoftrootTests(CMSTestCase):
         aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page)
         ccc = factories.ChildMenuItemFactory(parent=aaa1, content=ccc_pagecontent.page)
         factories.ChildMenuItemFactory(parent=ccc, content=ddd_pagecontent.page)
-        factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page, in_navigation=False)
+        factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page, hide_node=True)
         bbb = factories.ChildMenuItemFactory(parent=root, content=bbb_pagecontent.page)
 
         page = bbb_pagecontent.page
