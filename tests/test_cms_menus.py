@@ -609,17 +609,16 @@ class SoftrootTests(CMSTestCase):
         Tree in fixture :
                root
                    aaa( soft_root is True )
-                       aaa1
+                       aaa1 ( in_navigaton is False)
                            ccc
                                ddd
                        aaa2
-                   bbb ( in_navigaton is False)
+                   bbb
         tag: show_menu 0 100 0 100
         expected result 1:
                 0:root
                   1:aaa
-                     5:aaa2
-                  6:bbb
+                  1:bbb
         Note: If node has in_navigation False , node and its descendants are removed from tree
         """
         root_pagecontent = factories.PageContentWithVersionFactory(
@@ -684,8 +683,8 @@ class SoftrootTests(CMSTestCase):
         aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page)
         ccc = factories.ChildMenuItemFactory(parent=aaa1, content=ccc_pagecontent.page)
         factories.ChildMenuItemFactory(parent=ccc, content=ddd_pagecontent.page)
-        factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page)
-        bbb = factories.ChildMenuItemFactory(parent=root, content=bbb_pagecontent.page, in_navigation=False)
+        factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page, in_navigation=False)
+        bbb = factories.ChildMenuItemFactory(parent=root, content=bbb_pagecontent.page)
 
         page = bbb_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
@@ -695,7 +694,8 @@ class SoftrootTests(CMSTestCase):
 
         mock_tree = [
             AttributeObject(title=root.title, level=0, children=[
-                AttributeObject(title=aaa.title, level=1, children=[])
+                AttributeObject(title=aaa.title, level=1, children=[]),
+                AttributeObject(title=bbb.title, level=1, children=[])
             ])
         ]
 
