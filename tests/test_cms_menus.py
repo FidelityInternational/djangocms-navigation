@@ -404,6 +404,303 @@ class SoftrootTests(CMSTestCase):
 
         self.assertTreeQuality(hard_root, mock_tree, 'level', 'title')
 
+    def test_menu_with_node_hidden(self):
+        """
+        Tree in fixture :
+               root
+                   aaa
+                       aaa1( in_navigation = False) hidden node
+                           ccc
+                               ddd
+                       aaa2
+                   bbb
+        tag: show_menu 0 100 0 100
+        expected result 1:
+               0:root
+                  1:aaa
+                     5:aaa2
+                  6:bbb
+        Note: If node has in_navigation False , node and its descendants are removed from tree
+        """
+        root_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="root",
+            menu_title="root",
+            page_title="root",
+            version__state=PUBLISHED,
+        )
+        aaa_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa",
+            menu_title="aaa",
+            page_title="aaa",
+            version__state=PUBLISHED
+        )
+        ddd_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="ddd",
+            menu_title="ddd",
+            page_title="ddd",
+            version__state=PUBLISHED
+        )
+        aaa1_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa1",
+            menu_title="aaa1",
+            page_title="aaa1",
+            version__state=PUBLISHED
+        )
+        aaa2_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa2",
+            menu_title="aaa2",
+            page_title="aaa2",
+            version__state=PUBLISHED
+        )
+        bbb_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="bbb",
+            menu_title="bbb",
+            page_title="bbb",
+            version__state=PUBLISHED
+        )
+        ccc_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="ccc",
+            menu_title="ccc",
+            page_title="ccc",
+            version__state=PUBLISHED
+        )
+        menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
+        root = factories.ChildMenuItemFactory(parent=menu_content.root, content=root_pagecontent.page)
+        aaa = factories.ChildMenuItemFactory(parent=root, content=aaa_pagecontent.page)
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page, in_navigation=False)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=ccc_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=ccc, content=ddd_pagecontent.page)
+        aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page)
+        bbb = factories.ChildMenuItemFactory(parent=root, content=bbb_pagecontent.page)
+
+        page = aaa_pagecontent.page
+        context = self.get_context(page.get_absolute_url(), page=page)
+        tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
+        tpl.render(context)
+        hard_root = context['children']
+
+        mock_tree = [
+            AttributeObject(title=root.title, level=0, children=[
+                AttributeObject(title=aaa.title, level=1, children=[
+                    AttributeObject(title=aaa2.title, level=2, children=[])
+                ]),
+                AttributeObject(title=bbb.title, level=1, children=[])
+            ])
+        ]
+
+        self.assertTreeQuality(hard_root, mock_tree, 'level', 'title')
+
+    def test_menu_with_softroot_is_hidden(self):
+        """
+        Tree in fixture :
+               root
+                   aaa( soft_root is True and in_navigaton is False)
+                       aaa1
+                           ccc
+                               ddd
+                       aaa2
+                   bbb
+        tag: show_menu 0 100 0 100
+        expected result 1:
+               0:root
+                  1:bbb
+        Note: If node has in_navigation False , node and its descendants are removed from tree
+        """
+        root_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="root",
+            menu_title="root",
+            page_title="root",
+            version__state=PUBLISHED,
+        )
+        aaa_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa",
+            menu_title="aaa",
+            page_title="aaa",
+            version__state=PUBLISHED
+        )
+        ddd_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="ddd",
+            menu_title="ddd",
+            page_title="ddd",
+            version__state=PUBLISHED
+        )
+        aaa1_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa1",
+            menu_title="aaa1",
+            page_title="aaa1",
+            version__state=PUBLISHED
+        )
+        aaa2_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa2",
+            menu_title="aaa2",
+            page_title="aaa2",
+            version__state=PUBLISHED
+        )
+        bbb_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="bbb",
+            menu_title="bbb",
+            page_title="bbb",
+            version__state=PUBLISHED
+        )
+        ccc_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="ccc",
+            menu_title="ccc",
+            page_title="ccc",
+            version__state=PUBLISHED
+        )
+        menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
+        root = factories.ChildMenuItemFactory(parent=menu_content.root, content=root_pagecontent.page)
+        aaa = factories.ChildMenuItemFactory(
+            parent=root,
+            content=aaa_pagecontent.page,
+            soft_root=True,
+            in_navigation=False,
+        )
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=ccc_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=ccc, content=ddd_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page)
+        bbb = factories.ChildMenuItemFactory(parent=root, content=bbb_pagecontent.page)
+
+        page = bbb_pagecontent.page
+        context = self.get_context(page.get_absolute_url(), page=page)
+        tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
+        tpl.render(context)
+        hard_root = context['children']
+
+        mock_tree = [
+            AttributeObject(title=root.title, level=0, children=[
+                AttributeObject(title=bbb.title, level=1, children=[])
+            ])
+        ]
+
+        self.assertTreeQuality(hard_root, mock_tree, 'level', 'title')
+
+    def test_menu_with_softroot_and_hidden_child(self):
+        """
+        Tree in fixture :
+               root
+                   aaa( soft_root is True )
+                       aaa1
+                           ccc
+                               ddd
+                       aaa2
+                   bbb ( in_navigaton is False)
+        tag: show_menu 0 100 0 100
+        expected result 1:
+                0:root
+                  1:aaa
+                     5:aaa2
+                  6:bbb
+        Note: If node has in_navigation False , node and its descendants are removed from tree
+        """
+        root_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="root",
+            menu_title="root",
+            page_title="root",
+            version__state=PUBLISHED,
+        )
+        aaa_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa",
+            menu_title="aaa",
+            page_title="aaa",
+            version__state=PUBLISHED
+        )
+        ddd_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="ddd",
+            menu_title="ddd",
+            page_title="ddd",
+            version__state=PUBLISHED
+        )
+        aaa1_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa1",
+            menu_title="aaa1",
+            page_title="aaa1",
+            version__state=PUBLISHED
+        )
+        aaa2_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa2",
+            menu_title="aaa2",
+            page_title="aaa2",
+            version__state=PUBLISHED
+        )
+        bbb_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="bbb",
+            menu_title="bbb",
+            page_title="bbb",
+            version__state=PUBLISHED
+        )
+        ccc_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="ccc",
+            menu_title="ccc",
+            page_title="ccc",
+            version__state=PUBLISHED
+        )
+        menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
+        root = factories.ChildMenuItemFactory(parent=menu_content.root, content=root_pagecontent.page)
+        aaa = factories.ChildMenuItemFactory(parent=root, content=aaa_pagecontent.page, soft_root=True)
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=ccc_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=ccc, content=ddd_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page)
+        bbb = factories.ChildMenuItemFactory(parent=root, content=bbb_pagecontent.page, in_navigation=False)
+
+        page = bbb_pagecontent.page
+        context = self.get_context(page.get_absolute_url(), page=page)
+        tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
+        tpl.render(context)
+        hard_root = context['children']
+
+        mock_tree = [
+            AttributeObject(title=root.title, level=0, children=[
+                AttributeObject(title=aaa.title, level=1, children=[])
+            ])
+        ]
+
+        self.assertTreeQuality(hard_root, mock_tree, 'level', 'title')
+
     def test_menu_with_softroot_page_rendering(self):
         """
         Tree in fixture :

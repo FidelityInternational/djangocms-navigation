@@ -67,6 +67,7 @@ class CMSMenu(Menu):
                 id=node.pk,
                 parent_id=parent_id,
                 content=node.content,
+                visible=node.in_navigation,
                 attr={"link_target": node.link_target, "soft_root": node.soft_root},
             )
 
