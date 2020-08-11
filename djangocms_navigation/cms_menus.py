@@ -103,9 +103,28 @@ class NavigationSelector(Modifier):
             # defaulting to first subtree
             tree_id = nodes[0].id
         root = next(n for n in nodes if n.id == tree_id)
+        selected = None
+        for node in nodes:
+            if node.selected:
+                selected = node
+        if selected:
+            # find the nearest root page for selected node and make it visible in vaigation
+            root = self.find_ancestors_root_for_node(selected, nodes)
+            root.visible = True
         if root.attr.get("soft_root", False):
             return nodes
         return [self.make_roots(node, root) for node in root.children]
+
+    def find_ancestors_root_for_node(self, node, nodes):
+        """
+        Check ancestors for root of selected node
+        """
+        if node.parent:
+            if node.parent.attr.get("soft_root", False):
+                return node.parent
+            else:
+                node = self.find_ancestors_root_for_node(node.parent, nodes)
+        return node
 
     def make_roots(self, node, previous_root):
         """Detach level 1 nodes from parent, making them roots"""
