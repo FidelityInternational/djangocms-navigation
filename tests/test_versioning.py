@@ -49,6 +49,8 @@ class CopyFunctionTestCase(TestCase):
         self.assertEqual(new_child.title, original_child.title)
         self.assertEqual(new_child.content, original_child.content)
         self.assertEqual(new_child.link_target, original_child.link_target)
+        self.assertEqual(new_child.soft_root, original_child.soft_root)
+        self.assertEqual(new_child.hide_node, original_child.hide_node)
         # The new child is indeed a child node of the new root
         self.assertTrue(new_child.is_child_of(new_root))
 
@@ -72,6 +74,8 @@ class CopyFunctionTestCase(TestCase):
         self.assertEqual(new_sibling.title, original_sibling.title)
         self.assertEqual(new_sibling.content, original_sibling.content)
         self.assertEqual(new_sibling.link_target, original_sibling.link_target)
+        self.assertEqual(new_sibling.soft_root, original_sibling.soft_root)
+        self.assertEqual(new_sibling.hide_node, original_sibling.hide_node)
         # The new sibling is indeed a sibling node of the new child
         new_child = MenuItem.objects.get(path=new_root.path + original_child.path[4:])
         self.assertTrue(new_child.is_sibling_of(new_child))
