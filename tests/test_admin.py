@@ -664,7 +664,7 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
             "_position": "first-child",
         }
         self.client.post(add_url, data)
-        self.assertEqual(len(ma.get_list_display(mock_request)), 3)
+        self.assertEqual(len(ma.get_list_display(mock_request)), 4)
         self.assertIn("get_object_url", ma.get_list_display(mock_request))
 
 

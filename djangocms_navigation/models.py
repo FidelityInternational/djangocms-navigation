@@ -57,6 +57,7 @@ class AbstractMenuItem(MP_Node):
     content = GenericForeignKey("content_type", "object_id")
     soft_root = models.BooleanField(_("soft root"), db_index=True, default=False,
                                     help_text=_("All ancestors will not be displayed in the navigation"))
+    hide_node = models.BooleanField(_("Hide in menu"), default=False, db_index=True)
 
     def __str__(self):
         return self.title
