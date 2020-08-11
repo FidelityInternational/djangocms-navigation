@@ -108,7 +108,7 @@ class NavigationSelector(Modifier):
             if node.selected:
                 selected = node
         if selected:
-            # find the nearest root page for selected node and make it visible in vaigation
+            # find the nearest root page for selected node and make it visible in Navigation
             root = self.find_ancestors_root_for_node(selected, nodes)
             root.visible = True
         if root.attr.get("soft_root", False):

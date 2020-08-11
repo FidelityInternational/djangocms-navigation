@@ -281,6 +281,62 @@ class SoftrootTests(CMSTestCase):
     def setUp(self):
         self.language = 'en'
         self.client.force_login(self.get_superuser())
+        self.root_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="root",
+            menu_title="root",
+            page_title="root",
+            version__state=PUBLISHED,
+        )
+        self.aaa_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa",
+            menu_title="aaa",
+            page_title="aaa",
+            version__state=PUBLISHED
+        )
+        self.ddd_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="ddd",
+            menu_title="ddd",
+            page_title="ddd",
+            version__state=PUBLISHED
+        )
+        self.aaa1_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa1",
+            menu_title="aaa1",
+            page_title="aaa1",
+            version__state=PUBLISHED
+        )
+        self.aaa2_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa2",
+            menu_title="aaa2",
+            page_title="aaa2",
+            version__state=PUBLISHED
+        )
+        self.bbb_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="bbb",
+            menu_title="bbb",
+            page_title="bbb",
+            version__state=PUBLISHED
+        )
+        self.ccc_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="ccc",
+            menu_title="ccc",
+            page_title="ccc",
+            version__state=PUBLISHED
+        )
 
     def assertTreeQuality(self, a, b, *attrs):
         """
@@ -317,72 +373,17 @@ class SoftrootTests(CMSTestCase):
                      5:aaa2
                   6:bbb
         """
-        root_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="root",
-            menu_title="root",
-            page_title="root",
-            version__state=PUBLISHED,
-        )
-        aaa_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa",
-            menu_title="aaa",
-            page_title="aaa",
-            version__state=PUBLISHED
-        )
-        ddd_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="ddd",
-            menu_title="ddd",
-            page_title="ddd",
-            version__state=PUBLISHED
-        )
-        aaa1_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa1",
-            menu_title="aaa1",
-            page_title="aaa1",
-            version__state=PUBLISHED
-        )
-        aaa2_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa2",
-            menu_title="aaa2",
-            page_title="aaa2",
-            version__state=PUBLISHED
-        )
-        bbb_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="bbb",
-            menu_title="bbb",
-            page_title="bbb",
-            version__state=PUBLISHED
-        )
-        ccc_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="ccc",
-            menu_title="ccc",
-            page_title="ccc",
-            version__state=PUBLISHED
-        )
-        menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
-        root = factories.ChildMenuItemFactory(parent=menu_content.root, content=root_pagecontent.page)
-        aaa = factories.ChildMenuItemFactory(parent=root, content=aaa_pagecontent.page)
-        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page)
-        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=ccc_pagecontent.page)
-        ddd = factories.ChildMenuItemFactory(parent=ccc, content=ddd_pagecontent.page)
-        aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page)
-        bbb = factories.ChildMenuItemFactory(parent=root, content=bbb_pagecontent.page)
 
-        page = aaa_pagecontent.page
+        menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
+        root = factories.ChildMenuItemFactory(parent=menu_content.root, content=self.root_pagecontent.page)
+        aaa = factories.ChildMenuItemFactory(parent=root, content=self.aaa_pagecontent.page)
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
+        ddd = factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
+        aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page)
+        bbb = factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
+
+        page = self.aaa_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
@@ -422,72 +423,16 @@ class SoftrootTests(CMSTestCase):
                   6:bbb
         Note: If node has hide_node True , node and its descendants are removed from tree
         """
-        root_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="root",
-            menu_title="root",
-            page_title="root",
-            version__state=PUBLISHED,
-        )
-        aaa_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa",
-            menu_title="aaa",
-            page_title="aaa",
-            version__state=PUBLISHED
-        )
-        ddd_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="ddd",
-            menu_title="ddd",
-            page_title="ddd",
-            version__state=PUBLISHED
-        )
-        aaa1_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa1",
-            menu_title="aaa1",
-            page_title="aaa1",
-            version__state=PUBLISHED
-        )
-        aaa2_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa2",
-            menu_title="aaa2",
-            page_title="aaa2",
-            version__state=PUBLISHED
-        )
-        bbb_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="bbb",
-            menu_title="bbb",
-            page_title="bbb",
-            version__state=PUBLISHED
-        )
-        ccc_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="ccc",
-            menu_title="ccc",
-            page_title="ccc",
-            version__state=PUBLISHED
-        )
         menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
-        root = factories.ChildMenuItemFactory(parent=menu_content.root, content=root_pagecontent.page)
-        aaa = factories.ChildMenuItemFactory(parent=root, content=aaa_pagecontent.page)
-        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page, hide_node=True)
-        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=ccc_pagecontent.page)
-        factories.ChildMenuItemFactory(parent=ccc, content=ddd_pagecontent.page)
-        aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page)
-        bbb = factories.ChildMenuItemFactory(parent=root, content=bbb_pagecontent.page)
+        root = factories.ChildMenuItemFactory(parent=menu_content.root, content=self.root_pagecontent.page)
+        aaa = factories.ChildMenuItemFactory(parent=root, content=self.aaa_pagecontent.page)
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page, hide_node=True)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
+        aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page)
+        bbb = factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
-        page = aaa_pagecontent.page
+        page = self.aaa_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
@@ -520,77 +465,21 @@ class SoftrootTests(CMSTestCase):
                   1:bbb
         Note: If node has in_navigation False , node and its descendants are removed from tree
         """
-        root_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="root",
-            menu_title="root",
-            page_title="root",
-            version__state=PUBLISHED,
-        )
-        aaa_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa",
-            menu_title="aaa",
-            page_title="aaa",
-            version__state=PUBLISHED
-        )
-        ddd_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="ddd",
-            menu_title="ddd",
-            page_title="ddd",
-            version__state=PUBLISHED
-        )
-        aaa1_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa1",
-            menu_title="aaa1",
-            page_title="aaa1",
-            version__state=PUBLISHED
-        )
-        aaa2_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa2",
-            menu_title="aaa2",
-            page_title="aaa2",
-            version__state=PUBLISHED
-        )
-        bbb_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="bbb",
-            menu_title="bbb",
-            page_title="bbb",
-            version__state=PUBLISHED
-        )
-        ccc_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="ccc",
-            menu_title="ccc",
-            page_title="ccc",
-            version__state=PUBLISHED
-        )
         menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
-        root = factories.ChildMenuItemFactory(parent=menu_content.root, content=root_pagecontent.page)
+        root = factories.ChildMenuItemFactory(parent=menu_content.root, content=self.root_pagecontent.page)
         aaa = factories.ChildMenuItemFactory(
             parent=root,
-            content=aaa_pagecontent.page,
+            content=self.aaa_pagecontent.page,
             soft_root=True,
             hide_node=True,
         )
-        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page)
-        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=ccc_pagecontent.page)
-        factories.ChildMenuItemFactory(parent=ccc, content=ddd_pagecontent.page)
-        factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page)
-        bbb = factories.ChildMenuItemFactory(parent=root, content=bbb_pagecontent.page)
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page)
+        bbb = factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
-        page = bbb_pagecontent.page
+        page = self.bbb_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
@@ -621,72 +510,16 @@ class SoftrootTests(CMSTestCase):
                   1:bbb
         Note: If node has in_navigation False , node and its descendants are removed from tree
         """
-        root_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="root",
-            menu_title="root",
-            page_title="root",
-            version__state=PUBLISHED,
-        )
-        aaa_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa",
-            menu_title="aaa",
-            page_title="aaa",
-            version__state=PUBLISHED
-        )
-        ddd_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="ddd",
-            menu_title="ddd",
-            page_title="ddd",
-            version__state=PUBLISHED
-        )
-        aaa1_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa1",
-            menu_title="aaa1",
-            page_title="aaa1",
-            version__state=PUBLISHED
-        )
-        aaa2_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa2",
-            menu_title="aaa2",
-            page_title="aaa2",
-            version__state=PUBLISHED
-        )
-        bbb_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="bbb",
-            menu_title="bbb",
-            page_title="bbb",
-            version__state=PUBLISHED
-        )
-        ccc_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="ccc",
-            menu_title="ccc",
-            page_title="ccc",
-            version__state=PUBLISHED
-        )
         menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
-        root = factories.ChildMenuItemFactory(parent=menu_content.root, content=root_pagecontent.page)
-        aaa = factories.ChildMenuItemFactory(parent=root, content=aaa_pagecontent.page, soft_root=True)
-        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page)
-        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=ccc_pagecontent.page)
-        factories.ChildMenuItemFactory(parent=ccc, content=ddd_pagecontent.page)
-        factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page, hide_node=True)
-        bbb = factories.ChildMenuItemFactory(parent=root, content=bbb_pagecontent.page)
+        root = factories.ChildMenuItemFactory(parent=menu_content.root, content=self.root_pagecontent.page)
+        aaa = factories.ChildMenuItemFactory(parent=root, content=self.aaa_pagecontent.page, soft_root=True)
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page, hide_node=True)
+        bbb = factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
-        page = bbb_pagecontent.page
+        page = self.bbb_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
@@ -720,77 +553,21 @@ class SoftrootTests(CMSTestCase):
                     1:aaa2
         Note: If node has in_navigation False , node and its descendants are removed from tree
         """
-        root_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="root",
-            menu_title="root",
-            page_title="root",
-            version__state=PUBLISHED,
-        )
-        aaa_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa",
-            menu_title="aaa",
-            page_title="aaa",
-            version__state=PUBLISHED
-        )
-        ddd_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="ddd",
-            menu_title="ddd",
-            page_title="ddd",
-            version__state=PUBLISHED
-        )
-        aaa1_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa1",
-            menu_title="aaa1",
-            page_title="aaa1",
-            version__state=PUBLISHED
-        )
-        aaa2_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa2",
-            menu_title="aaa2",
-            page_title="aaa2",
-            version__state=PUBLISHED
-        )
-        bbb_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="bbb",
-            menu_title="bbb",
-            page_title="bbb",
-            version__state=PUBLISHED
-        )
-        ccc_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="ccc",
-            menu_title="ccc",
-            page_title="ccc",
-            version__state=PUBLISHED
-        )
         menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
-        root = factories.ChildMenuItemFactory(parent=menu_content.root, content=root_pagecontent.page)
+        root = factories.ChildMenuItemFactory(parent=menu_content.root, content=self.root_pagecontent.page)
         aaa = factories.ChildMenuItemFactory(
             parent=root,
-            content=aaa_pagecontent.page,
+            content=self.aaa_pagecontent.page,
             soft_root=True,
             hide_node=True,
         )
-        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page)
-        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=ccc_pagecontent.page)
-        ddd = factories.ChildMenuItemFactory(parent=ccc, content=ddd_pagecontent.page)
-        aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page)
-        factories.ChildMenuItemFactory(parent=root, content=bbb_pagecontent.page)
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
+        ddd = factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
+        aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
-        page = aaa_pagecontent.page
+        page = self.aaa_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
@@ -828,77 +605,21 @@ class SoftrootTests(CMSTestCase):
                     1:aaa2
         Note: If node has in_navigation False , node and its descendants are removed from tree
         """
-        root_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="root",
-            menu_title="root",
-            page_title="root",
-            version__state=PUBLISHED,
-        )
-        aaa_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa",
-            menu_title="aaa",
-            page_title="aaa",
-            version__state=PUBLISHED
-        )
-        ddd_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="ddd",
-            menu_title="ddd",
-            page_title="ddd",
-            version__state=PUBLISHED
-        )
-        aaa1_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa1",
-            menu_title="aaa1",
-            page_title="aaa1",
-            version__state=PUBLISHED
-        )
-        aaa2_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa2",
-            menu_title="aaa2",
-            page_title="aaa2",
-            version__state=PUBLISHED
-        )
-        bbb_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="bbb",
-            menu_title="bbb",
-            page_title="bbb",
-            version__state=PUBLISHED
-        )
-        ccc_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="ccc",
-            menu_title="ccc",
-            page_title="ccc",
-            version__state=PUBLISHED
-        )
         menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
-        root = factories.ChildMenuItemFactory(parent=menu_content.root, content=root_pagecontent.page)
+        root = factories.ChildMenuItemFactory(parent=menu_content.root, content=self.root_pagecontent.page)
         aaa = factories.ChildMenuItemFactory(
             parent=root,
-            content=aaa_pagecontent.page,
+            content=self.aaa_pagecontent.page,
             soft_root=True,
             hide_node=True,
         )
-        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page)
-        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=ccc_pagecontent.page)
-        ddd = factories.ChildMenuItemFactory(parent=ccc, content=ddd_pagecontent.page)
-        aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page)
-        factories.ChildMenuItemFactory(parent=root, content=bbb_pagecontent.page)
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
+        ddd = factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
+        aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
-        page = ccc_pagecontent.page
+        page = self.ccc_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
@@ -934,72 +655,16 @@ class SoftrootTests(CMSTestCase):
                            3:ddd
                      3:aaa2
         """
-        root_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="root",
-            menu_title="root",
-            page_title="root",
-            version__state=PUBLISHED,
-        )
-        aaa_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa",
-            menu_title="aaa",
-            page_title="aaa",
-            version__state=PUBLISHED
-        )
-        ddd_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="ddd",
-            menu_title="ddd",
-            page_title="ddd",
-            version__state=PUBLISHED
-        )
-        aaa1_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa1",
-            menu_title="aaa1",
-            page_title="aaa1",
-            version__state=PUBLISHED
-        )
-        aaa2_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa2",
-            menu_title="aaa2",
-            page_title="aaa2",
-            version__state=PUBLISHED
-        )
-        bbb_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="bbb",
-            menu_title="bbb",
-            page_title="bbb",
-            version__state=PUBLISHED
-        )
-        ccc_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="ccc",
-            menu_title="ccc",
-            page_title="ccc",
-            version__state=PUBLISHED
-        )
         menu_content_ver = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
-        root = factories.ChildMenuItemFactory(parent=menu_content_ver.root, content=root_pagecontent.page)
-        aaa = factories.ChildMenuItemFactory(parent=root, soft_root=True, content=aaa_pagecontent.page)
-        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page)
-        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=ccc_pagecontent.page)
-        ddd = factories.ChildMenuItemFactory(parent=ccc, content=ddd_pagecontent.page)
-        aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page)
-        factories.ChildMenuItemFactory(parent=root, content=bbb_pagecontent.page)
+        root = factories.ChildMenuItemFactory(parent=menu_content_ver.root, content=self.root_pagecontent.page)
+        aaa = factories.ChildMenuItemFactory(parent=root, soft_root=True, content=self.aaa_pagecontent.page)
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
+        ddd = factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
+        aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
-        page = aaa_pagecontent.page
+        page = self.aaa_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
@@ -1036,72 +701,16 @@ class SoftrootTests(CMSTestCase):
                            3:ddd
                      3:aaa2
         """
-        root_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="root",
-            menu_title="root",
-            page_title="root",
-            version__state=PUBLISHED,
-        )
-        aaa_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa",
-            menu_title="aaa",
-            page_title="aaa",
-            version__state=PUBLISHED
-        )
-        ddd_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="ddd",
-            menu_title="ddd",
-            page_title="ddd",
-            version__state=PUBLISHED
-        )
-        aaa1_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa1",
-            menu_title="aaa1",
-            page_title="aaa1",
-            version__state=PUBLISHED
-        )
-        aaa2_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa2",
-            menu_title="aaa2",
-            page_title="aaa2",
-            version__state=PUBLISHED
-        )
-        bbb_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="bbb",
-            menu_title="bbb",
-            page_title="bbb",
-            version__state=PUBLISHED
-        )
-        ccc_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="ccc",
-            menu_title="ccc",
-            page_title="ccc",
-            version__state=PUBLISHED
-        )
         menu_content_version = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
-        root = factories.ChildMenuItemFactory(parent=menu_content_version.root, content=root_pagecontent.page)
-        aaa = factories.ChildMenuItemFactory(parent=root, soft_root=True, content=aaa_pagecontent.page)
-        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=aaa1_pagecontent.page)
-        ccc = factories.ChildMenuItemFactory(parent=aaa1, soft_root=True, content=ccc_pagecontent.page)
-        ddd = factories.ChildMenuItemFactory(parent=ccc, content=ddd_pagecontent.page)
-        factories.ChildMenuItemFactory(parent=aaa, content=aaa2_pagecontent.page)
-        factories.ChildMenuItemFactory(parent=root, content=bbb_pagecontent.page)
+        root = factories.ChildMenuItemFactory(parent=menu_content_version.root, content=self.root_pagecontent.page)
+        aaa = factories.ChildMenuItemFactory(parent=root, soft_root=True, content=self.aaa_pagecontent.page)
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, soft_root=True, content=self.ccc_pagecontent.page)
+        ddd = factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
-        page = ddd_pagecontent.page
+        page = self.ddd_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
