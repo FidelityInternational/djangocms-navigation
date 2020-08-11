@@ -416,7 +416,7 @@ class SoftrootTests(CMSTestCase):
                        aaa2
                    bbb
         tag: show_menu 0 100 0 100
-        expected result when rendering node aaa parent of hidden node:
+        expected result when rendering node (aaa) parent of hidden node(aaa1):
                0:root
                   1:aaa
                      5:aaa2
@@ -460,7 +460,7 @@ class SoftrootTests(CMSTestCase):
                    bbb
         tag: show_menu 0 100 0 100
 
-        expected result when rendering node bbb:
+        expected result when rendering node bbb sibling of hidden and softroot node (aaa) :
                0:root
                   1:bbb
         """
@@ -503,7 +503,7 @@ class SoftrootTests(CMSTestCase):
                        aaa2
                    bbb
         tag: show_menu 0 100 0 100
-        expected result when rendering node bbb:
+        expected result when rendering node bbb sibling of softroot node (aaa) which has hidden child(aaa1):
                 0:root
                   1:aaa
                   1:bbb
@@ -543,7 +543,7 @@ class SoftrootTests(CMSTestCase):
                        aaa2
                    bbb
         tag: show_menu 0 100 0 100
-        expected result when rendering softroot node aaa:
+        expected result when rendering softroot node aaa which is also hidden in navigation:
                 0:aaa
                     1:aaa1
                         2:ccc
@@ -594,7 +594,7 @@ class SoftrootTests(CMSTestCase):
                        aaa2
                    bbb
         tag: show_menu 0 100 0 100
-        expected result when rendering node ccc grandchild of softroot:
+        expected result when rendering node ccc grandchild of softroot and hidden node(aaa):
                 0:aaa
                     1:aaa1
                         2:ccc
