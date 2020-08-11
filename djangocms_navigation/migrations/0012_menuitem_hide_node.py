@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='menuitem',
             name='hide_node',
-            field=models.BooleanField(db_index=True, default=False, verbose_name='Hide node in navigation'),
+            field=models.BooleanField(db_index=True, default=False, verbose_name='Hide in menu'),
         ),
     ]
