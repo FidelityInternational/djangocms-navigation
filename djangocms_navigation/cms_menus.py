@@ -122,8 +122,7 @@ class NavigationSelector(Modifier):
         if node.parent:
             if node.parent.attr.get("soft_root", False):
                 return node.parent
-            else:
-                node = self.find_ancestors_root_for_node(node.parent, nodes)
+            node = self.find_ancestors_root_for_node(node.parent, nodes)
         return node
 
     def make_roots(self, node, previous_root):

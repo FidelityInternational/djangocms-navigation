@@ -410,18 +410,17 @@ class SoftrootTests(CMSTestCase):
         Tree in fixture :
                root
                    aaa
-                       aaa1( Hide_node = True) hidden node
+                       aaa1( Hide_node = True)
                            ccc
                                ddd
                        aaa2
                    bbb
         tag: show_menu 0 100 0 100
-        expected result 1:
+        expected result when rendering node aaa parent of hidden node:
                0:root
                   1:aaa
                      5:aaa2
                   6:bbb
-        Note: If node has hide_node True , node and its descendants are removed from tree
         """
         menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         root = factories.ChildMenuItemFactory(parent=menu_content.root, content=self.root_pagecontent.page)
@@ -460,10 +459,10 @@ class SoftrootTests(CMSTestCase):
                        aaa2
                    bbb
         tag: show_menu 0 100 0 100
-        expected result 1:
+
+        expected result when rendering node bbb:
                0:root
                   1:bbb
-        Note: If node has in_navigation False , node and its descendants are removed from tree
         """
         menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         root = factories.ChildMenuItemFactory(parent=menu_content.root, content=self.root_pagecontent.page)
@@ -498,17 +497,16 @@ class SoftrootTests(CMSTestCase):
         Tree in fixture :
                root
                    aaa( soft_root is True )
-                       aaa1 ( in_navigaton is False)
+                       aaa1 ( Hide_node is True)
                            ccc
                                ddd
                        aaa2
                    bbb
         tag: show_menu 0 100 0 100
-        expected result 1:
+        expected result when rendering node bbb:
                 0:root
                   1:aaa
                   1:bbb
-        Note: If node has in_navigation False , node and its descendants are removed from tree
         """
         menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         root = factories.ChildMenuItemFactory(parent=menu_content.root, content=self.root_pagecontent.page)
@@ -538,20 +536,19 @@ class SoftrootTests(CMSTestCase):
         """
         Tree in fixture :
                root
-                   aaa( soft_root is True and hide_noe is True)
+                   aaa( soft_root is True and hide_node is True)
                        aaa1
                            ccc
                                ddd
                        aaa2
                    bbb
         tag: show_menu 0 100 0 100
-        expected result 1:
+        expected result when rendering softroot node aaa:
                 0:aaa
                     1:aaa1
                         2:ccc
                             3:ddd
                     1:aaa2
-        Note: If node has in_navigation False , node and its descendants are removed from tree
         """
         menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         root = factories.ChildMenuItemFactory(parent=menu_content.root, content=self.root_pagecontent.page)
@@ -590,20 +587,19 @@ class SoftrootTests(CMSTestCase):
         """
         Tree in fixture :
                root
-                   aaa( soft_root is True and hide_noe is True)
+                   aaa( soft_root is True and hide_node is True)
                        aaa1
                            ccc
                                ddd
                        aaa2
                    bbb
         tag: show_menu 0 100 0 100
-        expected result 1:
+        expected result when rendering node ccc grandchild of softroot:
                 0:aaa
                     1:aaa1
                         2:ccc
                             3:ddd
                     1:aaa2
-        Note: If node has in_navigation False , node and its descendants are removed from tree
         """
         menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         root = factories.ChildMenuItemFactory(parent=menu_content.root, content=self.root_pagecontent.page)
@@ -649,7 +645,7 @@ class SoftrootTests(CMSTestCase):
                        aaa2
                    bbb
         tag: show_menu 0 100 100 100
-        expected result 1:
+        expected result when rendering softroot node aaa:
                      1:aaa1
                         2:ccc
                            3:ddd
