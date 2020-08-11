@@ -407,6 +407,7 @@ class SoftrootTests(CMSTestCase):
 
     def test_menu_with_node_hidden(self):
         """
+        Checks the menu Navigation when a parent node of hidden node is rendered.
         Tree in fixture :
                root
                    aaa
@@ -450,9 +451,10 @@ class SoftrootTests(CMSTestCase):
 
     def test_menu_with_softroot_is_hidden(self):
         """
+        Checks the Menu navigation when rendering a sibling of a softroot and hidden node.
         Tree in fixture :
                root
-                   aaa( soft_root is True and in_navigaton is False)
+                   aaa( soft_root is True and Hide_node is True)
                        aaa1
                            ccc
                                ddd
@@ -494,6 +496,7 @@ class SoftrootTests(CMSTestCase):
 
     def test_menu_with_softroot_and_hidden_child(self):
         """
+        Checks the Menu navigation when rendering a sibling of a softroot
         Tree in fixture :
                root
                    aaa( soft_root is True )
@@ -534,6 +537,7 @@ class SoftrootTests(CMSTestCase):
 
     def test_menu_with_rendering_hidden_softroot(self):
         """
+        Checks the Menu Navigation when rendering a Softroot and Hidden node.
         Tree in fixture :
                root
                    aaa( soft_root is True and hide_node is True)
@@ -585,6 +589,7 @@ class SoftrootTests(CMSTestCase):
 
     def test_menu_with_rendering_child_node_of_hidden_softroot(self):
         """
+        Checks the Menu Navigation when rendering grandchild of a Softroot and Hidden node.
         Tree in fixture :
                root
                    aaa( soft_root is True and hide_node is True)
