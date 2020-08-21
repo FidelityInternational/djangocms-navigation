@@ -101,23 +101,23 @@ class NavigationSelector(Modifier):
     def modify(self, request, nodes, namespace, root_id, post_cut, breadcrumb):
         if post_cut or root_id or not nodes:
             return nodes
-        if namespace:
-            tree_id = namespace
-        else:
-            # defaulting to first subtree
-            tree_id = nodes[0].id
-        root = next(n for n in nodes if n.id == tree_id)
         if breadcrumb:
             home = next((node for node in nodes if node.attr.get('is_home')), None)
             if home and not home.visible:
                 home.visible = True
             return nodes
+        if namespace:
+            tree_id = namespace
+        else:
+            # defaulting to first subtree
+            tree_id = nodes[0].id
         selected = None
         selected = next((node for node in nodes if node.selected), None)
         if selected:
             # find the nearest root page for selected node and make it visible in Navigation
             root = self.find_ancestors_root_for_node(selected, nodes)
             root.visible = True
+        root = next(n for n in nodes if n.id == tree_id)
         if root.attr.get("soft_root", False):
             return nodes
         return [self.make_roots(node, root) for node in root.children]

@@ -810,7 +810,7 @@ class SoftrootTests(CMSTestCase):
         self.assertEqual(len(cmsnode.children), 0)
         self.assertEqual(len(shopnode.children), 0)
 
-    def test_show_breadrumb_menutag(self):
+    def test_show_breadrumb(self):
         """
         Tree in fixture :
             menuroot
@@ -850,14 +850,27 @@ class SoftrootTests(CMSTestCase):
         nodes = context['ancestors']
         self.assertEqual(len(nodes), 0)
 
+    def test_show_breadrumb_with_hide_node(self):
+        """
+        Tree in fixture :
+            menuroot
+               aaa ( hide_node= True)
+                   aaa1
+                       ccc
+                           ddd
+                   aaa2
+               bbb
+        """
+        menu_ver_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         aaa = factories.ChildMenuItemFactory(
-            parent=menu_content.root,
+            parent=menu_ver_content.root,
             content=self.aaa_pagecontent.page,
-            hide_node=True
+            hide_node=True,
         )
         aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
-        factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
-        page = self.aaa1_pagecontent.page
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
+        page = self.ccc_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
         tpl = Template("{% load navigation_menu_tags %}{% show_breadcrumb %}")
         tpl.render(context)
