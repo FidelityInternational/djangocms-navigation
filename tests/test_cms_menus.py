@@ -834,20 +834,26 @@ class SoftrootTests(CMSTestCase):
         tpl = Template("{% load navigation_menu_tags %}{% show_breadcrumb %}")
         tpl.render(context)
         nodes = context['ancestors']
+
         self.assertEqual(len(nodes), 3)
+
         tpl = Template("{% load navigation_menu_tags %}{% show_breadcrumb 1 %}")
         tpl.render(context)
         nodes = context['ancestors']
+
         self.assertEqual(len(nodes), 2)
 
         context = self.get_context()
         tpl = Template("{% load navigation_menu_tags %}{% show_breadcrumb %}")
         tpl.render(context)
         nodes = context['ancestors']
+
         self.assertEqual(len(nodes), 1)
+
         tpl = Template("{% load navigation_menu_tags %}{% show_breadcrumb 1 %}")
         tpl.render(context)
         nodes = context['ancestors']
+
         self.assertEqual(len(nodes), 0)
 
     def test_show_breadrumb_with_hide_node(self):
@@ -870,11 +876,13 @@ class SoftrootTests(CMSTestCase):
         aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
         ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
         factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
+
         page = self.ccc_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
         tpl = Template("{% load navigation_menu_tags %}{% show_breadcrumb %}")
         tpl.render(context)
         nodes = context['ancestors']
+
         self.assertEqual(len(nodes), 2)
 
 
@@ -886,13 +894,17 @@ class MultisiteNavigationTests(CMSTestCase):
         This is recursive over the tree
         """
         msg = '%r != %r with %r, %r' % (len(a), len(b), a, b)
+
         self.assertEqual(len(a), len(b), msg)
+
         for n1, n2 in zip(a, b):
             for attr in attrs:
                 a1 = getattr(n1, attr)
                 a2 = getattr(n2, attr)
                 msg = '%r != %r with %r, %r (%s)' % (a1, a2, n1, n2, attr)
+
                 self.assertEqual(a1, a2, msg)
+
             self.assertTreeQuality(n1.children, n2.children, *attrs)
 
     def test_menu_with_multiple_languages(self):
