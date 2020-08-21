@@ -68,7 +68,11 @@ class CMSMenu(Menu):
                 parent_id=parent_id,
                 content=node.content,
                 visible=not node.hide_node,
-                attr={"link_target": node.link_target, "soft_root": node.soft_root},
+                attr={
+                    "link_target": node.link_target,
+                    "soft_root": node.soft_root,
+                    "is_home": node.is_home
+                },
             )
 
     def get_nodes(self, request):
@@ -103,10 +107,13 @@ class NavigationSelector(Modifier):
             # defaulting to first subtree
             tree_id = nodes[0].id
         root = next(n for n in nodes if n.id == tree_id)
+        if breadcrumb:
+            home = next((node for node in nodes if node.attr.get('is_home')), None)
+            if home and not home.visible:
+                home.visible = True
+            return nodes
         selected = None
-        for node in nodes:
-            if node.selected:
-                selected = node
+        selected = next((node for node in nodes if node.selected), None)
         if selected:
             # find the nearest root page for selected node and make it visible in Navigation
             root = self.find_ancestors_root_for_node(selected, nodes)

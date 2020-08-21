@@ -68,7 +68,7 @@ class CMSMenuTestCase(TestCase):
             url=child1.content.get_absolute_url(),
             id=child1.id,
             parent_id=menu_contents[0].menu.root_id,
-            attr={"link_target": child1.link_target, "soft_root": False},
+            attr={"link_target": child1.link_target, "soft_root": False, "is_home": False},
         )
         self.assertNavigationNodeEqual(
             nodes[3],
@@ -76,7 +76,7 @@ class CMSMenuTestCase(TestCase):
             url=grandchild.content.get_absolute_url(),
             id=grandchild.id,
             parent_id=child1.id,
-            attr={"link_target": grandchild.link_target, "soft_root": False},
+            attr={"link_target": grandchild.link_target, "soft_root": False, "is_home": False},
         )
         self.assertNavigationNodeEqual(
             nodes[4],
@@ -84,7 +84,7 @@ class CMSMenuTestCase(TestCase):
             url=child2.content.get_absolute_url(),
             id=child2.id,
             parent_id=menu_contents[1].menu.root_id,
-            attr={"link_target": child2.link_target, "soft_root": False},
+            attr={"link_target": child2.link_target, "soft_root": False, "is_home": False},
         )
 
     def get_nodes_for_versioning_enabled(self):
@@ -809,6 +809,60 @@ class SoftrootTests(CMSTestCase):
         self.assertEqual(shopnode.id, djangoshop.id)
         self.assertEqual(len(cmsnode.children), 0)
         self.assertEqual(len(shopnode.children), 0)
+
+    def test_show_breadrumb_menutag(self):
+        """
+        Tree in fixture :
+            menuroot
+               aaa
+                   aaa1
+                       ccc
+                           ddd
+                   aaa2
+               bbb
+        """
+        menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
+        aaa = factories.ChildMenuItemFactory(parent=menu_content.root, content=self.aaa_pagecontent.page)
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=menu_content.root, content=self.bbb_pagecontent.page)
+
+        page = self.ccc_pagecontent.page
+        context = self.get_context(page.get_absolute_url(), page=page)
+        tpl = Template("{% load navigation_menu_tags %}{% show_breadcrumb %}")
+        tpl.render(context)
+        nodes = context['ancestors']
+        self.assertEqual(len(nodes), 3)
+        tpl = Template("{% load navigation_menu_tags %}{% show_breadcrumb 1 %}")
+        tpl.render(context)
+        nodes = context['ancestors']
+        self.assertEqual(len(nodes), 2)
+
+        context = self.get_context()
+        tpl = Template("{% load navigation_menu_tags %}{% show_breadcrumb %}")
+        tpl.render(context)
+        nodes = context['ancestors']
+        self.assertEqual(len(nodes), 1)
+        tpl = Template("{% load navigation_menu_tags %}{% show_breadcrumb 1 %}")
+        tpl.render(context)
+        nodes = context['ancestors']
+        self.assertEqual(len(nodes), 0)
+
+        aaa = factories.ChildMenuItemFactory(
+            parent=menu_content.root,
+            content=self.aaa_pagecontent.page,
+            hide_node=True
+        )
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
+        page = self.aaa1_pagecontent.page
+        context = self.get_context(page.get_absolute_url(), page=page)
+        tpl = Template("{% load navigation_menu_tags %}{% show_breadcrumb %}")
+        tpl.render(context)
+        nodes = context['ancestors']
+        self.assertEqual(len(nodes), 2)
 
 
 class MultisiteNavigationTests(CMSTestCase):
