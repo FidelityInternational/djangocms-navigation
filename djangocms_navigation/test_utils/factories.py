@@ -166,6 +166,7 @@ class MenuItemFactory(factory.django.DjangoModelFactory):
     content = factory.SubFactory(PageContentWithVersionFactory)
     soft_root = False
     hide_node = False
+    is_home = False
 
     class Meta:
         model = MenuItem
