@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from django import template
 
+from menus.menu_pool import menu_pool
+
 from classytags.arguments import Argument
 from classytags.core import Options
 from classytags.helpers import InclusionTag
-
-from menus.menu_pool import menu_pool
 
 
 register = template.Library()
@@ -39,7 +39,7 @@ class ShowBreadcrumb(InclusionTag):
             start_level = 0
         try:
             only_visible = bool(int(only_visible))
-        except:
+        except ValueError:
             only_visible = bool(only_visible)
         ancestors = []
 
