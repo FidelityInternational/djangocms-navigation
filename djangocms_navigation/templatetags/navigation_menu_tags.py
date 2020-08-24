@@ -19,7 +19,7 @@ class Navigation_ShowBreadcrumb(InclusionTag):
     - start level: after which level should the breadcrumb start? 0=home
     - template: template used to render the breadcrumb
     """
-    name = 'show_navigation_breadcrumb'
+    name = 'navigation_breadcrumb'
     template = 'menu/dummy.html'
 
     options = Options(

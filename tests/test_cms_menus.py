@@ -810,7 +810,7 @@ class SoftrootTests(CMSTestCase):
         self.assertEqual(len(cmsnode.children), 0)
         self.assertEqual(len(shopnode.children), 0)
 
-    def test_show_navigation_breadcrumb(self):
+    def test_navigation_breadcrumb(self):
         """
         Tree in fixture :
             menuroot
@@ -843,32 +843,32 @@ class SoftrootTests(CMSTestCase):
 
         page = self.ccc_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
-        tpl = Template("{% load navigation_menu_tags %}{% show_navigation_breadcrumb %}")
+        tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb %}")
         tpl.render(context)
         nodes = context['ancestors']
 
         self.assertEqual(len(nodes), 3)
 
-        tpl = Template("{% load navigation_menu_tags %}{% show_navigation_breadcrumb 1 %}")
+        tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb 1 %}")
         tpl.render(context)
         nodes = context['ancestors']
 
         self.assertEqual(len(nodes), 2)
 
         context = self.get_context()
-        tpl = Template("{% load navigation_menu_tags %}{% show_navigation_breadcrumb %}")
+        tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb %}")
         tpl.render(context)
         nodes = context['ancestors']
 
         self.assertEqual(len(nodes), 1)
 
-        tpl = Template("{% load navigation_menu_tags %}{% show_navigation_breadcrumb 1 %}")
+        tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb 1 %}")
         tpl.render(context)
         nodes = context['ancestors']
 
         self.assertEqual(len(nodes), 0)
 
-    def test_show_navigation_breadcrumb_with_hide_node(self):
+    def test_navigation_breadcrumb_with_hide_node(self):
         """
         Tree in fixture :
             menuroot
@@ -904,7 +904,7 @@ class SoftrootTests(CMSTestCase):
 
         page = self.ccc_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
-        tpl = Template("{% load navigation_menu_tags %}{% show_navigation_breadcrumb %}")
+        tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb %}")
         tpl.render(context)
         nodes = context['ancestors']
 
