@@ -8,6 +8,7 @@ from classytags.arguments import Argument
 from classytags.core import Options
 from classytags.helpers import InclusionTag
 
+
 register = template.Library()
 
 
