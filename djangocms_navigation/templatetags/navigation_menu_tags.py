@@ -12,14 +12,14 @@ from classytags.helpers import InclusionTag
 register = template.Library()
 
 
-class ShowBreadcrumb(InclusionTag):
+class Navigation_ShowBreadcrumb(InclusionTag):
     """
     Shows the breadcrumb from the node that has the same url as the current request
 
     - start level: after which level should the breadcrumb start? 0=home
     - template: template used to render the breadcrumb
     """
-    name = 'show_breadcrumb'
+    name = 'show_navigation_breadcrumb'
     template = 'menu/dummy.html'
 
     options = Options(
@@ -80,4 +80,4 @@ class ShowBreadcrumb(InclusionTag):
         return context
 
 
-register.tag(ShowBreadcrumb)
+register.tag(Navigation_ShowBreadcrumb)
