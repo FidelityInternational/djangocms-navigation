@@ -63,6 +63,7 @@ class TreeNodeFactory(factory.django.DjangoModelFactory):
 class PageFactory(factory.django.DjangoModelFactory):
     node = factory.SubFactory(TreeNodeFactory)
     is_home = False
+
     class Meta:
         model = Page
 

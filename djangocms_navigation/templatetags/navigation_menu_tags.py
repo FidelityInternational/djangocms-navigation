@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 from django import template
 
+from cms.models import Page
 from menus.menu_pool import menu_pool
 
 from classytags.arguments import Argument
 from classytags.core import Options
 from classytags.helpers import InclusionTag
-
-from cms.models import Page
 
 register = template.Library()
 
