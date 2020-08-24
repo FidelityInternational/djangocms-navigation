@@ -75,7 +75,6 @@ class ShowBreadcrumb(InclusionTag):
             ancestors = ancestors[start_level:]
         else:
             ancestors = []
-        context['nodes'] = nodes
         context['ancestors'] = ancestors
         context['template'] = template
         return context
