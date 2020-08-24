@@ -810,7 +810,7 @@ class SoftrootTests(CMSTestCase):
         self.assertEqual(len(cmsnode.children), 0)
         self.assertEqual(len(shopnode.children), 0)
 
-    def test_show_breadcrumb(self):
+    def test_show_navigation_breadcrumb(self):
         """
         Tree in fixture :
             menuroot
@@ -820,6 +820,9 @@ class SoftrootTests(CMSTestCase):
                            ddd
                    aaa2
                bbb
+        Expected result:
+            show_navigation_breadcrumb will return all the parents of the selected navigation node and home page
+            node in ancestors from above node tree
         """
         menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         aaa_pagecontent = factories.PageContentWithVersionFactory(
@@ -865,7 +868,7 @@ class SoftrootTests(CMSTestCase):
 
         self.assertEqual(len(nodes), 0)
 
-    def test_show_breadcrumb_with_hide_node(self):
+    def test_show_navigation_breadcrumb_with_hide_node(self):
         """
         Tree in fixture :
             menuroot
@@ -875,6 +878,10 @@ class SoftrootTests(CMSTestCase):
                            ddd
                    aaa2
                bbb
+
+        Expected result:
+            returns list of all parents of selected navigation node and home node, return home node making it visible
+            from above node tree
         """
         menu_ver_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         aaa_pagecontent = factories.PageContentWithVersionFactory(
