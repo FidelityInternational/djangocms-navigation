@@ -62,7 +62,7 @@ class TreeNodeFactory(factory.django.DjangoModelFactory):
 
 class PageFactory(factory.django.DjangoModelFactory):
     node = factory.SubFactory(TreeNodeFactory)
-
+    is_home = False
     class Meta:
         model = Page
 
@@ -166,7 +166,6 @@ class MenuItemFactory(factory.django.DjangoModelFactory):
     content = factory.SubFactory(PageContentWithVersionFactory)
     soft_root = False
     hide_node = False
-    is_home = False
 
     class Meta:
         model = MenuItem

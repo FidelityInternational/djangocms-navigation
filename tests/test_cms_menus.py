@@ -68,7 +68,7 @@ class CMSMenuTestCase(TestCase):
             url=child1.content.get_absolute_url(),
             id=child1.id,
             parent_id=menu_contents[0].menu.root_id,
-            attr={"link_target": child1.link_target, "soft_root": False, "is_home": False},
+            attr={"link_target": child1.link_target, "soft_root": False},
         )
         self.assertNavigationNodeEqual(
             nodes[3],
@@ -76,7 +76,7 @@ class CMSMenuTestCase(TestCase):
             url=grandchild.content.get_absolute_url(),
             id=grandchild.id,
             parent_id=child1.id,
-            attr={"link_target": grandchild.link_target, "soft_root": False, "is_home": False},
+            attr={"link_target": grandchild.link_target, "soft_root": False},
         )
         self.assertNavigationNodeEqual(
             nodes[4],
@@ -84,7 +84,7 @@ class CMSMenuTestCase(TestCase):
             url=child2.content.get_absolute_url(),
             id=child2.id,
             parent_id=menu_contents[1].menu.root_id,
-            attr={"link_target": child2.link_target, "soft_root": False, "is_home": False},
+            attr={"link_target": child2.link_target, "soft_root": False},
         )
 
     def get_nodes_for_versioning_enabled(self):
@@ -810,11 +810,11 @@ class SoftrootTests(CMSTestCase):
         self.assertEqual(len(cmsnode.children), 0)
         self.assertEqual(len(shopnode.children), 0)
 
-    def test_show_breadrumb(self):
+    def test_show_breadcrumb(self):
         """
         Tree in fixture :
             menuroot
-               aaa
+               aaa ( Home page Node)
                    aaa1
                        ccc
                            ddd
@@ -822,7 +822,16 @@ class SoftrootTests(CMSTestCase):
                bbb
         """
         menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
-        aaa = factories.ChildMenuItemFactory(parent=menu_content.root, content=self.aaa_pagecontent.page)
+        aaa_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa",
+            menu_title="aaa",
+            page_title="aaa",
+            version__state=PUBLISHED,
+            page__is_home=True
+        )
+        aaa = factories.ChildMenuItemFactory(parent=menu_content.root, content=aaa_pagecontent.page)
         aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
         ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
         factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
@@ -856,11 +865,11 @@ class SoftrootTests(CMSTestCase):
 
         self.assertEqual(len(nodes), 0)
 
-    def test_show_breadrumb_with_hide_node(self):
+    def test_show_breadcrumb_with_hide_node(self):
         """
         Tree in fixture :
             menuroot
-               aaa ( hide_node= True)
+               aaa ( homepage node and hide_node= True)
                    aaa1
                        ccc
                            ddd
@@ -868,12 +877,21 @@ class SoftrootTests(CMSTestCase):
                bbb
         """
         menu_ver_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
-        aaa = factories.ChildMenuItemFactory(
-            parent=menu_ver_content.root,
-            content=self.aaa_pagecontent.page,
-            hide_node=True,
+        aaa_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa",
+            menu_title="aaa",
+            page_title="aaa",
+            version__state=PUBLISHED,
+            page__is_home=True
         )
-        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
+        aaa_home = factories.ChildMenuItemFactory(
+            parent=menu_ver_content.root,
+            content=aaa_pagecontent.page,
+            hide_node=True
+        )
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa_home, content=self.aaa1_pagecontent.page)
         ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
         factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
 
@@ -883,7 +901,7 @@ class SoftrootTests(CMSTestCase):
         tpl.render(context)
         nodes = context['ancestors']
 
-        self.assertEqual(len(nodes), 2)
+        self.assertEqual(len(nodes), 3)
 
 
 class MultisiteNavigationTests(CMSTestCase):

@@ -7,6 +7,7 @@ from classytags.arguments import Argument
 from classytags.core import Options
 from classytags.helpers import InclusionTag
 
+from cms.models import Page
 
 register = template.Library()
 
@@ -52,7 +53,10 @@ class ShowBreadcrumb(InclusionTag):
 
         # Find home
         home = None
-        home = next((node for node in nodes if node.attr.get("is_home")), None)
+        for node in nodes:
+            if node.content and isinstance(node.content, Page) and node.content.is_home:
+                home = node
+                break
 
         # Find selected
         selected = None

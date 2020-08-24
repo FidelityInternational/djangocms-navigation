@@ -1,6 +1,7 @@
 from django.db.models import Q
 
 from cms.cms_menus import CMSMenu as OriginalCMSMenu
+from cms.models import Page
 from cms.utils import get_current_site, get_language_from_request
 from menus.base import Menu, Modifier, NavigationNode
 from menus.menu_pool import menu_pool
@@ -70,8 +71,7 @@ class CMSMenu(Menu):
                 visible=not node.hide_node,
                 attr={
                     "link_target": node.link_target,
-                    "soft_root": node.soft_root,
-                    "is_home": node.is_home
+                    "soft_root": node.soft_root
                 },
             )
 
@@ -102,7 +102,11 @@ class NavigationSelector(Modifier):
         if post_cut or root_id or not nodes:
             return nodes
         if breadcrumb:
-            home = next((node for node in nodes if node.attr.get('is_home')), None)
+            home = None
+            for node in nodes:
+                if node.content and isinstance(node.content, Page) and node.content.is_home:
+                    home = node
+                    break
             if home and not home.visible:
                 home.visible = True
             return nodes

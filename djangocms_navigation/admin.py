@@ -291,7 +291,7 @@ class MenuItemAdmin(TreeAdmin):
     menu_content_model = MenuContent
     change_form_template = "admin/djangocms_navigation/menuitem/change_form.html"
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
-    list_display = ["__str__", "get_object_url", "soft_root", 'hide_node', 'is_home']
+    list_display = ["__str__", "get_object_url", "soft_root", 'hide_node']
 
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
