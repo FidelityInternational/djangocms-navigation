@@ -12,7 +12,7 @@ from classytags.helpers import InclusionTag
 register = template.Library()
 
 
-class Navigation_ShowBreadcrumb(InclusionTag):
+class NavigationShowBreadcrumb(InclusionTag):
     """
     Shows the breadcrumb from the node that has the same url as the current request
 
@@ -80,4 +80,4 @@ class Navigation_ShowBreadcrumb(InclusionTag):
         return context
 
 
-register.tag(Navigation_ShowBreadcrumb)
+register.tag(NavigationShowBreadcrumb)

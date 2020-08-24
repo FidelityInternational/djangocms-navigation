@@ -821,7 +821,7 @@ class SoftrootTests(CMSTestCase):
                    aaa2
                bbb
         Expected result:
-            show_navigation_breadcrumb will return all the parents of the selected navigation node and home page
+            navigation_breadcrumb will return all the parents of the selected navigation node and home page
             node in ancestors from above node tree
         """
         menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
