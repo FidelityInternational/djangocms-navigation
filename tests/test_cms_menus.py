@@ -810,6 +810,106 @@ class SoftrootTests(CMSTestCase):
         self.assertEqual(len(cmsnode.children), 0)
         self.assertEqual(len(shopnode.children), 0)
 
+    def test_navigation_breadcrumb(self):
+        """
+        Tree in fixture :
+            menuroot
+               aaa ( Home page Node)
+                   aaa1
+                       ccc
+                           ddd
+                   aaa2
+               bbb
+        Expected result:
+            navigation_breadcrumb will return all the parents of the selected navigation node and home page
+            node in ancestors from above node tree
+        """
+        menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
+        aaa_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa",
+            menu_title="aaa",
+            page_title="aaa",
+            version__state=PUBLISHED,
+            page__is_home=True
+        )
+        aaa = factories.ChildMenuItemFactory(parent=menu_content.root, content=aaa_pagecontent.page)
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=menu_content.root, content=self.bbb_pagecontent.page)
+
+        page = self.ccc_pagecontent.page
+        context = self.get_context(page.get_absolute_url(), page=page)
+        tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb %}")
+        tpl.render(context)
+        nodes = context['ancestors']
+
+        self.assertEqual(len(nodes), 3)
+
+        tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb 1 %}")
+        tpl.render(context)
+        nodes = context['ancestors']
+
+        self.assertEqual(len(nodes), 2)
+
+        context = self.get_context()
+        tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb %}")
+        tpl.render(context)
+        nodes = context['ancestors']
+
+        self.assertEqual(len(nodes), 1)
+
+        tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb 1 %}")
+        tpl.render(context)
+        nodes = context['ancestors']
+
+        self.assertEqual(len(nodes), 0)
+
+    def test_navigation_breadcrumb_with_hide_node(self):
+        """
+        Tree in fixture :
+            menuroot
+               aaa ( homepage node and hide_node= True)
+                   aaa1
+                       ccc
+                           ddd
+                   aaa2
+               bbb
+
+        Expected result:
+            returns list of all parents of selected navigation node and home node, return home node making it visible
+            from above node tree
+        """
+        menu_ver_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
+        aaa_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa",
+            menu_title="aaa",
+            page_title="aaa",
+            version__state=PUBLISHED,
+            page__is_home=True
+        )
+        aaa_home = factories.ChildMenuItemFactory(
+            parent=menu_ver_content.root,
+            content=aaa_pagecontent.page,
+            hide_node=True
+        )
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa_home, content=self.aaa1_pagecontent.page)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
+
+        page = self.ccc_pagecontent.page
+        context = self.get_context(page.get_absolute_url(), page=page)
+        tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb %}")
+        tpl.render(context)
+        nodes = context['ancestors']
+
+        self.assertEqual(len(nodes), 3)
+
 
 class MultisiteNavigationTests(CMSTestCase):
 
@@ -819,13 +919,17 @@ class MultisiteNavigationTests(CMSTestCase):
         This is recursive over the tree
         """
         msg = '%r != %r with %r, %r' % (len(a), len(b), a, b)
+
         self.assertEqual(len(a), len(b), msg)
+
         for n1, n2 in zip(a, b):
             for attr in attrs:
                 a1 = getattr(n1, attr)
                 a2 = getattr(n2, attr)
                 msg = '%r != %r with %r, %r (%s)' % (a1, a2, n1, n2, attr)
+
                 self.assertEqual(a1, a2, msg)
+
             self.assertTreeQuality(n1.children, n2.children, *attrs)
 
     def test_menu_with_multiple_languages(self):

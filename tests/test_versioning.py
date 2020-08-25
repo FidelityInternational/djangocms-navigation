@@ -36,7 +36,7 @@ class CopyFunctionTestCase(TestCase):
         """
         original_root = factories.RootMenuItemFactory()
         original_version = factories.MenuVersionFactory(content__root=original_root)
-        original_child = factories.ChildMenuItemFactory(parent=original_root)
+        original_child = factories.ChildMenuItemFactory(parent=original_root, soft_root=True, hide_node=True)
 
         new_version = original_version.copy(self.user)
 
@@ -51,6 +51,7 @@ class CopyFunctionTestCase(TestCase):
         self.assertEqual(new_child.link_target, original_child.link_target)
         self.assertEqual(new_child.soft_root, original_child.soft_root)
         self.assertEqual(new_child.hide_node, original_child.hide_node)
+
         # The new child is indeed a child node of the new root
         self.assertTrue(new_child.is_child_of(new_root))
 
@@ -61,7 +62,7 @@ class CopyFunctionTestCase(TestCase):
         original_root = factories.RootMenuItemFactory()
         original_version = factories.MenuVersionFactory(content__root=original_root)
         original_child = factories.ChildMenuItemFactory(parent=original_root)
-        original_sibling = factories.SiblingMenuItemFactory(sibling=original_child)
+        original_sibling = factories.SiblingMenuItemFactory(sibling=original_child, hide_node=True)
 
         new_version = original_version.copy(self.user)
 

@@ -1,6 +1,7 @@
 from django.db.models import Q
 
 from cms.cms_menus import CMSMenu as OriginalCMSMenu
+from cms.models import Page
 from cms.utils import get_current_site, get_language_from_request
 from menus.base import Menu, Modifier, NavigationNode
 from menus.menu_pool import menu_pool
@@ -68,7 +69,10 @@ class CMSMenu(Menu):
                 parent_id=parent_id,
                 content=node.content,
                 visible=not node.hide_node,
-                attr={"link_target": node.link_target, "soft_root": node.soft_root},
+                attr={
+                    "link_target": node.link_target,
+                    "soft_root": node.soft_root
+                },
             )
 
     def get_nodes(self, request):
@@ -97,20 +101,27 @@ class NavigationSelector(Modifier):
     def modify(self, request, nodes, namespace, root_id, post_cut, breadcrumb):
         if post_cut or root_id or not nodes:
             return nodes
+        if breadcrumb:
+            home = None
+            for node in nodes:
+                if node.content and isinstance(node.content, Page) and node.content.is_home:
+                    home = node
+                    break
+            if home and not home.visible:
+                home.visible = True
+            return nodes
         if namespace:
             tree_id = namespace
         else:
             # defaulting to first subtree
             tree_id = nodes[0].id
-        root = next(n for n in nodes if n.id == tree_id)
         selected = None
-        for node in nodes:
-            if node.selected:
-                selected = node
+        selected = next((node for node in nodes if node.selected), None)
         if selected:
             # find the nearest root page for selected node and make it visible in Navigation
             root = self.find_ancestors_root_for_node(selected, nodes)
             root.visible = True
+        root = next(n for n in nodes if n.id == tree_id)
         if root.attr.get("soft_root", False):
             return nodes
         return [self.make_roots(node, root) for node in root.children]
