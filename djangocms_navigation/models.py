@@ -46,7 +46,7 @@ class AbstractMenuContent(models.Model):
 
 
 class AbstractMenuItem(MP_Node):
-    title = models.CharField(verbose_name=_("title"), max_length=100)
+    title = models.CharField(verbose_name=_("title"), max_length=255)
     link_target = models.CharField(choices=TARGETS, default="_self", max_length=20)
     # Allow null for content as the root menu item won't have a link
     content_type = models.ForeignKey(
