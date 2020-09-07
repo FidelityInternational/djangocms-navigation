@@ -383,7 +383,7 @@ class SoftrootTests(CMSTestCase):
         aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page)
         bbb = factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
-        page = self.aaa_pagecontent.page
+        page = self.root_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
@@ -548,11 +548,10 @@ class SoftrootTests(CMSTestCase):
                    bbb
         tag: show_menu 0 100 0 100
         expected result when rendering softroot node aaa which is also hidden in navigation:
-                0:aaa
-                    1:aaa1
-                        2:ccc
-                            3:ddd
-                    1:aaa2
+                    0:aaa1
+                        1:ccc
+                            2:ddd
+                    0:aaa2
         """
         menu_content = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         root = factories.ChildMenuItemFactory(parent=menu_content.root, content=self.root_pagecontent.page)
@@ -575,14 +574,12 @@ class SoftrootTests(CMSTestCase):
         hard_root = context['children']
 
         mock_tree = [
-            AttributeObject(title=aaa.title, level=0, children=[
-                AttributeObject(title=aaa1.title, level=1, children=[
-                    AttributeObject(title=ccc.title, level=2, children=[
-                        AttributeObject(title=ddd.title, level=3, children=[])
+            AttributeObject(title=aaa1.title, level=0, children=[
+                    AttributeObject(title=ccc.title, level=1, children=[
+                        AttributeObject(title=ddd.title, level=2, children=[])
                     ])
                 ]),
-                AttributeObject(title=aaa2.title, level=1, children=[])
-            ])
+                AttributeObject(title=aaa2.title, level=0, children=[])
         ]
 
         self.assertTreeQuality(hard_root, mock_tree, 'level', 'title')
@@ -600,7 +597,6 @@ class SoftrootTests(CMSTestCase):
                    bbb
         tag: show_menu 0 100 0 100
         expected result when rendering node ccc grandchild of softroot and hidden node(aaa):
-                0:aaa
                     1:aaa1
                         2:ccc
                             3:ddd
@@ -627,14 +623,12 @@ class SoftrootTests(CMSTestCase):
         hard_root = context['children']
 
         mock_tree = [
-            AttributeObject(title=aaa.title, level=0, children=[
-                AttributeObject(title=aaa1.title, level=1, children=[
-                    AttributeObject(title=ccc.title, level=2, children=[
-                        AttributeObject(title=ddd.title, level=3, children=[])
+            AttributeObject(title=aaa1.title, level=0, children=[
+                    AttributeObject(title=ccc.title, level=1, children=[
+                        AttributeObject(title=ddd.title, level=2, children=[])
                     ])
                 ]),
-                AttributeObject(title=aaa2.title, level=1, children=[])
-            ])
+                AttributeObject(title=aaa2.title, level=0, children=[])
         ]
 
         self.assertTreeQuality(hard_root, mock_tree, 'level', 'title')
@@ -651,10 +645,10 @@ class SoftrootTests(CMSTestCase):
                    bbb
         tag: show_menu 0 100 100 100
         expected result when rendering softroot node aaa:
-                     1:aaa1
-                        2:ccc
-                           3:ddd
-                     3:aaa2
+                     0:aaa1
+                        1:ccc
+                           2:ddd
+                     0:aaa2
         """
         menu_content_ver = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         root = factories.ChildMenuItemFactory(parent=menu_content_ver.root, content=self.root_pagecontent.page)
@@ -670,16 +664,14 @@ class SoftrootTests(CMSTestCase):
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         soft_root = context['children']
-
+        # soft_root node becomes the home/root and renders children menu nodes
         mock_tree = [
-            AttributeObject(title=aaa.title, level=0, children=[
-                AttributeObject(title=aaa1.title, level=1, children=[
-                    AttributeObject(title=ccc.title, level=2, children=[
-                        AttributeObject(title=ddd.title, level=3, children=[])
-                    ])
+            AttributeObject(title=aaa1.title, level=0, children=[
+                AttributeObject(title=ccc.title, level=1, children=[
+                    AttributeObject(title=ddd.title, level=2, children=[])
                 ]),
-                AttributeObject(title=aaa2.title, level=1, children=[]),
-                ])
+                ]),
+                AttributeObject(title=aaa2.title, level=0, children=[]),
         ]
 
         self.assertTreeQuality(soft_root, mock_tree, 'level', 'title')
@@ -711,7 +703,7 @@ class SoftrootTests(CMSTestCase):
         factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page)
         factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
-        page = self.ddd_pagecontent.page
+        page = self.ccc_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
@@ -719,9 +711,7 @@ class SoftrootTests(CMSTestCase):
         soft_root = context['children']
 
         mock_tree = [
-            AttributeObject(title=ccc.title, level=0, children=[
-                AttributeObject(title=ddd.title, level=1, children=[])
-            ])
+            AttributeObject(title=ddd.title, level=0, children=[])
         ]
 
         self.assertTreeQuality(soft_root, mock_tree, 'title', 'level')
@@ -738,7 +728,6 @@ class SoftrootTests(CMSTestCase):
 
         Expected menu when on "Projects" (0 100 100 100):
 
-        |- Projects (SOFTROOT)
         | |- django CMS
         | |- django Shop
         """
@@ -783,11 +772,11 @@ class SoftrootTests(CMSTestCase):
             version__state=PUBLISHED
         )
         menu_version = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
-        root = factories.ChildMenuItemFactory(parent=menu_version.root, content=root_pagecontent.page)
-        projects = factories.ChildMenuItemFactory(parent=root, soft_root=True, content=projects_pagecontent.page)
+        home = factories.ChildMenuItemFactory(parent=menu_version.root, content=root_pagecontent.page)
+        projects = factories.ChildMenuItemFactory(parent=home, soft_root=True, content=projects_pagecontent.page)
         djangocms = factories.ChildMenuItemFactory(parent=projects, content=djangocms_pagecontent.page)
         djangoshop = factories.ChildMenuItemFactory(parent=projects, content=djangoshop_pagecontent.page)
-        factories.ChildMenuItemFactory(parent=root, content=people_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=home, content=people_pagecontent.page)
 
         page = projects_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
@@ -796,14 +785,10 @@ class SoftrootTests(CMSTestCase):
 
         nodes = context['children']
 
-        self.assertEqual(len(nodes), 1)
+        self.assertEqual(len(nodes), 2)
 
-        rootnode = nodes[0]
-
-        self.assertEqual(rootnode.id, projects.id)
-        self.assertEqual(len(rootnode.children), 2)
-
-        cmsnode, shopnode = rootnode.children
+        cmsnode = nodes[0]
+        shopnode = nodes[1]
 
         self.assertEqual(cmsnode.id, djangocms.id)
         self.assertEqual(shopnode.id, djangoshop.id)
