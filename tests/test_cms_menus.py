@@ -578,8 +578,8 @@ class SoftrootTests(CMSTestCase):
                     AttributeObject(title=ccc.title, level=1, children=[
                         AttributeObject(title=ddd.title, level=2, children=[])
                     ])
-                ]),
-                AttributeObject(title=aaa2.title, level=0, children=[])
+            ]),
+            AttributeObject(title=aaa2.title, level=0, children=[])
         ]
 
         self.assertTreeQuality(hard_root, mock_tree, 'level', 'title')
@@ -627,8 +627,8 @@ class SoftrootTests(CMSTestCase):
                     AttributeObject(title=ccc.title, level=1, children=[
                         AttributeObject(title=ddd.title, level=2, children=[])
                     ])
-                ]),
-                AttributeObject(title=aaa2.title, level=0, children=[])
+            ]),
+            AttributeObject(title=aaa2.title, level=0, children=[])
         ]
 
         self.assertTreeQuality(hard_root, mock_tree, 'level', 'title')
@@ -670,8 +670,8 @@ class SoftrootTests(CMSTestCase):
                 AttributeObject(title=ccc.title, level=1, children=[
                     AttributeObject(title=ddd.title, level=2, children=[])
                 ]),
-                ]),
-                AttributeObject(title=aaa2.title, level=0, children=[]),
+            ]),
+            AttributeObject(title=aaa2.title, level=0, children=[]),
         ]
 
         self.assertTreeQuality(soft_root, mock_tree, 'level', 'title')
