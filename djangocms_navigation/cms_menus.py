@@ -109,32 +109,18 @@ class NavigationSelector(Modifier):
                     break
             if home and not home.visible:
                 home.visible = True
+                if request.path_info == home.get_absolute_url():
+                    home.selected = True
+                else:
+                    home.selected = False
             return nodes
         if namespace:
             tree_id = namespace
         else:
             # defaulting to first subtree
             tree_id = nodes[0].id
-        selected = None
-        selected = next((node for node in nodes if node.selected), None)
-        if selected:
-            # find the nearest root page for selected node and make it visible in Navigation
-            root = self.find_ancestors_root_for_node(selected, nodes)
-            root.visible = True
         root = next(n for n in nodes if n.id == tree_id)
-        if root.attr.get("soft_root", False):
-            return nodes
         return [self.make_roots(node, root) for node in root.children]
-
-    def find_ancestors_root_for_node(self, node, nodes):
-        """
-        Check ancestors for root of selected node
-        """
-        if node.parent:
-            if node.parent.attr.get("soft_root", False):
-                return node.parent
-            node = self.find_ancestors_root_for_node(node.parent, nodes)
-        return node
 
     def make_roots(self, node, previous_root):
         """Detach level 1 nodes from parent, making them roots"""
