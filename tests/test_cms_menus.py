@@ -4,6 +4,8 @@ from django.test import RequestFactory, TestCase
 
 from cms.test_utils.testcases import CMSTestCase
 from cms.test_utils.util.mock import AttributeObject
+from cms.toolbar.toolbar import CMSToolbar
+from cms.toolbar.utils import get_object_edit_url, get_object_preview_url
 from menus.menu_pool import menu_pool
 
 from djangocms_versioning.constants import (
@@ -19,12 +21,13 @@ from djangocms_navigation.test_utils import factories
 from .utils import disable_versioning_for_navigation
 
 
-class CMSMenuTestCase(TestCase):
+class CMSMenuTestCase(CMSTestCase):
     def setUp(self):
         self.language = "en"
         self.request = RequestFactory().get("/")
         self.user = factories.UserFactory()
         self.request.user = self.user
+        self.request.toolbar = CMSToolbar(self.request)
         self.renderer = menu_pool.get_renderer(self.request)
         self.menu = CMSMenu(self.renderer)
 
@@ -202,14 +205,14 @@ class CMSMenuTestCase(TestCase):
         menucontent_2_v1 = factories.MenuVersionFactory(content__language=self.language, state=PUBLISHED)
         factories.MenuVersionFactory(state=UNPUBLISHED)
         # Assert to check draft_mode_active is false
-        self.assertFalse(self.menu.renderer.draft_mode_active)
+        self.assertFalse(self.request.toolbar.edit_mode_active)
         roots = self.menu.get_roots(self.request)
 
         # Renderer should only render published menucontent
         self.assertEqual(roots.count(), 1)
         self.assertListEqual(list(roots), [menucontent_2_v1.content.root])
 
-    def test_get_roots_with_draft_mode_active(self):
+    def test_get_roots_with_toolbar_edit_mode_active(self):
         """This test to check versioning would group all the versions
         of menu content and return latest of all distinct menu content
         when renderer draft_mode_active is True
@@ -221,10 +224,9 @@ class CMSMenuTestCase(TestCase):
         menucontent_2_v1 = factories.MenuVersionFactory(content__language=self.language, state=PUBLISHED)
         factories.MenuVersionFactory(content__language=self.language, state=UNPUBLISHED)
 
-        # Getting renderer to set draft_mode_active
-        renderer = self.renderer
-        renderer.draft_mode_active = True
-        menu = CMSMenu(renderer)
+        # setting toolbar to edit_mode_active
+        self.request.toolbar.edit_mode_active = True
+        menu = CMSMenu(self.renderer)
 
         roots = menu.get_roots(self.request)
         self.assertEqual(roots.count(), 2)
@@ -249,6 +251,103 @@ class CMSMenuTestCase(TestCase):
         self.assertListEqual(
             list(roots), [menucontent_1.root, menucontent_2.root, menucontent_3.root]
         )
+
+    def test_menu_nodes_in_page_view_draft_mode(self):
+        menu_cont_draft = factories.MenuContentWithVersionFactory(version__state=DRAFT, language=self.language)
+        menu_cont_published = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
+        pagecontent_aaa = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa",
+            menu_title="aaa",
+            page_title="aaa",
+            version__state=DRAFT,
+        )
+        pagecontent_bbb = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="bbb",
+            menu_title="bbb",
+            page_title="bbb",
+            version__state=PUBLISHED,
+        )
+
+        child = factories.ChildMenuItemFactory(parent=menu_cont_draft.root, content=pagecontent_aaa.page)
+        child_1 = factories.ChildMenuItemFactory(parent=menu_cont_published.root, content=pagecontent_bbb.page)
+
+        # Node added in draft menu version is rendered in page draft view only
+        draft_page_endpoint = get_object_edit_url(pagecontent_aaa)
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(draft_page_endpoint)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(child.title, str(response.content))
+        self.assertNotIn(child_1.title, str(response.content))
+
+    def test_menu_nodes_in_page_view_publish_mode(self):
+        menu_cont_draft = factories.MenuContentWithVersionFactory(version__state=DRAFT, language=self.language)
+        menu_cont_published = factories.MenuContentWithVersionFactory(version__state=PUBLISHED,
+                                                                      language=self.language)
+        pagecontent_aaa = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa",
+            menu_title="aaa",
+            page_title="aaa",
+            version__state=DRAFT,
+        )
+        pagecontent_bbb = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="bbb",
+            menu_title="bbb",
+            page_title="bbb",
+            version__state=PUBLISHED,
+        )
+
+        child = factories.ChildMenuItemFactory(parent=menu_cont_draft.root, content=pagecontent_aaa.page)
+        child_1 = factories.ChildMenuItemFactory(parent=menu_cont_published.root, content=pagecontent_bbb.page)
+
+        # Node added in draft menu version is not rendered in published view, only published menu nodes are rendered
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(pagecontent_bbb.page.get_absolute_url())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(child_1.title, str(response.content))
+        self.assertNotIn(child.title, str(response.content))
+
+    def test_menu_nodes_in_page_view_preview_mode(self):
+        menu_cont_draft = factories.MenuContentWithVersionFactory(version__state=DRAFT, language=self.language)
+        menu_cont_published = factories.MenuContentWithVersionFactory(version__state=PUBLISHED,
+                                                                      language=self.language)
+        pagecontent_aaa = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="aaa",
+            menu_title="aaa",
+            page_title="aaa",
+            version__state=DRAFT,
+        )
+        pagecontent_bbb = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            title="bbb",
+            menu_title="bbb",
+            page_title="bbb",
+            version__state=PUBLISHED,
+        )
+
+        child = factories.ChildMenuItemFactory(parent=menu_cont_draft.root, content=pagecontent_aaa.page)
+        child_1 = factories.ChildMenuItemFactory(parent=menu_cont_published.root, content=pagecontent_bbb.page)
+
+        preview_page_endpoint = get_object_preview_url(pagecontent_aaa)
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(preview_page_endpoint)
+
+        # preview mode renders published menu with draft page in preview mode
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(child_1.title, str(response.content))
+        self.assertNotIn(child.title, str(response.content))
 
 
 class SoftrootTests(CMSTestCase):

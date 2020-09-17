@@ -41,7 +41,7 @@ class CMSMenu(Menu):
                 "versions__state__in": [PUBLISHED],
                 "language": language,
             }
-            if self.renderer.draft_mode_active:
+            if hasattr(request, "toolbar") and request.toolbar.edit_mode_active:
                 inner_filter["versions__state__in"] += [DRAFT]
             menucontents = versionable.distinct_groupers(**inner_filter)
             queryset = queryset.filter(menucontent__in=menucontents)
