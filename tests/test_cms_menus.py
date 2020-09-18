@@ -16,6 +16,7 @@ from djangocms_versioning.constants import (
 )
 
 from djangocms_navigation.cms_menus import CMSMenu
+from djangocms_navigation.models import MenuItem
 from djangocms_navigation.test_utils import factories
 
 from .utils import disable_versioning_for_navigation
@@ -252,7 +253,10 @@ class CMSMenuTestCase(CMSTestCase):
             list(roots), [menucontent_1.root, menucontent_2.root, menucontent_3.root]
         )
 
-    def test_menu_nodes_in_page_view_draft_mode(self):
+    def test_draft_menu_on_draft_page(self):
+        """
+        Draft menu changes on draft page rendering.
+        """
         menu_cont_draft = factories.MenuContentWithVersionFactory(version__state=DRAFT, language=self.language)
         menu_cont_published = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         pagecontent_aaa = factories.PageContentWithVersionFactory(
@@ -284,7 +288,10 @@ class CMSMenuTestCase(CMSTestCase):
         self.assertIn(child.title, str(response.content))
         self.assertNotIn(child_1.title, str(response.content))
 
-    def test_menu_nodes_in_page_view_publish_mode(self):
+    def test_draft_menu_on_published_page(self):
+        """
+         Draft menu changes on published page
+        """
         menu_cont_draft = factories.MenuContentWithVersionFactory(version__state=DRAFT, language=self.language)
         menu_cont_published = factories.MenuContentWithVersionFactory(version__state=PUBLISHED,
                                                                       language=self.language)
@@ -316,7 +323,10 @@ class CMSMenuTestCase(CMSTestCase):
         self.assertIn(child_1.title, str(response.content))
         self.assertNotIn(child.title, str(response.content))
 
-    def test_menu_nodes_in_page_view_preview_mode(self):
+    def test_draft_menu_in_draft_preview_mode(self):
+        """
+        Draft menu changes on draft poge in preview mode
+        """
         menu_cont_draft = factories.MenuContentWithVersionFactory(version__state=DRAFT, language=self.language)
         menu_cont_published = factories.MenuContentWithVersionFactory(version__state=PUBLISHED,
                                                                       language=self.language)
@@ -380,6 +390,7 @@ class SoftrootTests(CMSTestCase):
     def setUp(self):
         self.language = 'en'
         self.client.force_login(self.get_superuser())
+        self.user = factories.UserFactory()
         self.root_pagecontent = factories.PageContentWithVersionFactory(
             language=self.language,
             version__created_by=self.get_superuser(),
@@ -824,6 +835,38 @@ class SoftrootTests(CMSTestCase):
         ]
 
         self.assertTreeQuality(soft_root, mock_tree, 'title', 'level')
+
+    def test_draft_menu_item_atributechanges_on_published_page_menu(self):
+        """
+        Draft menu item attribute changes render changes in draft menucontent version only.
+        """
+
+        original_version = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
+        original_root = factories.ChildMenuItemFactory(
+            parent=original_version.root, content=self.root_pagecontent
+        )
+
+        original_child = factories.ChildMenuItemFactory(parent=original_root, content=self.aaa_pagecontent.page)
+        original_grandchild = factories.ChildMenuItemFactory(parent=original_child, content=self.bbb_pagecontent.page)
+
+        published_version = original_version.versions.get()
+        new_version = published_version.copy(self.user)
+
+        new_root = new_version.content.root
+        new_child = MenuItem.objects.get(path=new_root.path + original_child.path[4:])
+        new_child.soft_root = True
+        new_child.hidden = True
+
+        page = self.bbb_pagecontent.page
+        context = self.get_context(page.get_absolute_url(), page=page)
+        tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
+        tpl.render(context)
+        published_root = context['children']
+
+        self.assertFalse(published_root[0].children[0].attr.get("soft_root"))
+        self.assertEqual(original_child.soft_root, published_root[0].children[0].attr.get("soft_root"))
+        self.assertTrue(published_root[0].children[0].visible)
+
 
     def test_basic_projects_softroot_rendering_nodes(self):
         """
