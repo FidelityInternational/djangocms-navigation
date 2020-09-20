@@ -5,6 +5,7 @@ from django.test import RequestFactory, TestCase
 
 from cms.test_utils.testcases import CMSTestCase
 from cms.toolbar.toolbar import CMSToolbar
+from cms.toolbar.utils import get_object_edit_url
 from menus.base import NavigationNode
 from menus.models import CacheKey
 
@@ -345,8 +346,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
         cache_key = CacheKey.objects.all().count()
         self.assertEqual(cache_key, 0)
 
-        # And view the page
-        from cms.toolbar.utils import get_object_edit_url
+        # And render the page in edit mode
         edit_endpoint = get_object_edit_url(page_content)
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(edit_endpoint)
@@ -418,8 +418,8 @@ class NavigationPluginViewTestCase(CMSTestCase):
             language=self.language, version__created_by=self.get_superuser()
         )
         placeholder = factories.PlaceholderFactory(source=page_content)
-        menu_content_version = factories.MenuVersionFactory.create_batch(2, content__language=self.language)
-        menu_content = menu_content_version[0].content
+        menu_content_version = factories.MenuVersionFactory(content__language=self.language)
+        menu_content = menu_content_version.content
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         # grandchild
         factories.ChildMenuItemFactory(parent=child)
@@ -430,18 +430,13 @@ class NavigationPluginViewTestCase(CMSTestCase):
             placeholder, menu_content.menu, "menu/menu.html"
         )
 
-        # Now publish the menu_content and page content containing the plugin,
-        # so the page can be viewed
-        version = page_content.versions.get()
-        version.publish(self.get_superuser())
-        menu_content_version[0].publish(self.get_superuser())
-
         # Making sure there is no cachekey existed before rendering page
         cache_key = CacheKey.objects.all().count()
         self.assertEqual(cache_key, 0)
-        # And view the page
-        page_url = page_content.page.get_absolute_url()
-        response = self.client.get(page_url)
+        # And View/render the page in edit mode
+        edit_endpoint = get_object_edit_url(page_content)
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(edit_endpoint)
 
         cache_key = CacheKey.objects.all().count()
 
@@ -449,7 +444,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # Rendering should generate cachekey object
         self.assertEqual(cache_key, 1)
 
-        menu_content_version[1].archive(user=self.get_superuser())
+        menu_content_version.archive(user=self.get_superuser())
 
         # Version archive action should invalidate cache_key object
         cache_key = CacheKey.objects.all().count()

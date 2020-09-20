@@ -867,7 +867,6 @@ class SoftrootTests(CMSTestCase):
         self.assertEqual(original_child.soft_root, published_root[0].children[0].attr.get("soft_root"))
         self.assertTrue(published_root[0].children[0].visible)
 
-
     def test_basic_projects_softroot_rendering_nodes(self):
         """
         Given the tree:
