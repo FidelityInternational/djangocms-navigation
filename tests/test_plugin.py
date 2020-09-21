@@ -350,7 +350,6 @@ class NavigationPluginViewTestCase(CMSTestCase):
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(edit_endpoint)
 
-
         cache_key = CacheKey.objects.all().count()
         self.assertEqual(response.status_code, 200)
         # Rendering should generate cachekey object
