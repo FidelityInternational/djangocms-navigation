@@ -847,7 +847,7 @@ class SoftrootTests(CMSTestCase):
         )
 
         original_child = factories.ChildMenuItemFactory(parent=original_root, content=self.aaa_pagecontent.page)
-        original_grandchild = factories.ChildMenuItemFactory(parent=original_child, content=self.bbb_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=original_child, content=self.bbb_pagecontent.page)
 
         published_version = original_version.versions.get()
         new_version = published_version.copy(self.user)

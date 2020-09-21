@@ -20,8 +20,7 @@ class NavigationSelectorTestCase(TestCase):
     def setUp(self):
         self.selector = NavigationSelector(None)
         self.request = RequestFactory().get("/")
-        self.user = factories.UserFactory()
-        self.request.user = self.user
+        self.request.user = factories.UserFactory()
         self.request.toolbar = CMSToolbar(self.request)
 
     def _get_nodes(self):
