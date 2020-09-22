@@ -193,10 +193,6 @@ class NavigationPluginViewTestCase(CMSTestCase):
         version.publish(self.get_superuser())
         menu_version = menu_content2.versions.get()
         menu_version.publish(self.get_superuser())
-        # TODO: Possibly there's a bug where MenuItem objects from
-        # unpublished MenuContent objects are being displayed. If yes
-        # then the menu_content2 will need to be published in this test
-        # once that bug is fixed
 
         # And view the page
         page_url = page_content.page.get_absolute_url()
