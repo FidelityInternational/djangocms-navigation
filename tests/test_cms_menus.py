@@ -858,21 +858,21 @@ class SoftrootTests(CMSTestCase):
             parent=original_version.root, content=self.root_pagecontent
         )
 
-        original_child = factories.ChildMenuItemFactory(
+        published_child = factories.ChildMenuItemFactory(
             parent=original_root,
             content=self.aaa_pagecontent.page,
             soft_root=False,
             hide_node=False
         )
-        factories.ChildMenuItemFactory(parent=original_child, content=self.bbb_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=published_child, content=self.bbb_pagecontent.page)
 
         published_version = original_version.versions.get()
-        new_version = published_version.copy(self.user)
-
-        new_root = new_version.content.root
-        new_child = MenuItem.objects.get(path=new_root.path + original_child.path[4:])
-        new_child.soft_root = True
-        new_child.hidden = True
+        draft_version = published_version.copy(self.user)
+        draft_root = draft_version.content.root
+        draft_child = MenuItem.objects.get(path=draft_root.path + published_child.path[4:])
+        draft_child.soft_root = True
+        draft_child.hide_node = True
+        draft_child.save()
 
         page = self.bbb_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
@@ -880,8 +880,9 @@ class SoftrootTests(CMSTestCase):
         tpl.render(context)
         published_root = context['children']
 
+        self.assertEqual(published_child.title, published_root[0].children[0].title)
         self.assertFalse(published_root[0].children[0].attr.get("soft_root"))
-        self.assertEqual(original_child.soft_root, published_root[0].children[0].attr.get("soft_root"))
+        self.assertEqual(published_child.soft_root, published_root[0].children[0].attr.get("soft_root"))
         self.assertTrue(published_root[0].children[0].visible)
 
     def test_basic_projects_softroot_rendering_nodes(self):
