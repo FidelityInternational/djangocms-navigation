@@ -323,13 +323,11 @@ class CMSMenuTestCase(CMSTestCase):
         self.assertIn(child_1.title, str(response.content))
         self.assertNotIn(child.title, str(response.content))
 
-    def test_draft_menu_in_draft_preview_mode(self):
+    def test_draft_menu_in_preview_mode(self):
         """
-        Draft menu changes on draft poge in preview mode
+        rendering draft poge in preview mode will show published menu
         """
-        menu_cont_draft = factories.MenuContentWithVersionFactory(version__state=DRAFT, language=self.language)
-        menu_cont_published = factories.MenuContentWithVersionFactory(version__state=PUBLISHED,
-                                                                      language=self.language)
+        menu_cont_published = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         pagecontent_aaa = factories.PageContentWithVersionFactory(
             language=self.language,
             version__created_by=self.get_superuser(),
@@ -347,8 +345,13 @@ class CMSMenuTestCase(CMSTestCase):
             version__state=PUBLISHED,
         )
 
-        child = factories.ChildMenuItemFactory(parent=menu_cont_draft.root, content=pagecontent_aaa.page)
-        child_1 = factories.ChildMenuItemFactory(parent=menu_cont_published.root, content=pagecontent_bbb.page)
+        original_child = factories.ChildMenuItemFactory(parent=menu_cont_published.root, content=pagecontent_bbb.page)
+        published_version = menu_cont_published.versions.get()
+
+        menu_cont_draft = published_version.copy(self.get_superuser())
+        draft_root = menu_cont_draft.content.root
+        draft_child = MenuItem.objects.get(path=draft_root.path + original_child.path[4:])
+        new_child = factories.ChildMenuItemFactory(parent=draft_child, content=pagecontent_aaa.page)
 
         preview_page_endpoint = get_object_preview_url(pagecontent_aaa)
         with self.login_user_context(self.get_superuser()):
@@ -356,8 +359,8 @@ class CMSMenuTestCase(CMSTestCase):
 
         # preview mode renders published menu with draft page in preview mode
         self.assertEqual(response.status_code, 200)
-        self.assertIn(child_1.title, str(response.content))
-        self.assertNotIn(child.title, str(response.content))
+        self.assertIn(original_child.title, str(response.content))
+        self.assertNotIn(new_child.title, str(response.content))
 
 
 class SoftrootTests(CMSTestCase):
