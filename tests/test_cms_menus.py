@@ -299,12 +299,12 @@ class CMSMenuTestCase(CMSTestCase):
             version__created_by=self.get_superuser(),
             version__state=DRAFT,
         )
+        #publish the draft pagecontent
         pagecontent_published.versions.get().publish(self.get_superuser())
-
         published_version_pagecontent = pagecontent_published.versions.get()
+        # create a new pagecontent draft version from published pagecontent
         pagecontent_draft_version = published_version_pagecontent.copy(self.get_superuser())
         pagecontent_draft = pagecontent_draft_version.content
-
 
         draft_child = factories.ChildMenuItemFactory(parent=menu_cont_draft.root, content=pagecontent_draft.page)
         published_child = factories.ChildMenuItemFactory(
@@ -331,13 +331,12 @@ class CMSMenuTestCase(CMSTestCase):
             version__created_by=self.get_superuser(),
             version__state=DRAFT,
         )
-        version = pagecontent_published.versions.get()
-        version.publish(self.get_superuser())
-        pagecontent_draft = factories.PageContentWithVersionFactory(
-            page=page,
-            version__created_by=self.get_superuser(),
-            version__state=DRAFT,
-        )
+        published_version_pagecontent = pagecontent_published.versions.get()
+        #publish the draft version
+        published_version_pagecontent.publish(self.get_superuser())
+        # create a new pagecontent draft version from published pagecontent
+        pagecontent_draft_version = published_version_pagecontent.copy(self.get_superuser())
+        pagecontent_draft = pagecontent_draft_version.content
 
         published_child = factories.ChildMenuItemFactory(
             parent=menu_cont_published.root,
