@@ -259,23 +259,18 @@ class CMSMenuTestCase(CMSTestCase):
         """
         menu_cont_draft = factories.MenuContentWithVersionFactory(version__state=DRAFT, language=self.language)
         menu_cont_published = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
-        pagecontent_draft = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa",
-            menu_title="aaa",
-            page_title="aaa",
-            version__state=PUBLISHED,
-        )
+        page = factories.PageFactory()
         pagecontent_published = factories.PageContentWithVersionFactory(
-            language=self.language,
+            page=page,
             version__created_by=self.get_superuser(),
-            title="bbb",
-            menu_title="bbb",
-            page_title="bbb",
-            version__state=PUBLISHED,
+            version__state=DRAFT,
         )
+        version = pagecontent_published.versions.get()
+        version.publish(self.get_superuser())
+        published_version_pagecontent = pagecontent_published.versions.get()
 
+        pagecontent_draft_version = published_version_pagecontent.copy(self.get_superuser())
+        pagecontent_draft = pagecontent_draft_version.content
         draft_child = factories.ChildMenuItemFactory(parent=menu_cont_draft.root, content=pagecontent_draft.page)
         published_child = factories.ChildMenuItemFactory(
             parent=menu_cont_published.root,
@@ -298,22 +293,18 @@ class CMSMenuTestCase(CMSTestCase):
         menu_cont_draft = factories.MenuContentWithVersionFactory(version__state=DRAFT, language=self.language)
         menu_cont_published = factories.MenuContentWithVersionFactory(version__state=PUBLISHED,
                                                                       language=self.language)
-        pagecontent_draft = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa",
-            menu_title="aaa",
-            page_title="aaa",
-            version__state=PUBLISHED,
-        )
+        page = factories.PageFactory()
         pagecontent_published = factories.PageContentWithVersionFactory(
-            language=self.language,
+            page=page,
             version__created_by=self.get_superuser(),
-            title="bbb",
-            menu_title="bbb",
-            page_title="bbb",
-            version__state=PUBLISHED,
+            version__state=DRAFT,
         )
+        pagecontent_published.versions.get().publish(self.get_superuser())
+
+        published_version_pagecontent = pagecontent_published.versions.get()
+        pagecontent_draft_version = published_version_pagecontent.copy(self.get_superuser())
+        pagecontent_draft = pagecontent_draft_version.content
+
 
         draft_child = factories.ChildMenuItemFactory(parent=menu_cont_draft.root, content=pagecontent_draft.page)
         published_child = factories.ChildMenuItemFactory(
@@ -334,21 +325,18 @@ class CMSMenuTestCase(CMSTestCase):
         Ensure that a draft page renders a draft menu when it exists.
         """
         menu_cont_published = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
-        pagecontent_draft = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            title="aaa",
-            menu_title="aaa",
-            page_title="aaa",
-            version__state=PUBLISHED,
-        )
+        page = factories.PageFactory()
         pagecontent_published = factories.PageContentWithVersionFactory(
-            language=self.language,
+            page=page,
             version__created_by=self.get_superuser(),
-            title="bbb",
-            menu_title="bbb",
-            page_title="bbb",
-            version__state=PUBLISHED,
+            version__state=DRAFT,
+        )
+        version = pagecontent_published.versions.get()
+        version.publish(self.get_superuser())
+        pagecontent_draft = factories.PageContentWithVersionFactory(
+            page=page,
+            version__created_by=self.get_superuser(),
+            version__state=DRAFT,
         )
 
         published_child = factories.ChildMenuItemFactory(
