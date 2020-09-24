@@ -257,27 +257,38 @@ class CMSMenuTestCase(CMSTestCase):
         """
         Ensure that a draft page renders a draft menu when it exists.
         """
-        menu_cont_draft = factories.MenuContentWithVersionFactory(version__state=DRAFT, language=self.language)
-        menu_cont_published = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
+        menu = factories.MenuFactory()
+        menu_cont_published = factories.MenuContentWithVersionFactory(
+            menu=menu,
+            version__state=PUBLISHED,
+            language=self.language
+        )
+        menu_cont_draft = factories.MenuContentWithVersionFactory(
+            menu=menu,
+            version__state=DRAFT,
+            language=self.language
+        )
+        page = factories.PageFactory()
         pagecontent_published = factories.PageContentWithVersionFactory(
+            page=page,
             language=self.language,
             version__created_by=self.get_superuser(),
-            title="test",
-            menu_title="test",
-            page_title="test",
+            version__state=PUBLISHED,
+        )
+        pagecontent_draft = factories.PageContentWithVersionFactory(
+            page=page,
+            language=self.language,
+            version__created_by=self.get_superuser(),
             version__state=DRAFT,
         )
-        version = pagecontent_published.versions.get()
-        version.publish(self.get_superuser())
-        published_version_pagecontent = pagecontent_published.versions.get()
-
-        pagecontent_draft_version = published_version_pagecontent.copy(self.get_superuser())
-        pagecontent_draft = pagecontent_draft_version.content
         draft_child = factories.ChildMenuItemFactory(parent=menu_cont_draft.root, content=pagecontent_draft.page)
         published_child = factories.ChildMenuItemFactory(
             parent=menu_cont_published.root,
             content=pagecontent_published.page
         )
+
+        self.assertEqual(pagecontent_draft.page, pagecontent_published.page)
+        self.assertEqual(menu_cont_draft.menu, menu_cont_published.menu)
 
         # Node added in draft menu version is rendered in page draft view only
         draft_page_endpoint = get_object_edit_url(pagecontent_draft)
@@ -292,23 +303,30 @@ class CMSMenuTestCase(CMSTestCase):
         """
           Ensure that a published page only shows a published menu
         """
-        menu_cont_draft = factories.MenuContentWithVersionFactory(version__state=DRAFT, language=self.language)
-        menu_cont_published = factories.MenuContentWithVersionFactory(version__state=PUBLISHED,
-                                                                      language=self.language)
+        menu = factories.MenuFactory()
+        menu_cont_published = factories.MenuContentWithVersionFactory(
+            menu=menu,
+            version__state=PUBLISHED,
+            language=self.language
+        )
+        menu_cont_draft = factories.MenuContentWithVersionFactory(
+            menu=menu,
+            version__state=DRAFT,
+            language=self.language
+        )
+        page = factories.PageFactory()
         pagecontent_published = factories.PageContentWithVersionFactory(
+            page=page,
             language=self.language,
             version__created_by=self.get_superuser(),
-            title="test",
-            menu_title="test",
-            page_title="test",
+            version__state=PUBLISHED,
+        )
+        pagecontent_draft = factories.PageContentWithVersionFactory(
+            page=page,
+            language=self.language,
+            version__created_by=self.get_superuser(),
             version__state=DRAFT,
         )
-        # publish the draft pagecontent
-        pagecontent_published.versions.get().publish(self.get_superuser())
-        published_version_pagecontent = pagecontent_published.versions.get()
-        # create a new pagecontent draft version from published pagecontent
-        pagecontent_draft_version = published_version_pagecontent.copy(self.get_superuser())
-        pagecontent_draft = pagecontent_draft_version.content
 
         draft_child = factories.ChildMenuItemFactory(parent=menu_cont_draft.root, content=pagecontent_draft.page)
         published_child = factories.ChildMenuItemFactory(
@@ -316,44 +334,54 @@ class CMSMenuTestCase(CMSTestCase):
             content=pagecontent_published.page
         )
 
+        self.assertEqual(pagecontent_draft.page, pagecontent_published.page)
+        self.assertEqual(menu_cont_draft.menu, menu_cont_published.menu)
+
         # Node added in draft menu version is not rendered in published view, only published menu nodes are rendered
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(pagecontent_published.page.get_absolute_url())
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(pagecontent_draft.page, pagecontent_published.page)
         self.assertIn(published_child.title, str(response.content))
         self.assertNotIn(draft_child.title, str(response.content))
 
-    def test_draft_menu_in_preview_mode(self):
+    def test_published_menu_in_preview_mode(self):
         """
-        Ensure that a draft page renders a draft menu when it exists.
+        Ensure that a page preview mode renders a published menu.
         """
-        menu_cont_published = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
+        menu = factories.MenuFactory()
+        menu_cont_published = factories.MenuContentWithVersionFactory(
+            menu=menu,
+            version__state=PUBLISHED,
+            language=self.language
+        )
+        menu_cont_draft = factories.MenuContentWithVersionFactory(
+            menu=menu,
+            version__state=DRAFT,
+            language=self.language
+        )
+        page = factories.PageFactory()
         pagecontent_published = factories.PageContentWithVersionFactory(
+            page=page,
             language=self.language,
             version__created_by=self.get_superuser(),
-            title="test",
-            menu_title="test",
-            page_title="test",
+            version__state=PUBLISHED,
+        )
+        pagecontent_draft = factories.PageContentWithVersionFactory(
+            page=page,
+            language=self.language,
+            version__created_by=self.get_superuser(),
             version__state=DRAFT,
         )
-        published_version_pagecontent = pagecontent_published.versions.get()
-        # publish the draft version
-        published_version_pagecontent.publish(self.get_superuser())
-        # create a new pagecontent draft version from published pagecontent
-        pagecontent_draft_version = published_version_pagecontent.copy(self.get_superuser())
-        pagecontent_draft = pagecontent_draft_version.content
-
+        draft_child = factories.ChildMenuItemFactory(parent=menu_cont_draft.root, content=pagecontent_draft.page)
         published_child = factories.ChildMenuItemFactory(
             parent=menu_cont_published.root,
             content=pagecontent_published.page
         )
-        published_version = menu_cont_published.versions.get()
 
-        menu_cont_draft = published_version.copy(self.get_superuser())
-        draft_root = menu_cont_draft.content.root
-        draft_child = MenuItem.objects.get(path=draft_root.path + published_child.path[4:])
-        new_draft_grand_child = factories.ChildMenuItemFactory(parent=draft_child, content=pagecontent_draft.page)
+        self.assertEqual(pagecontent_draft.page, pagecontent_published.page)
+        self.assertEqual(menu_cont_draft.menu, menu_cont_published.menu)
 
         preview_page_endpoint = get_object_preview_url(pagecontent_draft)
         with self.login_user_context(self.get_superuser()):
@@ -362,7 +390,7 @@ class CMSMenuTestCase(CMSTestCase):
         # preview mode renders published menu with draft page in preview mode
         self.assertEqual(response.status_code, 200)
         self.assertIn(published_child.title, str(response.content))
-        self.assertNotIn(new_draft_grand_child.title, str(response.content))
+        self.assertNotIn(draft_child.title, str(response.content))
 
 
 class SoftrootTests(CMSTestCase):
@@ -846,37 +874,57 @@ class SoftrootTests(CMSTestCase):
          A published page only shows published menu when a draft version exists with changes to the attributes.
         """
 
-        original_version = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
-        original_root = factories.ChildMenuItemFactory(
-            parent=original_version.root, content=self.root_pagecontent
+        menu = factories.MenuFactory()
+        menu_cont_published = factories.MenuContentWithVersionFactory(
+            menu=menu,
+            version__state=PUBLISHED,
+            language=self.language
         )
-
+        menu_cont_draft = factories.MenuContentWithVersionFactory(
+            menu=menu,
+            version__state=DRAFT,
+            language=self.language
+        )
+        page = factories.PageFactory()
+        pagecontent_published = factories.PageContentWithVersionFactory(
+            page=page,
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            version__state=PUBLISHED,
+        )
+        pagecontent_draft = factories.PageContentWithVersionFactory(
+            page=page,
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            version__state=DRAFT,
+        )
         published_child = factories.ChildMenuItemFactory(
-            parent=original_root,
-            content=self.aaa_pagecontent.page,
+            parent=menu_cont_published.root,
+            content=pagecontent_published.page,
             soft_root=False,
             hide_node=False
         )
-        factories.ChildMenuItemFactory(parent=published_child, content=self.bbb_pagecontent.page)
+        draft_child = factories.ChildMenuItemFactory(
+            parent=menu_cont_draft.root,
+            content=pagecontent_draft.page,
+            soft_root=True,
+            hide_node=True
+        )
 
-        published_version = original_version.versions.get()
-        draft_version = published_version.copy(self.user)
-        draft_root = draft_version.content.root
-        draft_child = MenuItem.objects.get(path=draft_root.path + published_child.path[4:])
-        draft_child.soft_root = True
-        draft_child.hide_node = True
-        draft_child.save()
+        self.assertEqual(pagecontent_draft.page, pagecontent_published.page)
+        self.assertEqual(menu_cont_draft.menu, menu_cont_published.menu)
 
-        page = self.bbb_pagecontent.page
+        page = pagecontent_draft.page
         context = self.get_context(page.get_absolute_url(), page=page)
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
-        published_root = context['children']
+        rendered_menu = context['children']
 
-        self.assertEqual(published_child.title, published_root[0].children[0].title)
-        self.assertFalse(published_root[0].children[0].attr.get("soft_root"))
-        self.assertEqual(published_child.soft_root, published_root[0].children[0].attr.get("soft_root"))
-        self.assertTrue(published_root[0].children[0].visible)
+        self.assertEqual(published_child.title, rendered_menu[0].title)
+        self.assertFalse(rendered_menu[0].attr.get("soft_root"))
+        self.assertEqual(published_child.soft_root, rendered_menu[0].attr.get("soft_root"))
+        self.assertNotEqual(draft_child.soft_root, rendered_menu[0].attr.get("soft_root"))
+        self.assertTrue(rendered_menu[0].visible)
 
     def test_basic_projects_softroot_rendering_nodes(self):
         """
