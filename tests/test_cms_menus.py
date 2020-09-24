@@ -299,7 +299,7 @@ class CMSMenuTestCase(CMSTestCase):
             version__created_by=self.get_superuser(),
             version__state=DRAFT,
         )
-        #publish the draft pagecontent
+        # publish the draft pagecontent
         pagecontent_published.versions.get().publish(self.get_superuser())
         published_version_pagecontent = pagecontent_published.versions.get()
         # create a new pagecontent draft version from published pagecontent
@@ -332,7 +332,7 @@ class CMSMenuTestCase(CMSTestCase):
             version__state=DRAFT,
         )
         published_version_pagecontent = pagecontent_published.versions.get()
-        #publish the draft version
+        # publish the draft version
         published_version_pagecontent.publish(self.get_superuser())
         # create a new pagecontent draft version from published pagecontent
         pagecontent_draft_version = published_version_pagecontent.copy(self.get_superuser())
