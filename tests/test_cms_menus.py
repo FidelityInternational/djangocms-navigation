@@ -16,7 +16,6 @@ from djangocms_versioning.constants import (
 )
 
 from djangocms_navigation.cms_menus import CMSMenu
-from djangocms_navigation.models import MenuItem
 from djangocms_navigation.test_utils import factories
 
 from .utils import disable_versioning_for_navigation
