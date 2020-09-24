@@ -259,10 +259,12 @@ class CMSMenuTestCase(CMSTestCase):
         """
         menu_cont_draft = factories.MenuContentWithVersionFactory(version__state=DRAFT, language=self.language)
         menu_cont_published = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
-        page = factories.PageFactory()
         pagecontent_published = factories.PageContentWithVersionFactory(
-            page=page,
+            language=self.language,
             version__created_by=self.get_superuser(),
+            title="test",
+            menu_title="test",
+            page_title="test",
             version__state=DRAFT,
         )
         version = pagecontent_published.versions.get()
@@ -293,10 +295,12 @@ class CMSMenuTestCase(CMSTestCase):
         menu_cont_draft = factories.MenuContentWithVersionFactory(version__state=DRAFT, language=self.language)
         menu_cont_published = factories.MenuContentWithVersionFactory(version__state=PUBLISHED,
                                                                       language=self.language)
-        page = factories.PageFactory()
         pagecontent_published = factories.PageContentWithVersionFactory(
-            page=page,
+            language=self.language,
             version__created_by=self.get_superuser(),
+            title="test",
+            menu_title="test",
+            page_title="test",
             version__state=DRAFT,
         )
         # publish the draft pagecontent
@@ -325,10 +329,12 @@ class CMSMenuTestCase(CMSTestCase):
         Ensure that a draft page renders a draft menu when it exists.
         """
         menu_cont_published = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
-        page = factories.PageFactory()
         pagecontent_published = factories.PageContentWithVersionFactory(
-            page=page,
+            language=self.language,
             version__created_by=self.get_superuser(),
+            title="test",
+            menu_title="test",
+            page_title="test",
             version__state=DRAFT,
         )
         published_version_pagecontent = pagecontent_published.versions.get()
