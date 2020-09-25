@@ -780,6 +780,21 @@ class SoftrootTests(CMSTestCase):
         ]
 
         self.assertTreeQuality(hard_root, mock_tree, 'level', 'title')
+        # get the selected node  from resultant tree
+        selected_node = hard_root[0].children[0].children[0]
+        self.assertTrue(selected_node.selected)
+        # check if parent node in Level 0  for selected node  has ancestor attribute set
+        level1_ancestor_for_selected_node = selected_node.parent.parent
+        self.assertTrue(level1_ancestor_for_selected_node.ancestor)
+        # check if parent node in Level1  for selected node  has ancestor attribute set
+        level2_ancestor_for_selected_node = selected_node.parent
+        self.assertTrue(level2_ancestor_for_selected_node.ancestor)
+        # check if other level1 node not the parent for selected node, but sibling  has ancestor attribute False
+        level2_ancestor_sibling_for_selected_node = hard_root[0].children[1]
+        self.assertFalse(level2_ancestor_sibling_for_selected_node.ancestor)
+        # check if the child of selected node has attribute descendant is set True
+        self.assertTrue(selected_node.children[0].descendant)
+
 
     def test_menu_with_softroot_page_rendering(self):
         """
@@ -867,6 +882,12 @@ class SoftrootTests(CMSTestCase):
         ]
 
         self.assertTreeQuality(soft_root, mock_tree, 'title', 'level')
+        # get the selected node  from resultant tree
+        selected_node = soft_root[0].children[0]
+        self.assertTrue(selected_node.selected)
+        # check if parent node in Level 0  for selected node  has ancestor attribute set
+        level1_ancestor_for_selected_node = selected_node.parent
+        self.assertTrue(level1_ancestor_for_selected_node.ancestor)
 
     def test_draft_menu_item_attributechanges_on_published_page_menu(self):
         """
