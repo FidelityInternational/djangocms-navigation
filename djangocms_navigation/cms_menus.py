@@ -145,6 +145,7 @@ class NavigationSelector(Modifier):
             node.parent = None
         return node
 
+
 menu_pool.menus.pop(OriginalCMSMenu.__name__)
 menu_pool.register_menu(CMSMenu)
 menu_pool.register_modifier(NavigationSelector)
