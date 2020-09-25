@@ -8,10 +8,7 @@ from cms.toolbar.toolbar import CMSToolbar
 from menus.base import NavigationNode
 from menus.models import CacheKey
 
-from djangocms_versioning.constants import (
-    DRAFT,
-    PUBLISHED,
-)
+from djangocms_versioning.constants import DRAFT, PUBLISHED
 
 from djangocms_navigation.cms_menus import NavigationSelector
 from djangocms_navigation.models import NavigationPlugin
