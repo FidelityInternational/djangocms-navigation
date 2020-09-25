@@ -214,7 +214,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
     def test_crud_for_navigation_plugin_when_versioning_disabled(self):
         # The page content here is versioned because we're only disabling
         # versioning for navigation (i.e. MenuContent)
-        page=factories.PageFactory()
+        page = factories.PageFactory()
         page_content = factories.PageContentWithVersionFactory(
             page=page, language=self.language, version__created_by=self.get_superuser()
         )

@@ -795,7 +795,6 @@ class SoftrootTests(CMSTestCase):
         # check if the child of selected node has attribute descendant is set True
         self.assertTrue(selected_node.children[0].descendant)
 
-
     def test_menu_with_softroot_page_rendering(self):
         """
         Tree in fixture :
