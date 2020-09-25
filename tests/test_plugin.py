@@ -5,15 +5,12 @@ from django.test import RequestFactory, TestCase
 
 from cms.test_utils.testcases import CMSTestCase
 from cms.toolbar.toolbar import CMSToolbar
-from cms.toolbar.utils import get_object_edit_url
 from menus.base import NavigationNode
 from menus.models import CacheKey
 
 from djangocms_versioning.constants import (
-    ARCHIVED,
     DRAFT,
     PUBLISHED,
-    UNPUBLISHED,
 )
 
 from djangocms_navigation.cms_menus import NavigationSelector
