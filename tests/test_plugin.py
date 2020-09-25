@@ -8,10 +8,7 @@ from cms.toolbar.toolbar import CMSToolbar
 from menus.base import NavigationNode
 from menus.models import CacheKey
 
-from djangocms_versioning.constants import (
-    DRAFT,
-    PUBLISHED,
-)
+from djangocms_versioning.constants import DRAFT, PUBLISHED
 
 from djangocms_navigation.cms_menus import NavigationSelector
 from djangocms_navigation.models import NavigationPlugin
@@ -84,7 +81,7 @@ class NavigationSelectorTestCase(TestCase):
             post_cut=False,
             breadcrumb=False,
         )
-        self.assertListEqual(result, [self.celery, self.carrots])
+        self.assertListEqual(result, [self.celery, self.carrots, self.purple_carrots])
 
     def test_modify_without_namespace(self):
         result = self.selector.modify(
@@ -217,13 +214,14 @@ class NavigationPluginViewTestCase(CMSTestCase):
     def test_crud_for_navigation_plugin_when_versioning_disabled(self):
         # The page content here is versioned because we're only disabling
         # versioning for navigation (i.e. MenuContent)
+        page=factories.PageFactory()
         page_content = factories.PageContentWithVersionFactory(
-            language=self.language, version__created_by=self.get_superuser()
+            page=page, language=self.language, version__created_by=self.get_superuser()
         )
         placeholder = factories.PlaceholderFactory(source=page_content)
         menu_content1 = factories.MenuContentFactory(language=self.language)
         menu_content2 = factories.MenuContentFactory(language=self.language)
-        child = factories.ChildMenuItemFactory(parent=menu_content2.root)
+        child = factories.ChildMenuItemFactory(parent=menu_content1.root)
         grandchild = factories.ChildMenuItemFactory(parent=child)
 
         # Patch the choices on the template field, so we don't get
