@@ -321,49 +321,38 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # NOTE: This test is based on a similar one from django-cms:
         # https://github.com/divio/django-cms/blob/2daeb7d63cb5fee49575a834d0f23669ce46144e/cms/tests/test_plugins.py#L160
 
-        menu = factories.MenuFactory()
-        menu_cont_published = factories.MenuContentWithVersionFactory(
-            menu=menu,
-            version__state=PUBLISHED,
-            language=self.language
-        )
-        menu_cont_draft = factories.MenuContentWithVersionFactory(
-            menu=menu,
-            version__state=DRAFT,
-            language=self.language
-        )
-        page = factories.PageFactory()
-        pagecontent_published = factories.PageContentWithVersionFactory(
-            page=page,
+        menucontent = factories.MenuContentWithVersionFactory(language=self.language, version__state=PUBLISHED)
+        pagecontent = factories.PageContentWithVersionFactory(
             language=self.language,
-            version__created_by=self.get_superuser(),
-            version__state=PUBLISHED,
+            version__created_by=self.get_superuser()
         )
-        pagecontent_draft = factories.PageContentWithVersionFactory(
-            page=page,
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            version__state=DRAFT,
-        )
-        factories.ChildMenuItemFactory(parent=menu_cont_published.root, content=pagecontent_published.page)
-        draft_child = factories.ChildMenuItemFactory(parent=menu_cont_draft.root, content=pagecontent_draft.page)
+        factories.ChildMenuItemFactory(parent=menucontent.root, content=pagecontent.page)
+        draft_child = factories.ChildMenuItemFactory(parent=menucontent.root, content=pagecontent.page)
         # Set up a version page with one placeholder
-        placeholder = factories.PlaceholderFactory(source=pagecontent_draft)
+        placeholder = factories.PlaceholderFactory(source=pagecontent)
         # grandchild
         factories.ChildMenuItemFactory(parent=draft_child)
 
         # TODO: Use a factory instead
         # Add nav plugin to placeholder
         self._add_nav_plugin_and_assert(
-            placeholder, menu_cont_draft.menu, "menu/menu.html"
+            placeholder, menucontent.menu, "menu/menu.html"
         )
+
+        # Now publish the page content containing the plugin,
+        # so the page can be viewed
+        version = pagecontent.versions.get()
+        version.publish(self.get_superuser())
+
+        menu_published_version = menucontent.versions.get()
+        menu_content_draft = menu_published_version.copy(self.get_superuser())
 
         # Making sure there is no cachekey existed before rendering page
         cache_key = CacheKey.objects.all().count()
         self.assertEqual(cache_key, 0)
 
         # And view the page
-        page_url = pagecontent_published.page.get_absolute_url()
+        page_url = pagecontent.page.get_absolute_url()
         response = self.client.get(page_url)
 
         cache_key = CacheKey.objects.all().count()
@@ -371,7 +360,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # Rendering should generate cachekey object
         self.assertEqual(cache_key, 1)
 
-        menu_cont_draft.versions.get().publish(user=self.get_superuser())
+        menu_content_draft.publish(user=self.get_superuser())
 
         # MenuItem publish action should be invalidated cache_key object
         cache_key = CacheKey.objects.all().count()
@@ -427,49 +416,38 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # NOTE: This test is based on a similar one from django-cms:
         # https://github.com/divio/django-cms/blob/2daeb7d63cb5fee49575a834d0f23669ce46144e/cms/tests/test_plugins.py#L160
 
-        menu = factories.MenuFactory()
-        menu_cont_published = factories.MenuContentWithVersionFactory(
-            menu=menu,
-            version__state=PUBLISHED,
-            language=self.language
-        )
-        menu_cont_draft = factories.MenuContentWithVersionFactory(
-            menu=menu,
-            version__state=DRAFT,
-            language=self.language
-        )
-        page = factories.PageFactory()
-        pagecontent_published = factories.PageContentWithVersionFactory(
-            page=page,
+        menucontent = factories.MenuContentWithVersionFactory(language=self.language, version__state=PUBLISHED)
+        pagecontent = factories.PageContentWithVersionFactory(
             language=self.language,
-            version__created_by=self.get_superuser(),
-            version__state=PUBLISHED,
+            version__created_by=self.get_superuser()
         )
-        pagecontent_draft = factories.PageContentWithVersionFactory(
-            page=page,
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            version__state=DRAFT,
-        )
-        factories.ChildMenuItemFactory(parent=menu_cont_published.root, content=pagecontent_published.page)
-        draft_child = factories.ChildMenuItemFactory(parent=menu_cont_draft.root, content=pagecontent_draft.page)
+        factories.ChildMenuItemFactory(parent=menucontent.root, content=pagecontent.page)
+        draft_child = factories.ChildMenuItemFactory(parent=menucontent.root, content=pagecontent.page)
         # Set up a versioned page with one placeholder
-        placeholder = factories.PlaceholderFactory(source=pagecontent_draft)
+        placeholder = factories.PlaceholderFactory(source=pagecontent)
         # grandchild
         factories.ChildMenuItemFactory(parent=draft_child)
 
         # TODO: Use a factory instead
         # Add nav plugin to placeholder
         self._add_nav_plugin_and_assert(
-            placeholder, menu_cont_draft.menu, "menu/menu.html"
+            placeholder, menucontent.menu, "menu/menu.html"
         )
+
+        # Now publish the page content containing the plugin,
+        # so the page can be viewed
+        version = pagecontent.versions.get()
+        version.publish(self.get_superuser())
+
+        menu_published_version = menucontent.versions.get()
+        menu_content_draft = menu_published_version.copy(self.get_superuser())
 
         # Making sure there is no cachekey existed before rendering page
         cache_key = CacheKey.objects.all().count()
         self.assertEqual(cache_key, 0)
 
         # And view the page
-        page_url = pagecontent_published.page.get_absolute_url()
+        page_url = pagecontent.page.get_absolute_url()
         response = self.client.get(page_url)
 
         cache_key = CacheKey.objects.all().count()
@@ -477,7 +455,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
         # Rendering should generate cachekey object
         self.assertEqual(cache_key, 1)
 
-        menu_cont_draft.versions.get().archive(user=self.get_superuser())
+        menu_content_draft.archive(user=self.get_superuser())
 
         # Version archive action should invalidate cache_key object
         cache_key = CacheKey.objects.all().count()
