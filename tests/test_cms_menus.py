@@ -341,7 +341,6 @@ class CMSMenuTestCase(CMSTestCase):
             response = self.client.get(pagecontent_published.page.get_absolute_url())
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(pagecontent_draft.page, pagecontent_published.page)
         self.assertIn(published_child.title, str(response.content))
         self.assertNotIn(draft_child.title, str(response.content))
 
