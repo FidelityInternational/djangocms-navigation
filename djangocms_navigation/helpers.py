@@ -7,7 +7,7 @@ from cms.utils import get_current_site, get_language_from_request
 from djangocms_versioning import versionables
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 
-from .models import MenuItem, MenuContent
+from .models import MenuContent, MenuItem
 from .utils import get_versionable_for_content
 
 
