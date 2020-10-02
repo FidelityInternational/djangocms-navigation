@@ -11,9 +11,10 @@ from classytags.helpers import InclusionTag
 from djangocms_navigation.helpers import (
     get_navigation_node_for_content_object,
     get_root_node,
-    get_site_menu_content
+    get_site_menu_content,
 )
 from djangocms_navigation.models import MenuContent, MenuItem
+
 
 register = template.Library()
 
