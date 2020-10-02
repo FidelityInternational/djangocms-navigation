@@ -8,6 +8,12 @@ from classytags.arguments import Argument
 from classytags.core import Options
 from classytags.helpers import InclusionTag
 
+from djangocms_navigation.helpers import (
+    get_navigation_node_for_content_object,
+    get_root_node,
+    get_site_menu_content
+)
+from djangocms_navigation.models import MenuContent, MenuItem
 
 register = template.Library()
 
@@ -81,3 +87,26 @@ class NavigationShowBreadcrumb(InclusionTag):
 
 
 register.tag(NavigationShowBreadcrumb)
+
+
+@register.simple_tag(takes_context=True)
+def get_menu_node_for_page(context, page=None):
+    request = context['request']
+    page = page or request.current_page
+    menu_content = get_site_menu_content(request, MenuContent)
+    node = get_navigation_node_for_content_object(menu_content, page)
+    if node:
+        return node
+    return None
+
+
+@register.simple_tag(takes_context=True)
+def get_root_node_for_page(context, page=None):
+    request = context['request']
+    page = page or request.current_page
+    menu_content = get_site_menu_content(request, MenuContent)
+    node = get_navigation_node_for_content_object(menu_content, page)
+    if node:
+        page_root_node = get_root_node(node, menu_content, MenuItem)
+        return page_root_node
+    return None

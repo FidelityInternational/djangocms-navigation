@@ -2,9 +2,13 @@ from copy import deepcopy
 
 from django.contrib.contenttypes.models import ContentType
 
-from djangocms_versioning import versionables
+from cms.utils import get_current_site, get_language_from_request
 
-from .models import MenuItem
+from djangocms_versioning import versionables
+from djangocms_versioning.constants import DRAFT, PUBLISHED
+
+from .models import MenuItem, MenuContent
+from .utils import get_versionable_for_content
 
 
 def get_navigation_node_for_content_object(menu_content, content_object, node_model=MenuItem):
@@ -26,6 +30,37 @@ def get_navigation_node_for_content_object(menu_content, content_object, node_mo
             return search_node
 
     return False
+
+
+def get_site_menu_content(request, content_model=MenuContent):
+    """
+    Find the menu Content grouper for the current site
+    """
+    current_lang = get_language_from_request(request)
+    versionable = get_versionable_for_content(content_model)
+    if versionable:
+        inner_filter = {
+            "versions__state__in": [PUBLISHED],
+            "language": current_lang,
+            "menu__site": get_current_site(),
+        }
+        if hasattr(request, "toolbar") and request.toolbar.edit_mode_active:
+            inner_filter["versions__state__in"] = [DRAFT]
+        menucontent = versionable.distinct_groupers(**inner_filter).first()
+        return menucontent
+    return None
+
+
+def get_root_node(node, menu_content, node_model=MenuItem):
+    """
+    Find the nearest root for the node in menu.
+    """
+    root = node_model.get_root_nodes().filter(menucontent=menu_content).first()
+    while node.get_parent() and node.get_parent() != root:
+        if node.soft_root:
+            return node
+        node = node.get_parent()
+    return node
 
 
 def proxy_model(obj, content_model):
