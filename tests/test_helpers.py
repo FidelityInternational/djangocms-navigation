@@ -6,7 +6,6 @@ from cms.test_utils.util.fuzzy_int import FuzzyInt
 from djangocms_versioning.constants import PUBLISHED
 
 from djangocms_navigation.helpers import get_navigation_node_for_content_object
-
 from djangocms_navigation.test_utils import factories
 from djangocms_navigation.test_utils.polls.models import Poll, PollContent
 

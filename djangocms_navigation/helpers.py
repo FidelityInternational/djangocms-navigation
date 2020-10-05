@@ -2,13 +2,9 @@ from copy import deepcopy
 
 from django.contrib.contenttypes.models import ContentType
 
-from cms.utils import get_current_site, get_language_from_request
-
 from djangocms_versioning import versionables
-from djangocms_versioning.constants import DRAFT, PUBLISHED
 
-from .models import MenuContent, MenuItem
-from .utils import get_versionable_for_content
+from .models import MenuItem
 
 
 def get_navigation_node_for_content_object(menu_content, content_object, node_model=MenuItem):
@@ -30,6 +26,7 @@ def get_navigation_node_for_content_object(menu_content, content_object, node_mo
             return search_node
 
     return False
+
 
 def proxy_model(obj, content_model):
     """
