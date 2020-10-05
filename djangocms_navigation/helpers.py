@@ -31,38 +31,6 @@ def get_navigation_node_for_content_object(menu_content, content_object, node_mo
 
     return False
 
-
-def get_site_menu_content(request, content_model=MenuContent):
-    """
-    Find the menu Content grouper for the current site
-    """
-    current_lang = get_language_from_request(request)
-    versionable = get_versionable_for_content(content_model)
-    if versionable:
-        inner_filter = {
-            "versions__state__in": [PUBLISHED],
-            "language": current_lang,
-            "menu__site": get_current_site(),
-        }
-        if hasattr(request, "toolbar") and request.toolbar.edit_mode_active:
-            inner_filter["versions__state__in"] = [DRAFT]
-        menucontent = versionable.distinct_groupers(**inner_filter).first()
-        return menucontent
-    return None
-
-
-def get_root_node(node, menu_content, node_model=MenuItem):
-    """
-    Find the nearest root for the node in menu.
-    """
-    root = node_model.get_root_nodes().filter(menucontent=menu_content).first()
-    while node.get_parent() and node.get_parent() != root:
-        if node.soft_root:
-            return node
-        node = node.get_parent()
-    return node
-
-
 def proxy_model(obj, content_model):
     """
     Get the proxy model from a

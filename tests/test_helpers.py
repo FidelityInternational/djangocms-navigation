@@ -5,10 +5,8 @@ from cms.test_utils.util.fuzzy_int import FuzzyInt
 
 from djangocms_versioning.constants import PUBLISHED
 
-from djangocms_navigation.helpers import (
-    get_navigation_node_for_content_object,
-    get_root_node,
-)
+from djangocms_navigation.helpers import get_navigation_node_for_content_object
+
 from djangocms_navigation.test_utils import factories
 from djangocms_navigation.test_utils.polls.models import Poll, PollContent
 
@@ -135,24 +133,6 @@ class NavigationContentTypeSearchTestCase(CMSTestCase):
         result = get_navigation_node_for_content_object(menu_contents, poll_content)
 
         self.assertEqual(result, grandchild2)
-
-    def test_root_node_for_page(self):
-        """
-        Root node for a page in menu. Note: site root from menucontent is detached when menu is rendered.
-        """
-
-        page_content = factories.PageContentWithVersionFactory(
-            language=self.language, version__created_by=self.get_superuser()
-        )
-        menu_contents = factories.MenuContentFactory()
-        child1 = factories.ChildMenuItemFactory(parent=menu_contents.root)
-        factories.ChildMenuItemFactory(parent=menu_contents.root)
-        grandchild = factories.ChildMenuItemFactory(parent=child1)
-        grandchild1 = factories.ChildMenuItemFactory(parent=grandchild)
-        grandchild2 = factories.ChildMenuItemFactory(parent=grandchild1, content=page_content.page)
-        result = get_root_node(grandchild2, menu_contents)
-
-        self.assertEqual(result, child1)
 
 
 class TestNavigationPerformance(CMSTestCase):
