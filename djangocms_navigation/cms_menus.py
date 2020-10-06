@@ -122,9 +122,12 @@ class NavigationSelector(Modifier):
             root = self.find_ancestors_root_for_node(selected, nodes)
             root.visible = True
         root = next(n for n in nodes if n.id == tree_id)
+        # if root is soft_root return the nodes as softrootCutter Modifier sets soft_root node parent as None(root)
+        # return the nodes
         if root.attr.get("soft_root", False):
             return nodes
-        return [self.make_roots(node, root) for node in root.children]
+        # detach the level 1 nodes from top menu content root node and return the nodes
+        return [self.make_roots(node, root) for node in root.get_descendants()]
 
     def find_ancestors_root_for_node(self, node, nodes):
         """

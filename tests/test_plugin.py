@@ -81,7 +81,7 @@ class NavigationSelectorTestCase(TestCase):
             post_cut=False,
             breadcrumb=False,
         )
-        self.assertListEqual(result, [self.celery, self.carrots])
+        self.assertListEqual(result, [self.celery, self.carrots, self.purple_carrots])
 
     def test_modify_without_namespace(self):
         result = self.selector.modify(
@@ -220,7 +220,7 @@ class NavigationPluginViewTestCase(CMSTestCase):
         placeholder = factories.PlaceholderFactory(source=page_content)
         menu_content1 = factories.MenuContentFactory(language=self.language)
         menu_content2 = factories.MenuContentFactory(language=self.language)
-        child = factories.ChildMenuItemFactory(parent=menu_content2.root)
+        child = factories.ChildMenuItemFactory(parent=menu_content1.root)
         grandchild = factories.ChildMenuItemFactory(parent=child)
 
         # Patch the choices on the template field, so we don't get
