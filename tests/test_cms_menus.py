@@ -701,7 +701,6 @@ class SoftrootTests(CMSTestCase):
             parent=root,
             content=self.aaa_pagecontent.page,
             soft_root=True,
-            hide_node=True,
         )
         aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
         ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
@@ -753,7 +752,6 @@ class SoftrootTests(CMSTestCase):
             parent=root,
             content=self.aaa_pagecontent.page,
             soft_root=True,
-            hide_node=True,
         )
         aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
         ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
@@ -766,7 +764,6 @@ class SoftrootTests(CMSTestCase):
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
-
         mock_tree = [
             AttributeObject(title=aaa.title, level=0, children=[
                 AttributeObject(title=aaa1.title, level=1, children=[
@@ -838,6 +835,46 @@ class SoftrootTests(CMSTestCase):
         ]
 
         self.assertTreeQuality(soft_root, mock_tree, 'level', 'title')
+
+    def test_menu_with_softroot_page_rendering(self):
+        """
+        Tree in fixture :
+               root
+                   aaa (soft_root)
+                       aaa1
+                           ccc
+                               ddd
+                       aaa2
+                   bbb
+        tag: show_menu 0 100 100 100
+        expected result when rendering softroot node aaa:
+                     1:aaa1
+                        2:ccc
+                           3:ddd
+                     3:aaa2
+        """
+        menu_content_ver = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
+        root = factories.ChildMenuItemFactory(parent=menu_content_ver.root, content=self.root_pagecontent.page)
+        aaa = factories.ChildMenuItemFactory(
+            parent=root,
+            soft_root=True,
+            hide_node=True,
+            content=self.aaa_pagecontent.page
+        )
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
+        ddd = factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
+        aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
+
+        page = self.aaa_pagecontent.page
+        context = self.get_context(page.get_absolute_url(), page=page)
+        tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
+        tpl.render(context)
+        soft_root = context['children']
+
+        mock_tree = []
+        self.assertTreeQuality(soft_root, mock_tree)
 
     def test_menu_with_softroot_rendering_nested_softroot_child(self):
         """

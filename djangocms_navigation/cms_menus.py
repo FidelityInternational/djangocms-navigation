@@ -120,7 +120,8 @@ class NavigationSelector(Modifier):
         if selected:
             # find the nearest root page for selected node and make it visible in Navigation
             root = self.find_ancestors_root_for_node(selected, nodes)
-            root.visible = True
+            if not root.attr.get("soft_root", False):
+                root.visible = True
         root = next(n for n in nodes if n.id == tree_id)
         # if root is soft_root return the nodes as softrootCutter Modifier sets soft_root node parent as None(root)
         # return the nodes
