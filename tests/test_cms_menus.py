@@ -836,7 +836,7 @@ class SoftrootTests(CMSTestCase):
 
         self.assertTreeQuality(soft_root, mock_tree, 'level', 'title')
 
-    def test_menu_with_hiddden_softroot_page_rendering(self):
+    def test_menu_with_hidden_softroot_page_rendering(self):
         """
         Tree in fixture :
                root
@@ -860,8 +860,8 @@ class SoftrootTests(CMSTestCase):
         )
         aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
         ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
-        ddd = factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
-        aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page)
         factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
         page = self.aaa_pagecontent.page
