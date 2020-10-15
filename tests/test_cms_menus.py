@@ -836,7 +836,7 @@ class SoftrootTests(CMSTestCase):
 
         self.assertTreeQuality(soft_root, mock_tree, 'level', 'title')
 
-    def test_menu_with_softroot_page_rendering(self):
+    def test_menu_with_hiddden_softroot_page_rendering(self):
         """
         Tree in fixture :
                root
@@ -848,10 +848,7 @@ class SoftrootTests(CMSTestCase):
                    bbb
         tag: show_menu 0 100 100 100
         expected result when rendering softroot node aaa:
-                     1:aaa1
-                        2:ccc
-                           3:ddd
-                     3:aaa2
+         : renders just the softroot page, with no menu nodes
         """
         menu_content_ver = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         root = factories.ChildMenuItemFactory(parent=menu_content_ver.root, content=self.root_pagecontent.page)
