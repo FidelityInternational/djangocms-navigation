@@ -464,52 +464,17 @@ class MenuItemAdmin(TreeAdmin):
         return super().changelist_view(request, extra_context)
 
     def response_change(self, request, obj):
-        msgstr = 'Menuitem "{}" was changed successfully.'.format(obj)
-        extras = ""
-        if '_addanother' in request.POST:
-            url = reverse(
-                "admin:{}_menuitem_add".format(self.model._meta.app_label),
-                kwargs={"menu_content_id": request.menu_content_id},
-            )
-        elif '_continue' in request.POST and self.has_change_permission(request):
-            extras = " You can edit it below"
-            url = reverse(
-                "admin:{}_menuitem_change".format(self.model._meta.app_label),
-                kwargs={"menu_content_id": request.menu_content_id, "object_id": obj.id},
-            )
-        else:
-            url = reverse(
-                "admin:{}_menuitem_list".format(self.model._meta.app_label),
-                kwargs={"menu_content_id": request.menu_content_id},
-            )
-        msg = '{}{}'.format(msgstr, extras)
-        self.message_user(request, msg, messages.SUCCESS)
-
+        url = reverse(
+            "admin:{}_menuitem_list".format(self.model._meta.app_label),
+            kwargs={"menu_content_id": request.menu_content_id},
+        )
         return HttpResponseRedirect(url)
 
     def response_add(self, request, obj, post_url_continue=None):
-
-        msgstr = 'Menuitem "{}" was changed successfully.'.format(obj)
-        extras = ""
-        if self.has_add_permission(request) and '_addanother' in request.POST:
-            url = reverse(
-                "admin:{}_menuitem_add".format(self.model._meta.app_label),
-                kwargs={"menu_content_id": request.menu_content_id},
-            )
-        elif self.has_change_permission(request) and '_continue' in request.POST:
-            extras = " You can edit it below"
-            url = reverse(
-                "admin:{}_menuitem_change".format(self.model._meta.app_label),
-                kwargs={"menu_content_id": request.menu_content_id, "object_id": obj.id},
-            )
-        else:
-            url = reverse(
-                "admin:{}_menuitem_list".format(self.model._meta.app_label),
-                kwargs={"menu_content_id": request.menu_content_id},
-            )
-        msg = '{}{}'.format(msgstr, extras)
-        self.message_user(request, msg, messages.SUCCESS)
-
+        url = reverse(
+            "admin:{}_menuitem_list".format(self.model._meta.app_label),
+            kwargs={"menu_content_id": request.menu_content_id},
+        )
         return HttpResponseRedirect(url)
 
     def move_node(self, request, menu_content_id):
