@@ -58,16 +58,15 @@ class CMSMenu(Menu):
         for node in nodes:
             parent = node.get_parent()
             url = node.content.get_absolute_url() if node.content else ""
-            if parent:
-                if parent.id in root_ids:
-                    parent_id = root_ids[parent.id]
-                else:
-                    parent_id = parent.id
+            if parent.id in root_ids:
+                parent_id = root_ids[parent.id]
+            else:
+                parent_id = parent.id
             yield MenuItemNavigationNode(
                 title=node.title,
                 url=url,
                 id=node.pk,
-                parent_id=parent_id if parent else None,
+                parent_id=parent_id,
                 content=node.content,
                 visible=not node.hide_node,
                 attr={
@@ -120,10 +119,8 @@ class NavigationSelector(Modifier):
         selected = next((node for node in nodes if node.selected), None)
         if selected:
             # find the nearest root page for selected node and make it visible in Navigation
-            # if selected node is softroot  do not make update visible attribute
-            nearest_root = self.find_ancestors_root_for_node(selected, nodes)
-            if not nearest_root.attr.get("soft_root", False):
-                nearest_root.visible = True
+            root = self.find_ancestors_root_for_node(selected, nodes)
+            root.visible = True
         root = next(n for n in nodes if n.id == tree_id)
         # if root is soft_root return the nodes as softrootCutter Modifier sets soft_root node parent as None(root)
         # return the nodes
