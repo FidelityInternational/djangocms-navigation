@@ -669,7 +669,8 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
 
     def test_menuitem_add_view_redirects_on_save_Continue(self):
         """
-        redirect to edit url when Save and continue clicked
+        When a MenuIem object is created we check that the correct url is generated and redirected
+        for the save and continue option and a message is shown to the user.
         """
         menu_content = factories.MenuContentWithVersionFactory()
         add_url = reverse(
@@ -699,7 +700,8 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
 
     def test_menuitem_add_view_redirects_on_save_add_another(self):
         """
-        redirect to add url when Save and add another clicked
+        When a MenuIem object is created we check that the correct url is generated and redirected
+        for the save and add another option and a message is shown to the user.
         """
         menu_content = factories.MenuContentWithVersionFactory()
         add_url = reverse(
