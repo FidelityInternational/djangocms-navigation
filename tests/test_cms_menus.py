@@ -847,8 +847,8 @@ class SoftrootTests(CMSTestCase):
                        aaa2
                    bbb
         tag: show_menu 0 100 100 100
-        expected result when rendering softroot node aaa:
-         : renders just the softroot page, with no menu nodes
+        expected result:
+            renders just the softroot page, with no menu nodes
         """
         menu_content_ver = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         root = factories.ChildMenuItemFactory(parent=menu_content_ver.root, content=self.root_pagecontent.page)
@@ -885,7 +885,7 @@ class SoftrootTests(CMSTestCase):
                    bbb
         tag: show_menu 0 100 100 100
         expected result when rendering child node ccc of hidden softroot node aaa:
-         :          1:aaa1
+                    1:aaa1
                         2:ccc
                            3:ddd
                      1:aaa2
@@ -932,7 +932,7 @@ class SoftrootTests(CMSTestCase):
                        aaa2
                    bbb
         tag: show_menu 0 100 100 100
-        expected result 1:
+        expected result:
                     0:aaa
                      1:aaa1
                         2:ccc
