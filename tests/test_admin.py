@@ -667,6 +667,64 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
         self.assertEqual(len(ma.get_list_display(mock_request)), 4)
         self.assertIn("get_object_url", ma.get_list_display(mock_request))
 
+    def test_menuitem_add_view_redirects_on_save_Continue(self):
+        """
+        redirect to edit url when Save and continue clicked
+        """
+        menu_content = factories.MenuContentWithVersionFactory()
+        add_url = reverse(
+            "admin:djangocms_navigation_menuitem_add", args=(menu_content.id,)
+        )
+        content_type = ContentType.objects.get(app_label="cms", model="page")
+        page = factories.PageContentFactory().page
+        data = {
+            "title": "My new Title",
+            "content_type": content_type.pk,
+            "object_id": page.pk,
+            "_ref_node_id": menu_content.root.id,
+            "numchild": 1,
+            "link_target": "_blank",
+            "_position": "first-child",
+            "_continue": ['Save and continue editing'],
+        }
+        response = self.client.post(add_url, data)
+        new_child = MenuItem.objects.exclude(pk=menu_content.root.pk).get()
+        self.assertEqual(
+            response.url,
+            reverse(
+                "admin:djangocms_navigation_menuitem_change",
+                kwargs={"menu_content_id": menu_content.pk, "object_id": new_child.id},
+            )
+        )
+
+    def test_menuitem_add_view_redirects_on_save_add_another(self):
+        """
+        redirect to add url when Save and add another clicked
+        """
+        menu_content = factories.MenuContentWithVersionFactory()
+        add_url = reverse(
+            "admin:djangocms_navigation_menuitem_add", args=(menu_content.id,)
+        )
+        content_type = ContentType.objects.get(app_label="cms", model="page")
+        page = factories.PageContentFactory().page
+        data = {
+            "title": "My new Title",
+            "content_type": content_type.pk,
+            "object_id": page.pk,
+            "_ref_node_id": menu_content.root.id,
+            "numchild": 1,
+            "link_target": "_blank",
+            "_position": "first-child",
+            '_addanother': ['Save and add another'],
+        }
+        response = self.client.post(add_url, data)
+        self.assertEqual(
+            response.url,
+            reverse(
+                "admin:djangocms_navigation_menuitem_add", args=(menu_content.id,)
+            )
+        )
+
 
 class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
     def setUp(self):
