@@ -58,15 +58,16 @@ class CMSMenu(Menu):
         for node in nodes:
             parent = node.get_parent()
             url = node.content.get_absolute_url() if node.content else ""
-            if parent.id in root_ids:
-                parent_id = root_ids[parent.id]
-            else:
-                parent_id = parent.id
+            if parent:
+                if parent.id in root_ids:
+                    parent_id = root_ids[parent.id]
+                else:
+                    parent_id = parent.id
             yield MenuItemNavigationNode(
                 title=node.title,
                 url=url,
                 id=node.pk,
-                parent_id=parent_id,
+                parent_id=parent_id if parent else None,
                 content=node.content,
                 visible=not node.hide_node,
                 attr={
