@@ -464,17 +464,39 @@ class MenuItemAdmin(TreeAdmin):
         return super().changelist_view(request, extra_context)
 
     def response_change(self, request, obj):
+        msg = _('Menuitem %(menuitem)s was changed successfully.') % {'menuitem': obj.id}
+        endpoint_name = "menuitem_list"
+        endpoint_kwargs = {"menu_content_id": request.menu_content_id}
+        if "_addanother" in request.POST:
+            endpoint_name = "menuitem_add"
+        elif "_continue" in request.POST:
+            endpoint_name = "menuitem_change"
+            msg = _('Menuitem %(menuitem)s was changed successfully. You can edit it below') % {'menuitem': obj.id}
+            endpoint_kwargs.update({"object_id": obj.id})
         url = reverse(
-            "admin:{}_menuitem_list".format(self.model._meta.app_label),
-            kwargs={"menu_content_id": request.menu_content_id},
+            "admin:{}_{}".format(self.model._meta.app_label, endpoint_name),
+            kwargs=endpoint_kwargs,
         )
+        self.message_user(request, msg, messages.SUCCESS)
+
         return HttpResponseRedirect(url)
 
     def response_add(self, request, obj, post_url_continue=None):
+        msg = _('Menuitem %(menuitem)s was changed successfully.') % {'menuitem': obj.id}
+        endpoint_name = "menuitem_list"
+        endpoint_kwargs = {"menu_content_id": request.menu_content_id}
+        if "_addanother" in request.POST:
+            endpoint_name = "menuitem_add"
+        elif "_continue" in request.POST:
+            endpoint_name = "menuitem_change"
+            msg = _('Menuitem %(menuitem)s was changed successfully. You can edit it below') % {'menuitem': obj.id}
+            endpoint_kwargs.update({"object_id": obj.id})
         url = reverse(
-            "admin:{}_menuitem_list".format(self.model._meta.app_label),
-            kwargs={"menu_content_id": request.menu_content_id},
+            "admin:{}_{}".format(self.model._meta.app_label, endpoint_name),
+            kwargs=endpoint_kwargs,
         )
+        self.message_user(request, msg, messages.SUCCESS)
+
         return HttpResponseRedirect(url)
 
     def move_node(self, request, menu_content_id):
