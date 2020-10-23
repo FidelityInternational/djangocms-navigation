@@ -8,6 +8,7 @@ from django.contrib.sites.models import Site
 from django.shortcuts import reverse
 from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
+from django.utils.translation import ugettext_lazy as _
 
 from cms.test_utils.testcases import CMSTestCase
 
@@ -667,7 +668,7 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
         self.assertEqual(len(ma.get_list_display(mock_request)), 4)
         self.assertIn("get_object_url", ma.get_list_display(mock_request))
 
-    def test_menuitem_add_view_redirects_on_save_Continue(self):
+    def test_menuitem_add_view_redirects_on_save_continue(self):
         """
         When a MenuIem object is created we check that the correct url is generated and redirected
         for the save and continue option and a message is shown to the user.
@@ -688,8 +689,10 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
             "_position": "first-child",
             "_continue": ['Save and continue editing'],
         }
+
         response = self.client.post(add_url, data)
         new_child = MenuItem.objects.exclude(pk=menu_content.root.pk).get()
+
         self.assertEqual(
             response.url,
             reverse(
@@ -697,6 +700,12 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
                 kwargs={"menu_content_id": menu_content.pk, "object_id": new_child.id},
             )
         )
+
+        response = self.client.post(add_url, data, follow=True)
+        child = MenuItem.objects.exclude(pk__in=[menu_content.root.pk, new_child.id]).get()
+        msg = _('Menuitem %(menuitem)s was changed successfully. You can edit it below') % {'menuitem': child.id}
+
+        self.assertContains(response, msg)
 
     def test_menuitem_add_view_redirects_on_save_add_another(self):
         """
@@ -719,6 +728,12 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
             "_position": "first-child",
             '_addanother': ['Save and add another'],
         }
+        response = self.client.post(add_url, data, follow=True)
+        new_child = MenuItem.objects.exclude(pk=menu_content.root.pk).get()
+        msg = _('Menuitem %(menuitem)s was changed successfully.') % {'menuitem': new_child.id}
+
+        self.assertContains(response, msg)
+
         response = self.client.post(add_url, data)
         self.assertEqual(
             response.url,
