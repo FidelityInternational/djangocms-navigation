@@ -840,7 +840,7 @@ class SoftrootTests(CMSTestCase):
         """
         Tree in fixture :
                root
-                   aaa (soft_root)
+                   aaa (soft_root,hide_node)
                        aaa1
                            ccc
                                ddd
@@ -884,11 +884,11 @@ class SoftrootTests(CMSTestCase):
                        aaa2
                    bbb
         tag: show_menu 0 100 100 100
-        expected result when rendering child node ccc of hidden softroot node aaa:
+        expected result:
                     1:aaa1
                         2:ccc
                            3:ddd
-                     1:aaa2
+                    1:aaa2
         """
         menu_content_ver = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         root = factories.ChildMenuItemFactory(parent=menu_content_ver.root, content=self.root_pagecontent.page)
