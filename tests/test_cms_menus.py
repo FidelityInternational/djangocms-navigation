@@ -848,7 +848,9 @@ class SoftrootTests(CMSTestCase):
                    bbb
         tag: show_menu 0 100 100 100
         expected result:
-            renders just the softroot page, with no menu nodes
+            renders just the softroot page, with no menu nodes. It renders no nodes because the soft_root
+            and hide_node are True and the requirement is that when rendering a node that is soft_root and
+            hide_node the navigation should be empty
         """
         menu_content_ver = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
         root = factories.ChildMenuItemFactory(parent=menu_content_ver.root, content=self.root_pagecontent.page)
@@ -884,7 +886,8 @@ class SoftrootTests(CMSTestCase):
                        aaa2
                    bbb
         tag: show_menu 0 100 100 100
-        expected result:
+        expected result  when hiding a parent node the child node should not render a parent node that is
+        soft_root and hidden:
                     1:aaa1
                         2:ccc
                            3:ddd
