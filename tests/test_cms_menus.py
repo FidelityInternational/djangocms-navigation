@@ -877,7 +877,7 @@ class SoftrootTests(CMSTestCase):
         """
         Tree in fixture :
                root
-                   aaa (soft_root)
+                   aaa (soft_root,hide_node)
                        aaa1
                            ccc
                                ddd
