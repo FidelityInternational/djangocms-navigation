@@ -701,7 +701,6 @@ class SoftrootTests(CMSTestCase):
             parent=root,
             content=self.aaa_pagecontent.page,
             soft_root=True,
-            hide_node=True,
         )
         aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
         ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
@@ -753,7 +752,6 @@ class SoftrootTests(CMSTestCase):
             parent=root,
             content=self.aaa_pagecontent.page,
             soft_root=True,
-            hide_node=True,
         )
         aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
         ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
@@ -766,7 +764,6 @@ class SoftrootTests(CMSTestCase):
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
-
         mock_tree = [
             AttributeObject(title=aaa.title, level=0, children=[
                 AttributeObject(title=aaa1.title, level=1, children=[
@@ -839,6 +836,94 @@ class SoftrootTests(CMSTestCase):
 
         self.assertTreeQuality(soft_root, mock_tree, 'level', 'title')
 
+    def test_menu_with_hidden_softroot_page_rendering(self):
+        """
+        Tree in fixture :
+               root
+                   aaa (soft_root,hide_node)
+                       aaa1
+                           ccc
+                               ddd
+                       aaa2
+                   bbb
+        tag: show_menu 0 100 100 100
+        expected result:
+            renders just the softroot page, with no menu nodes. It renders no nodes because the soft_root
+            and hide_node are True and the requirement is that when rendering a node that is soft_root and
+            hide_node the navigation should be empty
+        """
+        menu_content_ver = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
+        root = factories.ChildMenuItemFactory(parent=menu_content_ver.root, content=self.root_pagecontent.page)
+        aaa = factories.ChildMenuItemFactory(
+            parent=root,
+            soft_root=True,
+            hide_node=True,
+            content=self.aaa_pagecontent.page
+        )
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
+
+        page = self.aaa_pagecontent.page
+        context = self.get_context(page.get_absolute_url(), page=page)
+        tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
+        tpl.render(context)
+        soft_root = context['children']
+        mock_tree = []
+
+        self.assertTreeQuality(soft_root, mock_tree)
+
+    def test_menu_rendering_child_of_hidden_softroot_page(self):
+        """
+        Tree in fixture :
+               root
+                   aaa (soft_root,hide_node)
+                       aaa1
+                           ccc
+                               ddd
+                       aaa2
+                   bbb
+        tag: show_menu 0 100 100 100
+        expected result  when hiding a parent node the child node should not render a parent node that is
+        soft_root and hidden:
+                    1:aaa1
+                        2:ccc
+                           3:ddd
+                    1:aaa2
+        """
+        menu_content_ver = factories.MenuContentWithVersionFactory(version__state=PUBLISHED, language=self.language)
+        root = factories.ChildMenuItemFactory(parent=menu_content_ver.root, content=self.root_pagecontent.page)
+        aaa = factories.ChildMenuItemFactory(
+            parent=root,
+            soft_root=True,
+            hide_node=True,
+            content=self.aaa_pagecontent.page
+        )
+        aaa1 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa1_pagecontent.page)
+        ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
+        ddd = factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
+        aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page)
+        factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
+
+        page = self.ccc_pagecontent.page
+        context = self.get_context(page.get_absolute_url(), page=page)
+        tpl = Template("{% load menu_tags %}{% show_menu 1 100 100 100 %}")
+        tpl.render(context)
+        soft_root = context['children']
+
+        mock_tree = [
+            AttributeObject(title=aaa1.title, level=1, children=[
+                AttributeObject(title=ccc.title, level=2, children=[
+                    AttributeObject(title=ddd.title, level=3, children=[])
+                ])
+            ]),
+            AttributeObject(title=aaa2.title, level=1, children=[]),
+        ]
+
+        self.assertTreeQuality(soft_root, mock_tree)
+
     def test_menu_with_softroot_rendering_nested_softroot_child(self):
         """
         Tree in fixture :
@@ -850,7 +935,7 @@ class SoftrootTests(CMSTestCase):
                        aaa2
                    bbb
         tag: show_menu 0 100 100 100
-        expected result 1:
+        expected result:
                     0:aaa
                      1:aaa1
                         2:ccc

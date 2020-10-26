@@ -58,15 +58,16 @@ class CMSMenu(Menu):
         for node in nodes:
             parent = node.get_parent()
             url = node.content.get_absolute_url() if node.content else ""
-            if parent.id in root_ids:
-                parent_id = root_ids[parent.id]
-            else:
-                parent_id = parent.id
+            if parent:
+                if parent.id in root_ids:
+                    parent_id = root_ids[parent.id]
+                else:
+                    parent_id = parent.id
             yield MenuItemNavigationNode(
                 title=node.title,
                 url=url,
                 id=node.pk,
-                parent_id=parent_id,
+                parent_id=parent_id if parent else None,
                 content=node.content,
                 visible=not node.hide_node,
                 attr={
@@ -118,15 +119,15 @@ class NavigationSelector(Modifier):
         selected = None
         selected = next((node for node in nodes if node.selected), None)
         if selected:
-            # find the nearest root page for selected node and make it visible in Navigation
-            root = self.find_ancestors_root_for_node(selected, nodes)
-            root.visible = True
+            # find the nearest root  for selected node and
+            # make it visible in Navigation only if selected node is not softroot
+            nearest_root = self.find_ancestors_root_for_node(selected, nodes)
+            if not nearest_root.attr.get("soft_root", False):
+                nearest_root.visible = True
         root = next(n for n in nodes if n.id == tree_id)
-        # if root is soft_root return the nodes as softrootCutter Modifier sets soft_root node parent as None(root)
-        # return the nodes
+        # if root node is a soft_root return the nodes else detach the level 1 nodes from menu content root node
         if root.attr.get("soft_root", False):
             return nodes
-        # detach the level 1 nodes from top menu content root node and return the nodes
         return [self.make_roots(node, root) for node in root.get_descendants()]
 
     def find_ancestors_root_for_node(self, node, nodes):
