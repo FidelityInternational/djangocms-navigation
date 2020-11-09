@@ -19,11 +19,10 @@ class MenuItemNavigationNode(NavigationNode):
         super().__init__(*args, **kwargs)
 
     def is_selected(self, request):
-        try:
-            content = request.current_page
-        except AttributeError:
-            return False
-        return content == self.content
+        content = getattr(request, "current_page", None)
+        if self.content:
+            return content == self.content
+        return False
 
 
 class CMSMenu(Menu):
