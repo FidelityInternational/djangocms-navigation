@@ -66,6 +66,7 @@ class MenuContentAdmin(admin.ModelAdmin):
     list_filter = (LanguageFilter, )
 
     class Media:
+        js = ("admin/js/jquery.init.js", "djangocms_versioning/js/actions.js",)
         css = {"all": ("djangocms_versioning/css/actions.css", "djangocms_version_locking/css/version-locking.css",)}
 
     def get_version(self, obj):
@@ -196,7 +197,7 @@ class MenuContentAdmin(admin.ModelAdmin):
         )
         return render_to_string(
             "djangocms_navigation/admin/icons/edit_icon.html",
-            {"url": url, "disabled": disabled, "post": False},
+            {"url": url, "disabled": disabled, "get": False},
         )
 
     def _get_manage_versions_link(self, obj, request, disabled=False):
