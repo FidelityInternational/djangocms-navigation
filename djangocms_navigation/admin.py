@@ -323,6 +323,11 @@ class MenuItemAdmin(TreeAdmin):
                 name="{}_{}_change".format(*info),
             ),
             url(
+                r"^(?P<menu_content_id>\d+)/(?P<object_id>\d+)/delete/$",
+                self.admin_site.admin_view(self.delete_view),
+                name="{}_{}_delete".format(*info),
+            ),
+            url(
                 r"^(?P<menu_content_id>\d+)/move/$",
                 self.admin_site.admin_view(self.move_node),
                 name="{}_{}_move_node".format(*info),
@@ -374,6 +379,7 @@ class MenuItemAdmin(TreeAdmin):
             if not change_perm:
                 messages.error(request, LOCK_MESSAGE)
                 return HttpResponseRedirect(version_list_url(menu_content))
+            extra_context['can_change'] = change_perm
 
             version = Version.objects.get_for_content(menu_content)
             try:
@@ -383,12 +389,17 @@ class MenuItemAdmin(TreeAdmin):
                 return HttpResponseRedirect(version_list_url(menu_content))
             # purge menu cache
             purge_menu_cache(site_id=menu_content.menu.site_id)
+
         extra_context["list_url"] = reverse_admin_name(
             self.model,
             'list',
             kwargs={"menu_content_id": menu_content_id},
         )
 
+        extra_context["delete_url"] = reverse(
+                "admin:{}_menuitem_delete".format(self.model._meta.app_label),
+                kwargs={"menu_content_id": menu_content_id, "object_id": object_id},
+        )
         return super().change_view(
             request, object_id, form_url="", extra_context=extra_context
         )
@@ -463,6 +474,37 @@ class MenuItemAdmin(TreeAdmin):
             extra_context["versioning_enabled_for_nav"] = self._versioning_enabled
 
         return super().changelist_view(request, extra_context)
+
+    def delete_view(
+        self, request, object_id, menu_content_id=None, form_url="", extra_context=None
+    ):
+        extra_context = extra_context or {}
+        if menu_content_id:
+            request.menu_content_id = menu_content_id
+        if self._versioning_enabled:
+            menu_content = get_object_or_404(
+                self.menu_content_model._base_manager, id=menu_content_id
+            )
+
+            delete_perm = self.has_delete_permission(request, menu_content)
+            if not delete_perm:
+                messages.error(request, LOCK_MESSAGE)
+                return HttpResponseRedirect(version_list_url(menu_content))
+
+            version = Version.objects.get_for_content(menu_content)
+            try:
+                version.check_modify(request.user)
+            except ConditionFailed as error:
+                messages.error(request, str(error))
+                return HttpResponseRedirect(version_list_url(menu_content))
+
+            extra_context["list_url"] = reverse_admin_name(
+                self.model,
+                'list',
+                kwargs={"menu_content_id": menu_content_id},
+            )
+            extra_context['post_url'] = extra_context['list_url']
+            return super(MenuItemAdmin, self).delete_view(request, object_id, extra_context)
 
     def response_change(self, request, obj):
         msg = _('Menuitem %(menuitem)s was changed successfully.') % {'menuitem': obj.id}
@@ -547,6 +589,17 @@ class MenuItemAdmin(TreeAdmin):
         if not hasattr(request, "menu_content_id"):
             return False
         return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if not hasattr(request, "menu_content_id"):
+            return False
+
+        if obj and using_version_lock:
+            unlocked = content_is_unlocked_for_user(obj, request.user)
+            if not unlocked:
+                return False
+
+        return super().has_delete_permission(request, obj)
 
     def get_changelist(self, request, **kwargs):
         return MenuItemChangeList
