@@ -757,6 +757,9 @@ class SoftrootTests(CMSTestCase):
         ccc = factories.ChildMenuItemFactory(parent=aaa1, content=self.ccc_pagecontent.page)
         ddd = factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
         aaa2 = factories.ChildMenuItemFactory(parent=aaa, content=self.aaa2_pagecontent.page)
+        lable_node = factories.ChildMenuItemFactory(parent=aaa2)
+        lable_node.content = None
+        lable_node.content_type = None
         factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
         page = self.ccc_pagecontent.page
@@ -764,6 +767,7 @@ class SoftrootTests(CMSTestCase):
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
+
         mock_tree = [
             AttributeObject(title=aaa.title, level=0, children=[
                 AttributeObject(title=aaa1.title, level=1, children=[
@@ -771,7 +775,9 @@ class SoftrootTests(CMSTestCase):
                         AttributeObject(title=ddd.title, level=3, children=[])
                     ])
                 ]),
-                AttributeObject(title=aaa2.title, level=1, children=[])
+                AttributeObject(title=aaa2.title, level=1, children=[
+                    AttributeObject(title=lable_node.title, level=2, children=[])
+                ]),
             ])
         ]
 
@@ -790,6 +796,11 @@ class SoftrootTests(CMSTestCase):
         self.assertFalse(level2_ancestor_sibling_for_selected_node.ancestor)
         # check if the child of selected node has attribute descendant is set True
         self.assertTrue(selected_node.children[0].descendant)
+
+        # check if empty content menu node selected attribute is False
+        empty_content_node = hard_root[0].children[1].children[0]
+        self.assertEqual(empty_content_node.title, lable_node.title)
+        self.assertFalse(empty_content_node.selected)
 
     def test_menu_with_softroot_page_rendering(self):
         """
