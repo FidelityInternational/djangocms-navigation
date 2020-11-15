@@ -1,12 +1,14 @@
 from django.apps import apps
 from django.conf.urls import url
 from django.contrib import admin, messages
+from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
 from django.contrib.admin.utils import quote
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 from django.utils.text import slugify
@@ -364,7 +366,7 @@ class MenuItemAdmin(TreeAdmin):
         return self.model().get_tree()
 
     def change_view(
-        self, request, object_id, menu_content_id=None, form_url="", extra_context=None
+            self, request, object_id, menu_content_id=None, form_url="", extra_context=None
     ):
         extra_context = extra_context or {}
         if menu_content_id:
@@ -379,7 +381,6 @@ class MenuItemAdmin(TreeAdmin):
             if not change_perm:
                 messages.error(request, LOCK_MESSAGE)
                 return HttpResponseRedirect(version_list_url(menu_content))
-            extra_context['can_change'] = change_perm
 
             version = Version.objects.get_for_content(menu_content)
             try:
@@ -395,10 +396,9 @@ class MenuItemAdmin(TreeAdmin):
             'list',
             kwargs={"menu_content_id": menu_content_id},
         )
-
         extra_context["delete_url"] = reverse(
-                "admin:{}_menuitem_delete".format(self.model._meta.app_label),
-                kwargs={"menu_content_id": menu_content_id, "object_id": object_id},
+            "admin:{}_menuitem_delete".format(self.model._meta.app_label),
+            kwargs={"menu_content_id": menu_content_id, "object_id": object_id},
         )
         return super().change_view(
             request, object_id, form_url="", extra_context=extra_context
@@ -476,7 +476,7 @@ class MenuItemAdmin(TreeAdmin):
         return super().changelist_view(request, extra_context)
 
     def delete_view(
-        self, request, object_id, menu_content_id=None, form_url="", extra_context=None
+            self, request, object_id, menu_content_id=None, form_url="", extra_context=None
     ):
         extra_context = extra_context or {}
         if menu_content_id:
@@ -498,13 +498,53 @@ class MenuItemAdmin(TreeAdmin):
                 messages.error(request, str(error))
                 return HttpResponseRedirect(version_list_url(menu_content))
 
-            extra_context["list_url"] = reverse_admin_name(
+        extra_context["list_url"] = reverse_admin_name(
+            self.model,
+            'list',
+            kwargs={"menu_content_id": menu_content_id},
+        )
+        return super(MenuItemAdmin, self).delete_view(request, object_id, extra_context)
+
+    def response_delete(self, request, obj_display, obj_id):
+        """
+        Determine the HttpResponse for the delete_view stage.
+        """
+        opts = self.model._meta
+
+        if IS_POPUP_VAR in request.POST:
+            popup_response_data = json.dumps({
+                'action': 'delete',
+                'value': str(obj_id),
+            })
+            return TemplateResponse(request, self.popup_response_template or [
+                'admin/%s/%s/popup_response.html' % (opts.app_label, opts.model_name),
+                'admin/%s/popup_response.html' % opts.app_label,
+                'admin/popup_response.html',
+            ], {
+                                        'popup_response_data': popup_response_data,
+                                    })
+
+        self.message_user(
+            request,
+            _('The %(name)s “%(obj)s” was deleted successfully.') % {
+                'name': opts.verbose_name,
+                'obj': obj_display,
+            },
+            messages.SUCCESS,
+        )
+        if self.has_change_permission(request, None):
+            post_url = reverse_admin_name(
                 self.model,
                 'list',
-                kwargs={"menu_content_id": menu_content_id},
+                kwargs={"menu_content_id": request.menu_content_id},
             )
-            extra_context['post_url'] = extra_context['list_url']
-            return super(MenuItemAdmin, self).delete_view(request, object_id, extra_context)
+            preserved_filters = self.get_preserved_filters(request)
+            post_url = add_preserved_filters(
+                {'preserved_filters': preserved_filters, 'opts': opts}, post_url
+            )
+        else:
+            post_url = reverse('admin:index', current_app=self.admin_site.name)
+        return HttpResponseRedirect(post_url)
 
     def response_change(self, request, obj):
         msg = _('Menuitem %(menuitem)s was changed successfully.') % {'menuitem': obj.id}
