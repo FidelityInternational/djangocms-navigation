@@ -1,3 +1,5 @@
+import json
+
 from django.apps import apps
 from django.conf.urls import url
 from django.contrib import admin, messages
@@ -24,6 +26,7 @@ from .helpers import proxy_model
 from .models import Menu, MenuContent, MenuItem
 from .utils import is_versioning_enabled, purge_menu_cache, reverse_admin_name
 from .views import ContentObjectSelect2View, MenuContentPreviewView
+
 
 IS_POPUP_VAR = '_popup'
 
