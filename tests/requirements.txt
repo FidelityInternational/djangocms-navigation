@@ -1,3 +1,4 @@
+adminsortable2<1.0.0
 coverage
 django-classy-tags<2.0.0
 django-sekizai<2.0.0
