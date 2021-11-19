@@ -97,33 +97,33 @@ jobs:
     <<: *py35default
   isort:
     <<: *py35default
-  py35-dj111-sqlite-cms40:
+  py35-dj111-sqlite:
     <<: *py35default
-  py36-dj111-sqlite-cms40:
+  py36-dj111-sqlite:
     <<: *py36default
-  py37-dj111-sqlite-cms40:
+  py37-dj111-sqlite:
     <<: *py37default
 
 
-  py35-dj20-sqlite-cms40:
+  py35-dj20-sqlite:
     <<: *py35default
-  py36-dj20-sqlite-cms40:
+  py36-dj20-sqlite:
     <<: *py36default
-  py37-dj20-sqlite-cms40:
+  py37-dj20-sqlite:
     <<: *py37default
 
-  py35-dj21-sqlite-cms40:
+  py35-dj21-sqlite:
     <<: *py35default
-  py36-dj21-sqlite-cms40:
+  py36-dj21-sqlite:
     <<: *py36default
-  py37-dj21-sqlite-cms40:
+  py37-dj21-sqlite:
     <<: *py37default
 
-  py35-dj22-sqlite-cms40:
+  py35-dj22-sqlite:
     <<: *py35default
-  py36-dj22-sqlite-cms40:
+  py36-dj22-sqlite:
     <<: *py36default
-  py37-dj22-sqlite-cms40:
+  py37-dj22-sqlite:
     <<: *py37default
 
 
@@ -142,43 +142,43 @@ workflows:
       - isort:
           requires:
             - py35_base
-      - py35-dj111-sqlite-cms40:
+      - py35-dj111-sqlite:
           requires:
             - py35_base
-      - py36-dj111-sqlite-cms40:
+      - py36-dj111-sqlite:
           requires:
             - py36_base
-      - py37-dj111-sqlite-cms40:
+      - py37-dj111-sqlite:
           requires:
             - py37_base
 
-      - py35-dj20-sqlite-cms40:
+      - py35-dj20-sqlite:
           requires:
             - py35_base
-      - py36-dj20-sqlite-cms40:
+      - py36-dj20-sqlite:
           requires:
             - py36_base
-      - py37-dj20-sqlite-cms40:
+      - py37-dj20-sqlite:
           requires:
             - py37_base
 
 
-      - py35-dj21-sqlite-cms40:
+      - py35-dj21-sqlite:
           requires:
             - py35_base
-      - py36-dj21-sqlite-cms40:
+      - py36-dj21-sqlite:
           requires:
             - py36_base
-      - py37-dj21-sqlite-cms40:
+      - py37-dj21-sqlite:
           requires:
             - py37_base
 
-      - py35-dj22-sqlite-cms40:
+      - py35-dj22-sqlite:
           requires:
             - py35_base
-      - py36-dj22-sqlite-cms40:
+      - py36-dj22-sqlite:
           requires:
             - py36_base
-      - py37-dj22-sqlite-cms40:
+      - py37-dj22-sqlite:
           requires:
             - py37_base

@@ -391,6 +391,70 @@ class CMSMenuTestCase(CMSTestCase):
         self.assertNotIn(draft_child.title, str(response.content))
 
 
+
+
+
+    def test_draft_menu_on_draft_page_multiple_site_menus(self):
+        """
+        """
+        # Menu 1
+        menu = factories.MenuFactory()
+        menu_cont_published = factories.MenuContentWithVersionFactory(
+            menu=menu,
+            version__state=PUBLISHED,
+            language=self.language
+        )
+        menu_cont_draft = factories.MenuContentWithVersionFactory(
+            menu=menu,
+            version__state=DRAFT,
+            language=self.language
+        )
+
+        # Menu 2
+        menu_2 = factories.MenuFactory()
+        menu_cont_2_published = factories.MenuContentWithVersionFactory(
+            menu=menu_2,
+            version__state=PUBLISHED,
+            language=self.language
+        )
+        menu_cont_2_draft = factories.MenuContentWithVersionFactory(
+            menu=menu_2,
+            version__state=DRAFT,
+            language=self.language
+        )
+
+        page = factories.PageFactory()
+        pagecontent_published = factories.PageContentWithVersionFactory(
+            page=page,
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            version__state=PUBLISHED,
+        )
+        pagecontent_draft = factories.PageContentWithVersionFactory(
+            page=page,
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            version__state=DRAFT,
+        )
+        draft_child = factories.ChildMenuItemFactory(parent=menu_cont_draft.root, content=pagecontent_draft.page)
+        published_child = factories.ChildMenuItemFactory(
+            parent=menu_cont_published.root,
+            content=pagecontent_published.page
+        )
+
+        self.assertEqual(pagecontent_draft.page, pagecontent_published.page)
+        self.assertEqual(menu_cont_draft.menu, menu_cont_published.menu)
+
+        # Node added in draft menu version is rendered in page draft view only
+        draft_page_endpoint = get_object_edit_url(pagecontent_draft)
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(draft_page_endpoint)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(draft_child.title, str(response.content))
+        self.assertNotIn(published_child.title, str(response.content))
+
+
 class SoftrootTests(CMSTestCase):
     """
        Tree in fixture :
