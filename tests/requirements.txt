@@ -1,11 +1,15 @@
-djangocms-helper
-tox
+django-admin-sortable2<1.0.0
 coverage
-isort
-flake8
-factory_boy
 django-classy-tags<2.0.0
 django-sekizai<2.0.0
-git+git://github.com/divio/djangocms-versioning.git#egg=djangocms-versioning
-git+git://github.com/FidelityInternational/djangocms-version-locking.git#egg=djangocms-version-locking
-git+git://github.com/divio/djangocms-moderation.git#egg=djangocms-moderation
+djangocms-helper
+flake8
+factory_boy
+isort
+tox
+
+# Unreleased dependancies
+https://github.com/divio/django-cms/tarball/release/4.0.x#egg=django-cms
+https://github.com/divio/djangocms-versioning/tarball/master#egg=djangocms-versioning
+https://github.com/django-cms/djangocms-moderation/tarball/release/1.0.x#egg=djangocms-moderation
+https://github.com/FidelityInternational/djangocms-version-locking/tarball/master#egg=djangocms-version-locking

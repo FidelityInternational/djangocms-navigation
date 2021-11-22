@@ -390,6 +390,100 @@ class CMSMenuTestCase(CMSTestCase):
         self.assertIn(published_child.title, str(response.content))
         self.assertNotIn(draft_child.title, str(response.content))
 
+    def test_menu_shown_on_pages_with_multiple_site_menus(self):
+        """
+        When a site contains multiple navigation menus only the first menu should be
+        used and output to any draft or published pages.
+        """
+        # Menu 1
+        menu = factories.MenuFactory()
+        menu_cont_published = factories.MenuContentWithVersionFactory(
+            menu=menu,
+            version__state=PUBLISHED,
+            language=self.language
+        )
+        menu_1_published_child = factories.ChildMenuItemFactory(
+            parent=menu_cont_published.root,
+        )
+        # Menu 2
+        menu_2 = factories.MenuFactory()
+        menu_cont_2_published = factories.MenuContentWithVersionFactory(
+            menu=menu_2,
+            version__state=PUBLISHED,
+            language=self.language
+        )
+        menu_cont_2_draft = factories.MenuContentWithVersionFactory(
+            menu=menu_2,
+            version__state=DRAFT,
+            language=self.language
+        )
+        menu_2_published_child = factories.ChildMenuItemFactory(
+            parent=menu_cont_2_published.root,
+        )
+        menu_2_draft_child = factories.ChildMenuItemFactory(
+            parent=menu_cont_2_draft.root,
+        )
+        # Pages
+        page = factories.PageFactory()
+        pagecontent_published = factories.PageContentWithVersionFactory(
+            page=page,
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            version__state=PUBLISHED,
+        )
+        pagecontent_draft = factories.PageContentWithVersionFactory(
+            page=page,
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            version__state=DRAFT,
+        )
+
+        # Node added in draft menu version is rendered in page draft view only
+        draft_page_endpoint = get_object_edit_url(pagecontent_draft)
+        published_page_endpoint = pagecontent_published.get_absolute_url(self.language)
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(draft_page_endpoint)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(menu_1_published_child.title, str(response.content))
+        self.assertNotIn(menu_2_published_child.title, str(response.content))
+        self.assertNotIn(menu_2_draft_child.title, str(response.content))
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(published_page_endpoint)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(menu_1_published_child.title, str(response.content))
+        self.assertNotIn(menu_2_published_child.title, str(response.content))
+        self.assertNotIn(menu_2_draft_child.title, str(response.content))
+
+        # Now create a new item in the first menu and delete the existing child,
+        # this makes the path for the first menu higher than the second which could
+        # impact the default ordering by "path".
+        menu_1_published_child_2 = factories.ChildMenuItemFactory(
+            parent=menu_cont_published.root,
+        )
+        menu_1_published_child.delete()
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(draft_page_endpoint)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(menu_1_published_child_2.title, str(response.content))
+        self.assertNotIn(menu_1_published_child.title, str(response.content))
+        self.assertNotIn(menu_2_published_child.title, str(response.content))
+        self.assertNotIn(menu_2_draft_child.title, str(response.content))
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(published_page_endpoint)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(menu_1_published_child_2.title, str(response.content))
+        self.assertNotIn(menu_1_published_child.title, str(response.content))
+        self.assertNotIn(menu_2_published_child.title, str(response.content))
+        self.assertNotIn(menu_2_draft_child.title, str(response.content))
+
 
 class SoftrootTests(CMSTestCase):
     """
