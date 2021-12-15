@@ -1,4 +1,5 @@
 HELPER_SETTINGS = {
+    "SECRET_KEY": "Navigationtestsuitekey",
     "INSTALLED_APPS": [
         "djangocms_navigation",
         "djangocms_navigation.test_utils.app_1",

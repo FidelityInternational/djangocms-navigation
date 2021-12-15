@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class PollConfig(AppConfig):
-    name = "polls"
+    name = "djangocms_navigation.test_utils.polls"
