@@ -32,7 +32,11 @@ except ImportError:
     pass
 
 try:
-    from djangocms_version_locking.helpers import content_is_unlocked_for_user, version_is_locked
+    from djangocms_version_locking.helpers import (
+        content_is_unlocked_for_user,
+        version_is_locked,
+    )
+
     using_version_lock = True
     LOCK_MESSAGE = _(
         "The item is currently locked or you don't "
