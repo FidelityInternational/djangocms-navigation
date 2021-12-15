@@ -1,5 +1,4 @@
 from django.apps import apps
-from django.conf.urls import url
 from django.contrib import admin, messages
 from django.contrib.admin.utils import quote
 from django.contrib.admin.views.main import ChangeList
@@ -7,10 +6,10 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
-from django.urls import reverse
+from django.urls import reverse, re_path
 from django.utils.html import format_html, format_html_join
 from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views.i18n import JavaScriptCatalog
 
 from djangocms_versioning.constants import DRAFT, PUBLISHED
@@ -301,41 +300,41 @@ class MenuItemAdmin(TreeAdmin):
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
         return [
-            url(
+            re_path(
                 r"^$",
                 self.admin_site.admin_view(self.changelist_view),
                 name="{}_{}_changelist".format(*info),
             ),
-            url(
+            re_path(
                 r"^(?P<menu_content_id>\d+)/$",
                 self.admin_site.admin_view(self.changelist_view),
                 name="{}_{}_list".format(*info),
             ),
-            url(
+            re_path(
                 r"^(?P<menu_content_id>\d+)/$",
                 self.admin_site.admin_view(self.preview_view),
                 name="{}_{}_list".format(*info),
             ),
-            url(
+            re_path(
                 r"^(?P<menu_content_id>\d+)/add/$",
                 self.admin_site.admin_view(self.add_view),
                 name="{}_{}_add".format(*info),
             ),
-            url(
+            re_path(
                 r"^(?P<menu_content_id>\d+)/(?P<object_id>\d+)/change/$",
                 self.admin_site.admin_view(self.change_view),
                 name="{}_{}_change".format(*info),
             ),
-            url(
+            re_path(
                 r"^(?P<menu_content_id>\d+)/move/$",
                 self.admin_site.admin_view(self.move_node),
                 name="{}_{}_move_node".format(*info),
             ),
-            url(
+            re_path(
                 r"^(?P<menu_content_id>\d+)/jsi18n/$",
                 JavaScriptCatalog.as_view(packages=["treebeard"]),
             ),
-            url(
+            re_path(
                 r"^select2/$",
                 self.admin_site.admin_view(ContentObjectSelect2View.as_view(
                     menu_content_model=self.menu_content_model,
@@ -344,7 +343,7 @@ class MenuItemAdmin(TreeAdmin):
                     self.model._meta.app_label
                 )
             ),
-            url(
+            re_path(
                 r"^(?P<menu_content_id>\d+)/preview/$",
                 self.admin_site.admin_view(MenuContentPreviewView.as_view(
                     menu_content_model=self.menu_content_model,
