@@ -1,6 +1,11 @@
 {# Used for MP and NS trees #}
 {% extends "admin/tree_change_list.html" %}
-{% load admin_list admin_urls admin_tree i18n djangocms_versioning %}
+{% load static admin_list admin_urls navigation_admin_tree i18n djangocms_versioning %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'djangocms_navigation/css/djangocms_navigation.css' %}"/>
+{% endblock %}
 
 {% block object-tools-items %}
 <li>

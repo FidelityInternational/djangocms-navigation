@@ -25,7 +25,7 @@ from .forms import MenuContentForm, MenuItemForm
 from .helpers import proxy_model
 from .models import Menu, MenuContent, MenuItem
 from .utils import is_versioning_enabled, purge_menu_cache, reverse_admin_name
-from .views import ContentObjectSelect2View, MenuContentPreviewView
+from .views import ContentObjectSelect2View, MenuContentPreviewView, MessageStorageView
 
 
 try:
@@ -372,6 +372,13 @@ class MenuItemAdmin(TreeAdmin):
                     menu_item_model=self.model,
                 )),
                 name="{}_{}_preview".format(*info),
+            ),
+            re_path(
+                r"^(?P<menu_content_id>\d+)/messages/$",
+                self.admin_site.admin_view(MessageStorageView.as_view()),
+                name="{}_message_storage".format(
+                    self.model._meta.app_label
+                ),
             ),
         ]
 
