@@ -872,7 +872,9 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
 
         self.assertEqual(MenuItem._base_manager.count(), 4)
         self.assertContains(
-            response, f'<li class="success">Successfully deleted menuitem: ({new_child}: {new_child.id})</li>'
+            response, '<li class="success">Successfully deleted menuitem: ({}: {})</li>'.format(
+                new_child, new_child.id
+            )
         )
 
         delete_url_with_child = reverse(
@@ -887,9 +889,20 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
             response = self.client.post(response.request.get("PATH_INFO"), follow=True)
 
         self.assertEqual(MenuItem._base_manager.count(), 1)
-        self.assertContains(response, f'<li class="success">Successfully deleted menuitem: ({child}: {child.id}),')
-        self.assertContains(response, f'as well as it&#39;s children: ({child_of_child}: {child_of_child.id})')
-        self.assertContains(response, f' ({grandchild_of_child}: {grandchild_of_child.id}) </li>')
+        self.assertContains(
+            response, '<li class="success">Successfully deleted menuitem: ({}: {}),'.format(
+                child, child.id
+            )
+        )
+        self.assertContains(
+            response,
+            'as well as it&#39;s children: ({}: {})'.format(
+                child, child.id
+            ))
+        self.assertContains(
+            response, ' ({}: {}) </li>'.format(
+                grandchild_of_child, grandchild_of_child.id
+            ))
 
     def test_menuitem_delete_view_no_permission(self):
         """

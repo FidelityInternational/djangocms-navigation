@@ -452,11 +452,11 @@ class MenuItemAdmin(TreeAdmin):
                 return render(request, "djangocms_navigation/admin/delete_confirmation.html", context)
             else:
                 target = queryset.get(id=menu_item_id)
-                deleted_menuitem_message = f"Successfully deleted menuitem: ({target}: {target.id})"
+                deleted_menuitem_message = "Successfully deleted menuitem: ({}: {})".format(target, target.id)
                 if queryset.count() > 1:
                     deleted_menuitem_message += ", as well as it's children: "
                     for item in queryset.exclude(pk=target.id):
-                        deleted_menuitem_message += f"({item}: {item.id}) "
+                        deleted_menuitem_message += "({}: {}) ".format(item, item.id)
                 queryset.delete()
                 messages.success(request, deleted_menuitem_message)
             return HttpResponseRedirect(redirect_url)
