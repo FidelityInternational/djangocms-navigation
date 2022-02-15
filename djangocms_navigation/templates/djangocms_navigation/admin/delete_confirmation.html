@@ -1,0 +1,47 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static cms_tags %}
+{% block title %}{% trans "Delete Confirmation" %}{% endblock %}
+{% block extrahead %}
+    {{ block.super }}
+    {{ media }}
+{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} delete-confirmation{% endblock %}
+
+{% block content %}
+<h3>{% trans "Are you sure you want to remove these items from the navigation?" %}</h3>
+<div class="results">
+    <table id="result_list">
+            <thead>
+                <tr>
+                    <th>{% trans "Id" %}</th>
+                    <th>{% trans "Title" %}</th>
+                    <th>{% trans "Content Type" %}</th>
+                    <th>{% trans "Content" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for mi in queryset %}
+                <tr class="row1 djangocms_navigation_menuitem_1">
+                   <td>{{ mi.pk }}</td>
+                    <td>{{ mi.title }}</td>
+                    <td>{{ mr.content_type }}</td>
+                    <td>{{ mr.content }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+ </div><br/>
+<form action="" method="POST">
+    {% csrf_token %}
+    <input  class="button confirm-link js-versioning-keep-sideframe"
+            type="submit"
+            value="{% trans 'Yes, I\'m sure' %}">
+    <a href="{{ back_url }}">
+        <input type="button"
+               class="button js-versioning-keep-sideframe"
+               value="{% trans 'No, take me back' %}">
+    </a>
+</form>
+{% endblock %}
