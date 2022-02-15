@@ -646,18 +646,6 @@ class MenuItemAdmin(TreeAdmin):
 
         return super().has_change_permission(request, obj)
 
-    def has_menuitem_delete_permission(self, request, obj=None):
-        # When deleting via an admin action, a change permission check should be run.
-        # the has_change_permission method is not suited to this since the action doesn't pass
-        # the menucontent object as an attribute of the request
-        if self._versioning_enabled:
-            menu_root = obj.get_root()
-            version = Version.objects.get_for_content(menu_root.menucontent)
-            return version.check_modify.as_bool(request.user)
-        # TODO: verify functionality when versioning disabled
-        return False
-
-
     def has_view_permission(self, request, obj=None):
         if not hasattr(request, "menu_content_id"):
             return False
