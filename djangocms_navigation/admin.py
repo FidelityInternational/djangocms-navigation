@@ -427,6 +427,8 @@ class MenuItemAdmin(TreeAdmin):
                     [menu_item.get_root().menucontent.id, ]
                 )
             )
+            # TODO: This will need to iterate and find the root, as we don't always necessarily get the highest level
+            # from .get_root()
             request.menu_content_id = menu_item.get_root().menucontent.id
             change_perm = self.has_change_permission(request, menu_item)
             if not change_perm:
