@@ -1,4 +1,5 @@
 HELPER_SETTINGS = {
+    "SECRET_KEY": "Navigationtestsuitekey",
     "INSTALLED_APPS": [
         "djangocms_navigation",
         "djangocms_navigation.test_utils.app_1",
@@ -28,11 +29,12 @@ HELPER_SETTINGS = {
         ("fr", "French"),
         ("it", "Italiano"),
     ),
+    "DEFAULT_AUTO_FIELD": "django.db.models.AutoField",
 }
 
 
 def run():
-    from djangocms_helper import runner
+    from app_helper import runner
     runner.cms("djangocms_navigation", extra_args=[])
 
 

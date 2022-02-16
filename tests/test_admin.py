@@ -8,7 +8,7 @@ from django.contrib.sites.models import Site
 from django.shortcuts import reverse
 from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from cms.test_utils.testcases import CMSTestCase
 
@@ -275,8 +275,8 @@ class MenuItemAdminVersionLocked(CMSTestCase, UsefulAssertsMixin):
             expected_message = []
             status_code = 200
 
-        self.assertEquals(actual_message, expected_message)
-        self.assertEquals(response.status_code, status_code)
+        self.assertEqual(actual_message, expected_message)
+        self.assertEqual(response.status_code, status_code)
 
     def test_moving_node_that_is_version_locked_fails(self):
         """
@@ -292,14 +292,14 @@ class MenuItemAdminVersionLocked(CMSTestCase, UsefulAssertsMixin):
             msg = "OK"
             response_code = 200
 
-        self.assertEquals(response.status_code, response_code)
-        self.assertEquals(content, msg)
+        self.assertEqual(response.status_code, response_code)
+        self.assertEqual(content, msg)
 
     @patch('djangocms_navigation.admin.using_version_lock', False)
     def test_moving_node_version_lock_not_installed_works_without_error(self):
         response = self.client.post(self.move_url, data=self.data)
 
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.child.refresh_from_db()
         self.child_of_child.refresh_from_db()
         self.assertTrue(self.child_of_child.is_sibling_of(self.child))
