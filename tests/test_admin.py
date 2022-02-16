@@ -862,47 +862,29 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
         delete_url_single = reverse(
             "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, new_child.id,)
         )
-        with self.login_user_context(self.user):
-            response = self.client.get(delete_url_single, follow=True)
-
-        self.assertContains(response, "delete-confirmation")
 
         with self.login_user_context(self.user):
-            response = self.client.post(response.request.get("PATH_INFO"), follow=True)
+            response = self.client.post(
+                delete_url_single, follow=True, data={"menu_content_id": menu_content.id}
+            )
 
         self.assertEqual(MenuItem._base_manager.count(), 4)
-        self.assertContains(
-            response, '<li class="success">Successfully deleted menuitem: ({}: {})</li>'.format(
-                new_child, new_child.id
-            )
-        )
+        self.assertContains(response, '<li class="success">The menu item')
+        self.assertContains(response, new_child)
+        self.assertContains(response, 'was deleted successfully.</li>')
 
         delete_url_with_child = reverse(
             "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, child.id,),
         )
-        with self.login_user_context(self.user):
-            response = self.client.get(delete_url_with_child, follow=True)
-
-        self.assertContains(response, "delete-confirmation")
 
         with self.login_user_context(self.user):
-            response = self.client.post(response.request.get("PATH_INFO"), follow=True)
-
-        self.assertEqual(MenuItem._base_manager.count(), 1)
-        self.assertContains(
-            response, '<li class="success">Successfully deleted menuitem: ({}: {}),'.format(
-                child, child.id
+            response = self.client.post(
+                delete_url_with_child, follow=True, data={"menu_content_id": menu_content.id}
             )
-        )
-        self.assertContains(
-            response,
-            'as well as it&#39;s children: ({}: {})'.format(
-                child, child.id
-            ))
-        self.assertContains(
-            response, ' ({}: {}) </li>'.format(
-                grandchild_of_child, grandchild_of_child.id
-            ))
+
+        self.assertContains(response, '<li class="success">The menu item')
+        self.assertContains(response, child)
+        self.assertContains(response, 'was deleted successfully.</li>')
 
     def test_menuitem_delete_view_no_permission(self):
         """
@@ -925,6 +907,17 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
         """
         Root cannot be deleted, user is redirected without deletion
         """
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
+
+        url = reverse(
+            "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, menu_content.root.id)
+        )
+        with self.login_user_context(user=self.user):
+            response = self.client.post(url, follow=True, data={"menu_content_id": menu_content.id})
+
+        self.assertContains(
+            response, '<li class="error">This item is the root of a menu, therefore it cannot be deleted.</li>'
+        )
 
 
 class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
@@ -957,7 +950,7 @@ class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
         menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         move_url = reverse(
-            "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,)
+            "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,),
         )
         data = {"node_id": child.pk, "parent_id": 0}
 

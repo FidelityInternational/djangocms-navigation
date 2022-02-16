@@ -3,6 +3,7 @@ import json
 from django.apps import apps
 from django.conf.urls import url
 from django.contrib import admin, messages
+from django.contrib.admin.options import IS_POPUP_VAR
 from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
 from django.contrib.admin.utils import quote
 from django.contrib.admin.views.main import ChangeList
@@ -28,7 +29,6 @@ from .utils import is_versioning_enabled, purge_menu_cache, reverse_admin_name
 from .views import ContentObjectSelect2View, MenuContentPreviewView
 
 
-IS_POPUP_VAR = '_popup'
 ROOT_MESSAGE = _(
     "This item is the root of a menu, therefore it cannot be deleted."
 )
