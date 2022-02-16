@@ -539,6 +539,11 @@ class MenuItemAdmin(TreeAdmin):
             self, request, object_id, menu_content_id=None, form_url="", extra_context=None
     ):
         extra_context = extra_context or {}
+        list_url = reverse_admin_name(
+            self.model,
+            'list',
+            kwargs={"menu_content_id": menu_content_id},
+        )
         if menu_content_id:
             request.menu_content_id = menu_content_id
         if self._versioning_enabled:
@@ -554,7 +559,7 @@ class MenuItemAdmin(TreeAdmin):
             menu_item = get_object_or_404(MenuItem, id=object_id)
             if menu_item.is_root():
                 messages.error(request, ROOT_MESSAGE)
-                return HttpResponseRedirect(version_list_url(menu_content))
+                return HttpResponseRedirect(list_url)
 
             version = Version.objects.get_for_content(menu_content)
             try:
@@ -563,11 +568,7 @@ class MenuItemAdmin(TreeAdmin):
                 messages.error(request, str(error))
                 return HttpResponseRedirect(version_list_url(menu_content))
 
-        extra_context["list_url"] = reverse_admin_name(
-            self.model,
-            'list',
-            kwargs={"menu_content_id": menu_content_id},
-        )
+        extra_context["list_url"] = list_url
         return super(MenuItemAdmin, self).delete_view(request, object_id, extra_context)
 
     def response_delete(self, request, obj_display, obj_id):
