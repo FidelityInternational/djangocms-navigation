@@ -29,6 +29,9 @@ from .views import ContentObjectSelect2View, MenuContentPreviewView
 
 
 IS_POPUP_VAR = '_popup'
+ROOT_MESSAGE = _(
+    "This item is the root of a menu, therefore it cannot be deleted."
+)
 
 try:
     from djangocms_versioning.exceptions import ConditionFailed
@@ -296,9 +299,15 @@ class MenuContentAdmin(admin.ModelAdmin):
 class MenuItemAdmin(TreeAdmin):
     form = MenuItemForm
     menu_content_model = MenuContent
+    actions = None
     change_form_template = "admin/djangocms_navigation/menuitem/change_form.html"
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
     list_display = ["__str__", "get_object_url", "soft_root", 'hide_node']
+
+    class Media:
+         css = {
+             "all": ("djangocms_versioning/css/actions.css",)
+         }
 
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
@@ -360,6 +369,55 @@ class MenuItemAdmin(TreeAdmin):
                 name="{}_{}_preview".format(*info),
             ),
         ]
+
+    def get_list_display(self, request):
+        list_display = ["__str__", "get_object_url", "soft_root", 'hide_node']
+        list_display.extend([self._list_actions(request)])
+        return list_display
+
+    def _list_actions(self, request):
+        """
+        A closure that makes it possible to pass request object to
+        list action button functions.
+        """
+
+        def list_actions(obj):
+            """Display links to state change endpoints
+            """
+            return format_html_join(
+                "",
+                "{}",
+                ((action(obj, request),) for action in self.get_list_actions()),
+            )
+
+        list_actions.short_description = _("actions")
+        return list_actions
+
+    def get_list_actions(self):
+        """
+        Collect rendered actions from implemented methods and return as list
+        """
+        return [
+            self._get_delete_link,
+        ]
+
+    def _get_delete_link(self, obj, request, disabled=False):
+        # https://github.com/django/django/blob/d35ce682e31ea4a86c2079c60721fae171f03d7c/django/contrib/admin/actions.py#L19
+        from django.contrib.admin.actions import delete_selected
+        app, model = self.model._meta.app_label, self.model._meta.model_name
+
+        # print(dir(request))
+        # print(obj.id)
+        # print(request.menu_content_id)
+
+        delete_url = reverse("admin:{app}_{model}_delete".format(
+            app=app, model=model), args=[request.menu_content_id, obj.id]
+        )
+
+        return render_to_string(
+            "djangocms_versioning/admin/discard_icon.html",
+            {"discard_url": delete_url, "disabled": disabled, "object_id": obj.id},
+        )
 
     def get_queryset(self, request):
         if hasattr(request, "menu_content_id"):
@@ -493,6 +551,11 @@ class MenuItemAdmin(TreeAdmin):
             delete_perm = self.has_delete_permission(request, menu_content)
             if not delete_perm:
                 messages.error(request, LOCK_MESSAGE)
+                return HttpResponseRedirect(version_list_url(menu_content))
+
+            menu_item = get_object_or_404(MenuItem, id=object_id)
+            if menu_item.is_root():
+                messages.error(request, ROOT_MESSAGE)
                 return HttpResponseRedirect(version_list_url(menu_content))
 
             version = Version.objects.get_for_content(menu_content)

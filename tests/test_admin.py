@@ -665,7 +665,7 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
             "_position": "first-child",
         }
         self.client.post(add_url, data)
-        self.assertEqual(len(ma.get_list_display(mock_request)), 4)
+        self.assertEqual(len(ma.get_list_display(mock_request)), 5)
         self.assertIn("get_object_url", ma.get_list_display(mock_request))
 
     def test_menuitem_add_view_redirects_on_save_continue(self):
@@ -840,6 +840,91 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
         # Redirect happened and error message displayed
         self.assertRedirectsToVersionList(response, version.content)
         self.assertDjangoErrorMessage("Version is not a draft", mocked_messages)
+
+
+class MenuItemAdminDeleteViewTestCase(CMSTestCase):
+    def setUp(self):
+        self.user = self.get_superuser()
+        self.client.force_login(self.user)
+
+    def test_menuitem_delete_view_success(self):
+        """
+        With appropriate permissions, the delete view handles both the deletion of single, and multiple nodes (when
+        we have a node with child(ren)).
+        """
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
+        child = factories.ChildMenuItemFactory(parent=menu_content.root)
+        new_child = factories.ChildMenuItemFactory(parent=menu_content.root)
+        child_of_child = factories.ChildMenuItemFactory(parent=child)
+        grandchild_of_child = factories.ChildMenuItemFactory(parent=child_of_child)
+
+        # Test deleting one, editable node, with no children
+        delete_url_single = reverse(
+            "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, new_child.id,)
+        )
+        with self.login_user_context(self.user):
+            response = self.client.get(delete_url_single, follow=True)
+
+        self.assertContains(response, "delete-confirmation")
+
+        with self.login_user_context(self.user):
+            response = self.client.post(response.request.get("PATH_INFO"), follow=True)
+
+        self.assertEqual(MenuItem._base_manager.count(), 4)
+        self.assertContains(
+            response, '<li class="success">Successfully deleted menuitem: ({}: {})</li>'.format(
+                new_child, new_child.id
+            )
+        )
+
+        delete_url_with_child = reverse(
+            "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, child.id,),
+        )
+        with self.login_user_context(self.user):
+            response = self.client.get(delete_url_with_child, follow=True)
+
+        self.assertContains(response, "delete-confirmation")
+
+        with self.login_user_context(self.user):
+            response = self.client.post(response.request.get("PATH_INFO"), follow=True)
+
+        self.assertEqual(MenuItem._base_manager.count(), 1)
+        self.assertContains(
+            response, '<li class="success">Successfully deleted menuitem: ({}: {}),'.format(
+                child, child.id
+            )
+        )
+        self.assertContains(
+            response,
+            'as well as it&#39;s children: ({}: {})'.format(
+                child, child.id
+            ))
+        self.assertContains(
+            response, ' ({}: {}) </li>'.format(
+                grandchild_of_child, grandchild_of_child.id
+            ))
+
+    def test_menuitem_delete_view_no_permission(self):
+        """
+        User does not have appropriate permissions, 403 returned and MenuItem not deleted.
+        """
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
+        factories.ChildMenuItemFactory(parent=menu_content.root)
+        new_child = factories.ChildMenuItemFactory(parent=menu_content.root)
+
+        url = reverse(
+            "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, new_child.id,)
+        )
+        with self.login_user_context(user=self.get_staff_user_with_no_permissions()):
+            response = self.client.get(url, follow=True)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(MenuItem._base_manager.count(), 3)
+
+    def test_menuitem_delete_view_root(self):
+        """
+        Root cannot be deleted, user is redirected without deletion
+        """
 
 
 class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
