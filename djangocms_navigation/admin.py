@@ -405,13 +405,7 @@ class MenuItemAdmin(TreeAdmin):
         ]
 
     def _get_delete_link(self, obj, request, disabled=False):
-        # https://github.com/django/django/blob/d35ce682e31ea4a86c2079c60721fae171f03d7c/django/contrib/admin/actions.py#L19
-        from django.contrib.admin.actions import delete_selected
         app, model = self.model._meta.app_label, self.model._meta.model_name
-
-        # print(dir(request))
-        # print(obj.id)
-        # print(request.menu_content_id)
 
         delete_url = reverse("admin:{app}_{model}_delete".format(
             app=app, model=model), args=[request.menu_content_id, obj.id]
