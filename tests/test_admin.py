@@ -856,35 +856,39 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         new_child = factories.ChildMenuItemFactory(parent=menu_content.root)
         child_of_child = factories.ChildMenuItemFactory(parent=child)
-        grandchild_of_child = factories.ChildMenuItemFactory(parent=child_of_child)
+        factories.ChildMenuItemFactory(parent=child_of_child)
 
-        # Test deleting one, editable node, with no children
+        # Delete one, editable node, with no children
         delete_url_single = reverse(
             "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, new_child.id,)
         )
-
         with self.login_user_context(self.user):
             response = self.client.post(
                 delete_url_single, follow=True, data={"menu_content_id": menu_content.id}
             )
+        content = response.content.decode('utf-8')
 
         self.assertEqual(MenuItem._base_manager.count(), 4)
-        self.assertContains(response, '<li class="success">The menu item')
-        self.assertContains(response, new_child)
-        self.assertContains(response, 'was deleted successfully.</li>')
+        self.assertIn(
+            '<li class="success">The menu item “{}” was deleted successfully.</li>'.format(new_child),
+            content
+        )
 
+        # Delete an editable node, with children
         delete_url_with_child = reverse(
             "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, child.id,),
         )
-
         with self.login_user_context(self.user):
             response = self.client.post(
                 delete_url_with_child, follow=True, data={"menu_content_id": menu_content.id}
             )
+        content = response.content.decode('utf-8')
 
-        self.assertContains(response, '<li class="success">The menu item')
-        self.assertContains(response, child)
-        self.assertContains(response, 'was deleted successfully.</li>')
+        self.assertEqual(MenuItem._base_manager.count(), 1)
+        self.assertIn(
+            '<li class="success">The menu item “{}” was deleted successfully.</li>'.format(child),
+            content
+        )
 
     def test_menuitem_delete_view_no_permission(self):
         """
@@ -950,7 +954,7 @@ class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
         menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         move_url = reverse(
-            "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,),
+            "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,)
         )
         data = {"node_id": child.pk, "parent_id": 0}
 
