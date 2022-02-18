@@ -597,8 +597,8 @@ class MenuItemAdmin(TreeAdmin):
                 'admin/%s/popup_response.html' % opts.app_label,
                 'admin/popup_response.html',
             ], {
-                                        'popup_response_data': popup_response_data,
-                                    })
+                'popup_response_data': popup_response_data,
+            })
 
         self.message_user(
             request,
