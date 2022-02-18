@@ -529,6 +529,22 @@ class MenuItemAdmin(TreeAdmin):
 
         return super().changelist_view(request, extra_context)
 
+    def _get_to_be_deleted_objects(self, menu_item, request):
+        def _get_related_objects(menu_item):
+            # Since we are using treebeard, the default 'to_be_deleted' functionality from django
+            # does not work, therefore we must construct the list here and
+            # pass it to the delete confirmation.
+            yield menu_item
+            for child_item in menu_item.get_children():
+                yield child_item
+
+        to_be_deleted = list(_get_related_objects(menu_item))
+        get_deleted_objects_additional_context = {"request": request}
+        (deleted_objects, model_count, perms_needed, protected) = get_deleted_objects(
+            to_be_deleted, admin_site=self.admin_site, **get_deleted_objects_additional_context
+        )
+        return deleted_objects
+
     def delete_view(self, request, object_id, menu_content_id=None, form_url="", extra_context=None):
 
         extra_context = extra_context or {}
@@ -561,23 +577,7 @@ class MenuItemAdmin(TreeAdmin):
                     messages.error(request, str(error))
                     return HttpResponseRedirect(version_list_url(menu_content))
 
-                def _get_to_be_deleted_objects(menu_item):
-                    def _get_related_objects(menu_item):
-                        # Since we are using treebeard, the default 'to_be_deleted' functionality from django
-                        # does not work, therefore we must construct the list here and
-                        # pass it to the delete confirmation.
-                        yield menu_item
-                        for child_item in menu_item.get_children():
-                            yield child_item
-
-                    to_be_deleted = list(_get_related_objects(menu_item))
-                    get_deleted_objects_additional_context = {"request": request}
-                    (deleted_objects, model_count, perms_needed, protected) = get_deleted_objects(
-                        to_be_deleted, admin_site=self.admin_site, **get_deleted_objects_additional_context
-                    )
-                    return deleted_objects
-
-                extra_context["deleted_objects"] = _get_to_be_deleted_objects(menu_item)
+                extra_context["deleted_objects"] = self._get_to_be_deleted_objects(menu_item, request)
 
         return super(MenuItemAdmin, self).delete_view(request, object_id, extra_context)
 
