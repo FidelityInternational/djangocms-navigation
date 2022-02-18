@@ -421,9 +421,7 @@ class MenuItemAdmin(TreeAdmin):
             return self.model.get_tree(menu_content.root)
         return self.model().get_tree()
 
-    def change_view(
-            self, request, object_id, menu_content_id=None, form_url="", extra_context=None
-    ):
+    def change_view(self, request, object_id, menu_content_id=None, form_url="", extra_context=None):
         extra_context = extra_context or {}
         if menu_content_id:
             request.menu_content_id = menu_content_id
@@ -531,9 +529,8 @@ class MenuItemAdmin(TreeAdmin):
 
         return super().changelist_view(request, extra_context)
 
-    def delete_view(
-            self, request, object_id, menu_content_id=None, form_url="", extra_context=None
-    ):
+    def delete_view(self, request, object_id, menu_content_id=None, form_url="", extra_context=None):
+
         extra_context = extra_context or {}
         if menu_content_id:
             request.menu_content_id = menu_content_id
@@ -563,16 +560,24 @@ class MenuItemAdmin(TreeAdmin):
                 except ConditionFailed as error:
                     messages.error(request, str(error))
                     return HttpResponseRedirect(version_list_url(menu_content))
-                # Since we are using treebeard, the default 'to_be_deleted' functionality from django
-                # does not work, therefore we must construct the list here and pass it to the delete confirmation.
-                to_be_deleted = [menu_item]
-                for child_item in menu_item.get_children():
-                    to_be_deleted += [child_item]
-                get_deleted_objects_additional_context = {"request": request}
-                (deleted_objects, model_count, perms_needed, protected) = get_deleted_objects(
-                    to_be_deleted, admin_site=self.admin_site, **get_deleted_objects_additional_context
-                )
-                extra_context["deleted_objects"] = deleted_objects
+
+                def _get_to_be_deleted_objects(menu_item):
+                    def _get_related_objects(menu_item):
+                        # Since we are using treebeard, the default 'to_be_deleted' functionality from django
+                        # does not work, therefore we must construct the list here and
+                        # pass it to the delete confirmation.
+                        yield menu_item
+                        for child_item in menu_item.get_children():
+                            yield child_item
+
+                    to_be_deleted = list(_get_related_objects(menu_item))
+                    get_deleted_objects_additional_context = {"request": request}
+                    (deleted_objects, model_count, perms_needed, protected) = get_deleted_objects(
+                        to_be_deleted, admin_site=self.admin_site, **get_deleted_objects_additional_context
+                    )
+                    return deleted_objects
+
+                extra_context["deleted_objects"] = _get_to_be_deleted_objects(menu_item)
 
         return super(MenuItemAdmin, self).delete_view(request, object_id, extra_context)
 
