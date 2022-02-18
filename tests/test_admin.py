@@ -1,3 +1,4 @@
+import html
 from unittest.mock import patch
 
 import django
@@ -860,17 +861,23 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
         With appropriate permissions, the delete view handles both the deletion of single, and multiple nodes (when
         we have a node with child(ren)).
         """
-        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
+        user_with_delete_permissions = self._create_user(
+            "user_with_delete", is_staff=True
+        )
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=user_with_delete_permissions)
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         new_child = factories.ChildMenuItemFactory(parent=menu_content.root)
         child_of_child = factories.ChildMenuItemFactory(parent=child)
         factories.ChildMenuItemFactory(parent=child_of_child)
 
+        self.add_permission(user_with_delete_permissions, "view_menucontentversion")
+        self.add_permission(user_with_delete_permissions, "delete_menuitem")
+
         # Delete one, editable node, with no children
         delete_url_single = reverse(
             "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, new_child.id,)
         )
-        with self.login_user_context(self.user):
+        with self.login_user_context(user_with_delete_permissions):
             response = self.client.post(
                 delete_url_single, follow=True, data={"menu_content_id": menu_content.id}
             )
@@ -886,7 +893,7 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
         delete_url_with_child = reverse(
             "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, child.id,),
         )
-        with self.login_user_context(self.user):
+        with self.login_user_context(user_with_delete_permissions):
             response = self.client.post(
                 delete_url_with_child, follow=True, data={"menu_content_id": menu_content.id}
             )
@@ -909,17 +916,18 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
         url = reverse(
             "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, new_child.id,)
         )
-        user_with_delete_permissions = self._create_user(
-            "user_with_delete", is_staff=True
+        user_without_delete_permissions = self._create_user(
+            "user_without_delete", is_staff=True
         )
-        self.add_permission(user_with_delete_permissions, "view_menucontentversion")
+        self.add_permission(user_without_delete_permissions, "view_menucontentversion")
 
-        with self.login_user_context(user=user_with_delete_permissions):
+        with self.login_user_context(user=user_without_delete_permissions):
             response = self.client.post(url, follow=True)
         content = response.content.decode('utf-8')
+        content = html.unescape(content)
 
         self.assertIn(
-            '''<li class="error">The item is currently locked or you don&#x27;t have permission to change it</li>''',
+            '''<li class="error">The item is currently locked or you don\'t have permission to change it</li>''',
             content
         )
         self.assertEqual(response.status_code, 200)
@@ -940,6 +948,8 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
         self.assertContains(
             response, '<li class="error">This item is the root of a menu, therefore it cannot be deleted.</li>'
         )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(MenuItem._base_manager.count(), 1)
 
 
 class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
