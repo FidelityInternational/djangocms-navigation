@@ -858,12 +858,10 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
 
     def test_menuitem_delete_view_item_without_children(self):
         """
-        The confirmation screen is populated with both the MenuItem targeted to be deleted
-        and, its children.
+        Single MenuItem is shown in confirmation, and then deleted on second request
         """
         menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
-
 
         # Get the url for deleting a single URL
         delete_url_single = reverse(
@@ -874,6 +872,9 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
             # Hit the confirmation page using get request
             confirmation_response = self.client.get(
                 delete_url_single, data={"menu_content_id": menu_content.id}
+            )
+            response = self.client.post(
+                delete_url_single, follow=True, data={"menu_content_id": menu_content.id}
             )
 
         # Confirmation screen populated with all to-be deleted items
@@ -891,8 +892,17 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
                 child
             )
         )
+        # Confirm deletion was success
+        self.assertContains(
+            response,
+            '<li class="success">The menu item “{}” was deleted successfully.</li>'.format(child),
+        )
+        self.assertEqual(MenuItem._base_manager.count(), 1)
 
     def test_menuitem_delete_view_item_with_children(self):
+        """
+        Multi MenuItem is shown in confirmation, and then deleted on second request
+        """
         menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         child_of_child = factories.ChildMenuItemFactory(parent=child)
@@ -977,7 +987,7 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
 
     def test_menuitem_delete_view_without_permission(self):
         """
-        User does not have appropriate permissions, 403 returned and MenuItem not deleted.
+        User does not have appropriate permissions, redirect and provide error message
         """
         menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
         factories.ChildMenuItemFactory(parent=menu_content.root)
