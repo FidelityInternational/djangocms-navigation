@@ -878,9 +878,31 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
             "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, new_child.id,)
         )
         with self.login_user_context(user_with_delete_permissions):
+            # Hit the confirmation page using get
+            confirmation_response = self.client.get(
+                delete_url_single, data={"menu_content_id": menu_content.id}
+            )
+            # Hit the delete view using POST (i.e. confirmed delete)
             response = self.client.post(
                 delete_url_single, follow=True, data={"menu_content_id": menu_content.id}
             )
+
+        # Confirmation screen populated with all to be deleted items
+        self.assertContains(
+            confirmation_response,
+            '<p>Are you sure you want to delete the menu item "{}"?'.format(new_child)
+        )
+        self.assertContains(
+            confirmation_response,
+            'All of the following related items will be deleted:</p>'
+        )
+        self.assertContains(
+            confirmation_response,
+            '<ul>\t<li>Menu item: {}</li></ul'.format(
+                new_child
+            )
+        )
+
         content = response.content.decode('utf-8')
 
         self.assertEqual(MenuItem._base_manager.count(), 4)
@@ -894,9 +916,36 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
             "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, child.id,),
         )
         with self.login_user_context(user_with_delete_permissions):
+            # Hit the confirmation page using get
+            confirmation_response = self.client.get(
+                delete_url_with_child, data={"menu_content_id": menu_content.id}
+            )
             response = self.client.post(
                 delete_url_with_child, follow=True, data={"menu_content_id": menu_content.id}
             )
+
+        # Confirmation screen populated with all to be deleted items
+        self.assertContains(
+            confirmation_response,
+            '<p>Are you sure you want to delete the menu item "{}"?'.format(child)
+        )
+        self.assertContains(
+            confirmation_response,
+            'All of the following related items will be deleted:</p>'
+        )
+        self.assertContains(
+            confirmation_response,
+            '<ul>\t<li>Menu item: {}</li>'.format(
+                child
+            )
+        )
+        self.assertContains(
+            confirmation_response,
+            '\t<li>Menu item: {}</li></ul>'.format(
+                child_of_child
+            )
+        )
+
         content = response.content.decode('utf-8')
 
         self.assertEqual(MenuItem._base_manager.count(), 1)
