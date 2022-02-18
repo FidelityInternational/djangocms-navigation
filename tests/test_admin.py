@@ -856,7 +856,7 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
         self.user = self.get_superuser()
         self.client.force_login(self.user)
 
-    def test_menuitem_delete_view_success(self):
+    def test_menuitem_delete_view_success_single_item(self):
         """
         With appropriate permissions, the delete view handles both the deletion of single, and multiple nodes (when
         we have a node with child(ren)).
@@ -878,16 +878,59 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
             "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, new_child.id,)
         )
         with self.login_user_context(user_with_delete_permissions):
-            # Hit the confirmation page using get
-            confirmation_response = self.client.get(
-                delete_url_single, data={"menu_content_id": menu_content.id}
-            )
             # Hit the delete view using POST (i.e. confirmed delete)
             response = self.client.post(
                 delete_url_single, follow=True, data={"menu_content_id": menu_content.id}
             )
 
-        # Confirmation screen populated with all to be deleted items
+        content = response.content.decode('utf-8')
+
+        self.assertEqual(MenuItem._base_manager.count(), 4)
+        self.assertIn(
+            '<li class="success">The menu item “{}” was deleted successfully.</li>'.format(new_child),
+            content
+        )
+
+        # Delete an editable node, with children
+        delete_url_with_child = reverse(
+            "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, child.id,),
+        )
+        with self.login_user_context(user_with_delete_permissions):
+            response = self.client.post(
+                delete_url_with_child, follow=True, data={"menu_content_id": menu_content.id}
+            )
+
+        content = response.content.decode('utf-8')
+
+        self.assertEqual(MenuItem._base_manager.count(), 1)
+        self.assertIn(
+            '<li class="success">The menu item “{}” was deleted successfully.</li>'.format(child),
+            content
+        )
+
+    def test_menuitem_delete_view_confirmation(self):
+        """
+        The confirmation screen is populated with both the MenuItem targeted to be deleted
+        and, its children.
+        """
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
+        child = factories.ChildMenuItemFactory(parent=menu_content.root)
+        new_child = factories.ChildMenuItemFactory(parent=menu_content.root)
+        child_of_child = factories.ChildMenuItemFactory(parent=child)
+        factories.ChildMenuItemFactory(parent=child_of_child)
+
+        # Get the url for deleting a single URL
+        delete_url_single = reverse(
+            "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, new_child.id,)
+        )
+
+        with self.login_user_context(self.user):
+            # Hit the confirmation page using get request
+            confirmation_response = self.client.get(
+                delete_url_single, data={"menu_content_id": menu_content.id}
+            )
+
+        # Confirmation screen populated with all to-be deleted items
         self.assertContains(
             confirmation_response,
             '<p>Are you sure you want to delete the menu item "{}"?'.format(new_child)
@@ -903,25 +946,14 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
             )
         )
 
-        content = response.content.decode('utf-8')
-
-        self.assertEqual(MenuItem._base_manager.count(), 4)
-        self.assertIn(
-            '<li class="success">The menu item “{}” was deleted successfully.</li>'.format(new_child),
-            content
-        )
-
-        # Delete an editable node, with children
+        # Confirmation screen populated with all to-be deleted items
         delete_url_with_child = reverse(
             "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, child.id,),
         )
-        with self.login_user_context(user_with_delete_permissions):
+        with self.login_user_context(self.user):
             # Hit the confirmation page using get
             confirmation_response = self.client.get(
                 delete_url_with_child, data={"menu_content_id": menu_content.id}
-            )
-            response = self.client.post(
-                delete_url_with_child, follow=True, data={"menu_content_id": menu_content.id}
             )
 
         # Confirmation screen populated with all to be deleted items
@@ -944,14 +976,6 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
             '\t<li>Menu item: {}</li></ul>'.format(
                 child_of_child
             )
-        )
-
-        content = response.content.decode('utf-8')
-
-        self.assertEqual(MenuItem._base_manager.count(), 1)
-        self.assertIn(
-            '<li class="success">The menu item “{}” was deleted successfully.</li>'.format(child),
-            content
         )
 
     def test_menuitem_delete_view_no_permission(self):
