@@ -4,7 +4,7 @@ from django.apps import apps
 from django.contrib import admin, messages
 from django.contrib.admin.options import IS_POPUP_VAR
 from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
-from django.contrib.admin.utils import quote
+from django.contrib.admin.utils import get_deleted_objects, quote
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
@@ -563,6 +563,17 @@ class MenuItemAdmin(TreeAdmin):
                 except ConditionFailed as error:
                     messages.error(request, str(error))
                     return HttpResponseRedirect(version_list_url(menu_content))
+                # Since we are using treebeard, the default 'to_be_deleted' functionality from django
+                # does not work, therefore we must construct the list here and pass it to the delete confirmation.
+                to_be_deleted = [menu_item]
+                for child_item in menu_item.get_children():
+                    to_be_deleted += [child_item]
+                get_deleted_objects_additional_context = {"request": request}
+                (deleted_objects, model_count, perms_needed, protected) = get_deleted_objects(
+                    to_be_deleted, admin_site=self.admin_site, **get_deleted_objects_additional_context
+                )
+                extra_context["deleted_objects"] = deleted_objects
+
         return super(MenuItemAdmin, self).delete_view(request, object_id, extra_context)
 
     def response_delete(self, request, obj_display, obj_id):
