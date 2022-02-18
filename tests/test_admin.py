@@ -952,8 +952,7 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
 
     def test_menuitem_delete_view_with_permission(self):
         """
-        With appropriate permissions, the delete view handles both the deletion of single, and multiple nodes (when
-        we have a node with child(ren)).
+        With appropriate permissions, the delete view allows deletion of Menuitems
         """
         user_with_delete_permissions = self._create_user(
             "user_with_delete", is_staff=True
