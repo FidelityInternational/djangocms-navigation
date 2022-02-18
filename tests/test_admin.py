@@ -1,3 +1,4 @@
+import html
 from unittest.mock import patch
 
 import django
@@ -665,7 +666,7 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
             "_position": "first-child",
         }
         self.client.post(add_url, data)
-        self.assertEqual(len(ma.get_list_display(mock_request)), 4)
+        self.assertEqual(len(ma.get_list_display(mock_request)), 5)
         self.assertIn("get_object_url", ma.get_list_display(mock_request))
 
     def test_menuitem_add_view_redirects_on_save_continue(self):
@@ -840,6 +841,194 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
         # Redirect happened and error message displayed
         self.assertRedirectsToVersionList(response, version.content)
         self.assertDjangoErrorMessage("Version is not a draft", mocked_messages)
+
+
+@override_settings(
+    CMS_PERMISSION=True,
+    CMS_CAHCE_DURATIONS={
+        'menus': 60,
+        'content': 60,
+        'permissions': 60,
+    },
+)
+class MenuItemAdminDeleteViewTestCase(CMSTestCase):
+    def setUp(self):
+        self.user = self.get_superuser()
+        self.client.force_login(self.user)
+
+    def test_menuitem_delete_view_item_without_children(self):
+        """
+        Single MenuItem is shown in confirmation, and then deleted on second request
+        """
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
+        child = factories.ChildMenuItemFactory(parent=menu_content.root)
+
+        # Get the url for deleting a single URL
+        delete_url_single = reverse(
+            "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, child.id,)
+        )
+
+        with self.login_user_context(self.user):
+            # Hit the confirmation page using get request
+            confirmation_response = self.client.get(
+                delete_url_single, data={"menu_content_id": menu_content.id}
+            )
+            response = self.client.post(
+                delete_url_single, follow=True, data={"menu_content_id": menu_content.id}
+            )
+
+        # Confirmation screen populated with all to-be deleted items
+        self.assertContains(
+            confirmation_response,
+            '<p>Are you sure you want to delete the menu item "{}"?'.format(child)
+        )
+        self.assertContains(
+            confirmation_response,
+            'All of the following related items will be deleted:</p>'
+        )
+        self.assertContains(
+            confirmation_response,
+            '<ul>\t<li>Menu item: {}</li></ul'.format(
+                child
+            )
+        )
+        # Confirm deletion was success
+        self.assertContains(
+            response,
+            '<li class="success">The menu item “{}” was deleted successfully.</li>'.format(child),
+        )
+        self.assertEqual(MenuItem._base_manager.count(), 1)
+
+    def test_menuitem_delete_view_item_with_children(self):
+        """
+        Multi MenuItem is shown in confirmation, and then deleted on second request
+        """
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
+        child = factories.ChildMenuItemFactory(parent=menu_content.root)
+        child_of_child = factories.ChildMenuItemFactory(parent=child)
+        factories.ChildMenuItemFactory(parent=child_of_child)
+        # Delete an editable node, with children
+        delete_url_with_child = reverse(
+            "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, child.id,),
+        )
+        with self.login_user_context(self.user):
+            # Hit the confirmation page using get
+            confirmation_response = self.client.get(
+                delete_url_with_child, data={"menu_content_id": menu_content.id}
+            )
+            response = self.client.post(
+                delete_url_with_child, follow=True, data={"menu_content_id": menu_content.id}
+            )
+
+        # Confirmation screen populated with all to be deleted items
+        self.assertContains(
+            confirmation_response,
+            '<p>Are you sure you want to delete the menu item "{}"?'.format(child)
+        )
+        self.assertContains(
+            confirmation_response,
+            'All of the following related items will be deleted:</p>'
+        )
+        self.assertContains(
+            confirmation_response,
+            '<ul>\t<li>Menu item: {}</li>'.format(
+                child
+            )
+        )
+        self.assertContains(
+            confirmation_response,
+            '\t<li>Menu item: {}</li></ul>'.format(
+                child_of_child
+            )
+        )
+
+        content = response.content.decode('utf-8')
+
+        self.assertEqual(MenuItem._base_manager.count(), 1)
+        self.assertIn(
+            '<li class="success">The menu item “{}” was deleted successfully.</li>'.format(child),
+            content
+        )
+
+    def test_menuitem_delete_view_with_permission(self):
+        """
+        With appropriate permissions, the delete view allows deletion of Menuitems
+        """
+        user_with_delete_permissions = self._create_user(
+            "user_with_delete", is_staff=True
+        )
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=user_with_delete_permissions)
+        child = factories.ChildMenuItemFactory(parent=menu_content.root)
+        new_child = factories.ChildMenuItemFactory(parent=menu_content.root)
+        child_of_child = factories.ChildMenuItemFactory(parent=child)
+        factories.ChildMenuItemFactory(parent=child_of_child)
+
+        self.add_permission(user_with_delete_permissions, "view_menucontentversion")
+        self.add_permission(user_with_delete_permissions, "delete_menuitem")
+
+        # Delete one, editable node, with no children
+        delete_url_single = reverse(
+            "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, new_child.id,)
+        )
+        with self.login_user_context(user_with_delete_permissions):
+            # Hit the delete view using POST (i.e. confirmed delete)
+            response = self.client.post(
+                delete_url_single, follow=True, data={"menu_content_id": menu_content.id}
+            )
+
+        content = response.content.decode('utf-8')
+
+        self.assertEqual(MenuItem._base_manager.count(), 4)
+        self.assertIn(
+            '<li class="success">The menu item “{}” was deleted successfully.</li>'.format(new_child),
+            content
+        )
+
+    def test_menuitem_delete_view_without_permission(self):
+        """
+        User does not have appropriate permissions, redirect and provide error message
+        """
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
+        factories.ChildMenuItemFactory(parent=menu_content.root)
+        new_child = factories.ChildMenuItemFactory(parent=menu_content.root)
+
+        url = reverse(
+            "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, new_child.id,)
+        )
+        user_without_delete_permissions = self._create_user(
+            "user_without_delete", is_staff=True
+        )
+        self.add_permission(user_without_delete_permissions, "view_menucontentversion")
+
+        with self.login_user_context(user=user_without_delete_permissions):
+            response = self.client.post(url, follow=True)
+        content = response.content.decode('utf-8')
+        content = html.unescape(content)
+
+        self.assertIn(
+            '''<li class="error">The item is currently locked or you don\'t have permission to change it</li>''',
+            content
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(MenuItem._base_manager.count(), 3)
+
+    def test_menuitem_delete_view_root(self):
+        """
+        Root cannot be deleted, user is redirected without deletion
+        """
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
+
+        url = reverse(
+            "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, menu_content.root.id)
+        )
+        with self.login_user_context(user=self.user):
+            response = self.client.post(url, follow=True, data={"menu_content_id": menu_content.id})
+
+        self.assertContains(
+            response, '<li class="error">This item is the root of a menu, therefore it cannot be deleted.</li>'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(MenuItem._base_manager.count(), 1)
 
 
 class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):

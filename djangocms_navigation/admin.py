@@ -1,11 +1,16 @@
+import json
+
 from django.apps import apps
 from django.contrib import admin, messages
-from django.contrib.admin.utils import quote
+from django.contrib.admin.options import IS_POPUP_VAR
+from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
+from django.contrib.admin.utils import get_deleted_objects, quote
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
+from django.template.response import TemplateResponse
 from django.urls import re_path, reverse
 from django.utils.html import format_html, format_html_join
 from django.utils.text import slugify
@@ -293,9 +298,15 @@ class MenuContentAdmin(admin.ModelAdmin):
 class MenuItemAdmin(TreeAdmin):
     form = MenuItemForm
     menu_content_model = MenuContent
+    actions = None
     change_form_template = "admin/djangocms_navigation/menuitem/change_form.html"
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
     list_display = ["__str__", "get_object_url", "soft_root", 'hide_node']
+
+    class Media:
+        css = {
+            "all": ("djangocms_versioning/css/actions.css",)
+        }
 
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
@@ -326,6 +337,11 @@ class MenuItemAdmin(TreeAdmin):
                 name="{}_{}_change".format(*info),
             ),
             re_path(
+                r"^(?P<menu_content_id>\d+)/(?P<object_id>\d+)/delete/$",
+                self.admin_site.admin_view(self.delete_view),
+                name="{}_{}_delete".format(*info),
+            ),
+            re_path(
                 r"^(?P<menu_content_id>\d+)/move/$",
                 self.admin_site.admin_view(self.move_node),
                 name="{}_{}_move_node".format(*info),
@@ -353,6 +369,50 @@ class MenuItemAdmin(TreeAdmin):
             ),
         ]
 
+    def get_list_display(self, request):
+        list_display = ["__str__", "get_object_url", "soft_root", 'hide_node']
+        list_display.extend([self._list_actions(request)])
+        return list_display
+
+    def _list_actions(self, request):
+        """
+        A closure that makes it possible to pass request object to
+        list action button functions.
+        """
+
+        def list_actions(obj):
+            """Display links to state change endpoints
+            """
+            return format_html_join(
+                "",
+                "{}",
+                ((action(obj, request),) for action in self.get_list_actions()),
+            )
+
+        list_actions.short_description = _("actions")
+        return list_actions
+
+    def get_list_actions(self):
+        """
+        Collect rendered actions from implemented methods and return as list
+        """
+        return [
+            self._get_delete_link,
+        ]
+
+    def _get_delete_link(self, obj, request, disabled=False):
+        app, model = self.model._meta.app_label, self.model._meta.model_name
+
+        delete_url = reverse(
+            "admin:{app}_{model}_delete".format(app=app, model=model),
+            args=[request.menu_content_id, obj.id]
+        )
+
+        return render_to_string(
+            "djangocms_versioning/admin/discard_icon.html",
+            {"discard_url": delete_url, "disabled": disabled, "object_id": obj.id},
+        )
+
     def get_queryset(self, request):
         if hasattr(request, "menu_content_id"):
             menu_content = get_object_or_404(
@@ -361,9 +421,7 @@ class MenuItemAdmin(TreeAdmin):
             return self.model.get_tree(menu_content.root)
         return self.model().get_tree()
 
-    def change_view(
-        self, request, object_id, menu_content_id=None, form_url="", extra_context=None
-    ):
+    def change_view(self, request, object_id, menu_content_id=None, form_url="", extra_context=None):
         extra_context = extra_context or {}
         if menu_content_id:
             request.menu_content_id = menu_content_id
@@ -386,12 +444,16 @@ class MenuItemAdmin(TreeAdmin):
                 return HttpResponseRedirect(version_list_url(menu_content))
             # purge menu cache
             purge_menu_cache(site_id=menu_content.menu.site_id)
+
         extra_context["list_url"] = reverse_admin_name(
             self.model,
             'list',
             kwargs={"menu_content_id": menu_content_id},
         )
-
+        extra_context["delete_url"] = reverse(
+            "admin:{}_menuitem_delete".format(self.model._meta.app_label),
+            kwargs={"menu_content_id": menu_content_id, "object_id": object_id},
+        )
         return super().change_view(
             request, object_id, form_url="", extra_context=extra_context
         )
@@ -466,6 +528,99 @@ class MenuItemAdmin(TreeAdmin):
             extra_context["versioning_enabled_for_nav"] = self._versioning_enabled
 
         return super().changelist_view(request, extra_context)
+
+    def _get_to_be_deleted_objects(self, menu_item, request):
+        def _get_related_objects(menu_item):
+            # Since we are using treebeard, the default 'to_be_deleted' functionality from django
+            # does not work, therefore we must construct the list here and
+            # pass it to the delete confirmation.
+            yield menu_item
+            for child_item in menu_item.get_children():
+                yield child_item
+
+        to_be_deleted = list(_get_related_objects(menu_item))
+        get_deleted_objects_additional_context = {"request": request}
+        (deleted_objects, model_count, perms_needed, protected) = get_deleted_objects(
+            to_be_deleted, admin_site=self.admin_site, **get_deleted_objects_additional_context
+        )
+        return deleted_objects
+
+    def delete_view(self, request, object_id, menu_content_id=None, form_url="", extra_context=None):
+
+        extra_context = extra_context or {}
+        if menu_content_id:
+            request.menu_content_id = menu_content_id
+            list_url = reverse_admin_name(
+                self.model,
+                'list',
+                kwargs={"menu_content_id": menu_content_id},
+            )
+            extra_context["list_url"] = list_url
+            if self._versioning_enabled:
+                menu_content = get_object_or_404(
+                    self.menu_content_model._base_manager, id=menu_content_id
+                )
+                delete_perm = self.has_delete_permission(request, menu_content)
+                if not delete_perm:
+                    messages.error(request, LOCK_MESSAGE)
+                    return HttpResponseRedirect(version_list_url(menu_content))
+                menu_item = get_object_or_404(MenuItem, id=object_id)
+                if menu_item.is_root():
+                    messages.error(
+                        request, _("This item is the root of a menu, therefore it cannot be deleted.")
+                    )
+                    return HttpResponseRedirect(list_url)
+                version = Version.objects.get_for_content(menu_content)
+                try:
+                    version.check_modify(request.user)
+                except ConditionFailed as error:
+                    messages.error(request, str(error))
+                    return HttpResponseRedirect(version_list_url(menu_content))
+
+                extra_context["deleted_objects"] = self._get_to_be_deleted_objects(menu_item, request)
+
+        return super(MenuItemAdmin, self).delete_view(request, object_id, extra_context)
+
+    def response_delete(self, request, obj_display, obj_id):
+        """
+        Determine the HttpResponse for the delete_view stage.
+        """
+        opts = self.model._meta
+
+        if IS_POPUP_VAR in request.POST:
+            popup_response_data = json.dumps({
+                'action': 'delete',
+                'value': str(obj_id),
+            })
+            return TemplateResponse(request, self.popup_response_template or [
+                'admin/%s/%s/popup_response.html' % (opts.app_label, opts.model_name),
+                'admin/%s/popup_response.html' % opts.app_label,
+                'admin/popup_response.html',
+            ], {
+                'popup_response_data': popup_response_data,
+            })
+
+        self.message_user(
+            request,
+            _('The %(name)s “%(obj)s” was deleted successfully.') % {
+                'name': opts.verbose_name,
+                'obj': obj_display,
+            },
+            messages.SUCCESS,
+        )
+        if self.has_change_permission(request, None):
+            post_url = reverse_admin_name(
+                self.model,
+                'list',
+                kwargs={"menu_content_id": request.menu_content_id},
+            )
+            preserved_filters = self.get_preserved_filters(request)
+            post_url = add_preserved_filters(
+                {'preserved_filters': preserved_filters, 'opts': opts}, post_url
+            )
+        else:
+            post_url = reverse('admin:index', current_app=self.admin_site.name)
+        return HttpResponseRedirect(post_url)
 
     def response_change(self, request, obj):
         msg = _('Menuitem %(menuitem)s was changed successfully.') % {'menuitem': obj.id}
@@ -550,6 +705,17 @@ class MenuItemAdmin(TreeAdmin):
         if not hasattr(request, "menu_content_id"):
             return False
         return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if not hasattr(request, "menu_content_id"):
+            return False
+
+        if obj and using_version_lock:
+            unlocked = content_is_unlocked_for_user(obj, request.user)
+            if not unlocked:
+                return False
+
+        return super().has_delete_permission(request, obj)
 
     def get_changelist(self, request, **kwargs):
         return MenuItemChangeList
