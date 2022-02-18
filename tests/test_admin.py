@@ -842,6 +842,14 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
         self.assertDjangoErrorMessage("Version is not a draft", mocked_messages)
 
 
+@override_settings(
+    CMS_PERMISSION=True,
+    CMS_CAHCE_DURATIONS={
+        'menus': 60,
+        'content': 60,
+        'permissions': 60,
+    },
+)
 class MenuItemAdminDeleteViewTestCase(CMSTestCase):
     def setUp(self):
         self.user = self.get_superuser()
@@ -862,112 +870,7 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
         delete_url_single = reverse(
             "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, new_child.id,)
         )
-        user_with_delete_permissions = self._create_user(
-            "user_with_delete", is_staff=True,
-        )
-        self.add_permission(user_with_delete_permissions, "change_collectioncomment")
-        self.add_permission(user_with_delete_permissions, "change_role")
-        self.add_permission(user_with_delete_permissions, "add_requestcomment")
-        self.add_permission(user_with_delete_permissions, "add_pagecontentversion")
-        self.add_permission(user_with_delete_permissions, "add_aliaspluginmodel")
-        self.add_permission(user_with_delete_permissions, "view_cachekey")
-        self.add_permission(user_with_delete_permissions, "change_pageusergroup")
-        self.add_permission(user_with_delete_permissions, "add_moderationrequestaction")
-        self.add_permission(user_with_delete_permissions, "delete_usersettings")
-        self.add_permission(user_with_delete_permissions, "add_poll")
-        self.add_permission(user_with_delete_permissions, "delete_workflow")
-        self.add_permission(user_with_delete_permissions, "view_requestcomment")
-        self.add_permission(user_with_delete_permissions, "delete_testmodel4")
-        self.add_permission(user_with_delete_permissions, "view_placeholderreference")
-        self.add_permission(user_with_delete_permissions, "view_user")
-        self.add_permission(user_with_delete_permissions, "add_testmodel3")
-        self.add_permission(user_with_delete_permissions, "delete_contenttype")
-        self.add_permission(user_with_delete_permissions, "delete_workflowstep")
-        self.add_permission(user_with_delete_permissions, "view_moderationrequest")
-        self.add_permission(user_with_delete_permissions, "change_moderationrequest")
-        self.add_permission(user_with_delete_permissions, "view_session")
-        self.add_permission(user_with_delete_permissions, "view_aliaspluginmodel")
-        self.add_permission(user_with_delete_permissions, "add_testmodel2")
-        self.add_permission(user_with_delete_permissions, "delete_urlconfrevision")
-        self.add_permission(user_with_delete_permissions, "view_navigationplugin")
-        self.add_permission(user_with_delete_permissions, "delete_logentry")
-        self.add_permission(user_with_delete_permissions, "add_pageuser")
-        self.add_permission(user_with_delete_permissions, "delete_moderationcollection")
-        self.add_permission(user_with_delete_permissions, "change_poll")
-        self.add_permission(user_with_delete_permissions, "delete_collectioncomment")
-        self.add_permission(user_with_delete_permissions, "delete_testmodel3")
-        self.add_permission(user_with_delete_permissions, "add_version")
-        self.add_permission(user_with_delete_permissions, "view_menuitem")
-        self.add_permission(user_with_delete_permissions, "change_menuitem")
-        self.add_permission(user_with_delete_permissions, "delete_menuitem")
-        self.add_permission(user_with_delete_permissions, "view_menucontent")
-        self.add_permission(user_with_delete_permissions, "change_menucontent")
-        self.add_permission(user_with_delete_permissions, "change_menu")
-        self.add_permission(user_with_delete_permissions, "add_menu")
-        self.add_permission(user_with_delete_permissions, "view_menu")
-        self.add_permission(user_with_delete_permissions, "add_versionlock")
-        self.add_permission(user_with_delete_permissions, "delete_version")
-        self.add_permission(user_with_delete_permissions, "add_menucontentversion")
-        self.add_permission(user_with_delete_permissions, "view_menucontentversion")
-        self.add_permission(user_with_delete_permissions, "change_workflowstep")
-        self.add_permission(user_with_delete_permissions, "change_requestcomment")
-        self.add_permission(user_with_delete_permissions, "delete_menucontentversion")
-        self.add_permission(user_with_delete_permissions, "change_menucontent")
-        self.add_permission(user_with_delete_permissions, "delete_versionlock")
-        self.add_permission(user_with_delete_permissions, "add_moderationrequest")
-        self.add_permission(user_with_delete_permissions, "view_moderationcollection")
-        self.add_permission(user_with_delete_permissions, "view_statetracking")
-        self.add_permission(user_with_delete_permissions, "view_moderationrequesttreenode")
-        self.add_permission(user_with_delete_permissions, "change_testmodel2")
-        self.add_permission(user_with_delete_permissions, "change_permission")
-        self.add_permission(user_with_delete_permissions, "change_navigationplugin")
-        self.add_permission(user_with_delete_permissions, "add_moderationrequesttreenode")
-        self.add_permission(user_with_delete_permissions, "delete_staticplaceholder")
-        self.add_permission(user_with_delete_permissions, "view_staticplaceholder")
-        self.add_permission(user_with_delete_permissions, "view_usersettings")
-        self.add_permission(user_with_delete_permissions, "delete_user")
-        self.add_permission(user_with_delete_permissions, "add_confirmationformsubmission")
-        self.add_permission(user_with_delete_permissions, "delete_pagecontentversion")
-        self.add_permission(user_with_delete_permissions, "change_group")
-        self.add_permission(user_with_delete_permissions, "add_cmsplugin")
-        self.add_permission(user_with_delete_permissions, "delete_menu")
-        self.add_permission(user_with_delete_permissions, "view_logentry")
-        self.add_permission(user_with_delete_permissions, "change_user")
-        self.add_permission(user_with_delete_permissions, "view_page")
-        self.add_permission(user_with_delete_permissions, "view_pagepermission")
-        self.add_permission(user_with_delete_permissions, "add_site")
-        self.add_permission(user_with_delete_permissions, "delete_group")
-        self.add_permission(user_with_delete_permissions, "view_pagecontentversion")
-        self.add_permission(user_with_delete_permissions, "view_group")
-        self.add_permission(user_with_delete_permissions, "delete_placeholderreference")
-        self.add_permission(user_with_delete_permissions, "delete_role")
-        self.add_permission(user_with_delete_permissions, "delete_pollcontent")
-        self.add_permission(user_with_delete_permissions, "add_placeholderreference")
-        self.add_permission(user_with_delete_permissions, "change_cachekey")
-        self.add_permission(user_with_delete_permissions, "delete_page")
-        self.add_permission(user_with_delete_permissions, "add_urlconfrevision")
-        self.add_permission(user_with_delete_permissions, "add_menucontentversion")
-        self.add_permission(user_with_delete_permissions, "add_role")
-        self.add_permission(user_with_delete_permissions, "add_testmodel4")
-        self.add_permission(user_with_delete_permissions, "add_permission")
-        self.add_permission(user_with_delete_permissions, "view_globalpagepermission")
-        self.add_permission(user_with_delete_permissions, "change_menu")
-        self.add_permission(user_with_delete_permissions, "change_workflow")
-        self.add_permission(user_with_delete_permissions, "view_testmodel1")
-        self.add_permission(user_with_delete_permissions, "view_testmodel2")
-        self.add_permission(user_with_delete_permissions, "change_pagecontentversion")
-        self.add_permission(user_with_delete_permissions, "view_versionlock")
-        self.add_permission(user_with_delete_permissions, "add_testmodel1")
-        self.add_permission(user_with_delete_permissions, "add_pagepermission")
-        self.add_permission(user_with_delete_permissions, "change_testmodel3")
-        self.add_permission(user_with_delete_permissions, "edit_static_placeholder")
-        self.add_permission(user_with_delete_permissions, "change_moderationrequestaction")
-        self.add_permission(user_with_delete_permissions, "can_change_author")
-        self.add_permission(user_with_delete_permissions, "add_contenttype")
-        self.add_permission(user_with_delete_permissions, "view_menucontentversion")
-        self.add_permission(user_with_delete_permissions, "change_logentry")
-
-        with self.login_user_context(user_with_delete_permissions):
+        with self.login_user_context(self.user):
             response = self.client.post(
                 delete_url_single, follow=True, data={"menu_content_id": menu_content.id}
             )
@@ -1006,10 +909,20 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
         url = reverse(
             "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, new_child.id,)
         )
-        with self.login_user_context(user=self.get_staff_user_with_no_permissions()):
-            response = self.client.get(url, follow=True)
+        user_with_delete_permissions = self._create_user(
+            "user_with_delete", is_staff=True
+        )
+        self.add_permission(user_with_delete_permissions, "view_menucontentversion")
 
-        self.assertEqual(response.status_code, 403)
+        with self.login_user_context(user=user_with_delete_permissions):
+            response = self.client.post(url, follow=True)
+        content = response.content.decode('utf-8')
+
+        self.assertIn(
+            '''<li class="error">The item is currently locked or you don&#x27;t have permission to change it</li>''',
+            content
+        )
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(MenuItem._base_manager.count(), 3)
 
     def test_menuitem_delete_view_root(self):

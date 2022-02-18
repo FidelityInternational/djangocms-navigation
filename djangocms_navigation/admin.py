@@ -28,10 +28,6 @@ from .utils import is_versioning_enabled, purge_menu_cache, reverse_admin_name
 from .views import ContentObjectSelect2View, MenuContentPreviewView
 
 
-ROOT_MESSAGE = _(
-    "This item is the root of a menu, therefore it cannot be deleted."
-)
-
 try:
     from djangocms_versioning.exceptions import ConditionFailed
     from djangocms_versioning.helpers import version_list_url
@@ -557,7 +553,9 @@ class MenuItemAdmin(TreeAdmin):
                     return HttpResponseRedirect(version_list_url(menu_content))
                 menu_item = get_object_or_404(MenuItem, id=object_id)
                 if menu_item.is_root():
-                    messages.error(request, ROOT_MESSAGE)
+                    messages.error(
+                        request, _("This item is the root of a menu, therefore it cannot be deleted.")
+                    )
                     return HttpResponseRedirect(list_url)
                 version = Version.objects.get_for_content(menu_content)
                 try:
