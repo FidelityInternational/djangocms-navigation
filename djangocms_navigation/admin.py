@@ -579,7 +579,7 @@ class MenuItemAdmin(TreeAdmin):
 
                 extra_context["deleted_objects"] = self._get_to_be_deleted_objects(menu_item, request)
 
-        return super(MenuItemAdmin, self).delete_view(request, object_id, extra_context)
+        return super().delete_view(request, object_id, extra_context)
 
     def response_delete(self, request, obj_display, obj_id):
         """
