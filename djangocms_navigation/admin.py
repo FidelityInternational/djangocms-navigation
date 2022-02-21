@@ -564,7 +564,10 @@ class MenuItemAdmin(TreeAdmin):
                 if not delete_perm:
                     messages.error(request, LOCK_MESSAGE)
                     return HttpResponseRedirect(version_list_url(menu_content))
+
+                print(f"model: {self.model}")
                 menu_item = get_object_or_404(self.model, id=object_id)
+
                 if menu_item.is_root():
                     messages.error(
                         request, _("This item is the root of a menu, therefore it cannot be deleted.")
