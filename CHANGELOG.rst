@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* feat: Hide the MenuItem boolean false icon for `Hide in Menu` and `Soft Root` fields.
 
 1.0.0 (2022-02-18)
 ===================
