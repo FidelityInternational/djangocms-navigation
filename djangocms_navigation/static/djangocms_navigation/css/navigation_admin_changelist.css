@@ -1,7 +1,7 @@
 
 /* Hide the no / false icon added automatically by BooleanField for
     soft-root and hide-node fields */
-.field-soft_root img[alt="True" {
+.field-soft_root img[alt="True"] {
     display: none;
 }
 .field-hide_node img[alt="True"] {
