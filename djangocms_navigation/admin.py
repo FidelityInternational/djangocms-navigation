@@ -71,6 +71,8 @@ class MenuContentAdmin(admin.ModelAdmin):
     menu_model = Menu
     menu_item_model = MenuItem
     list_display_links = None
+    # Disable dropdown actions
+    actions = None
     list_filter = (LanguageFilter, )
 
     class Media:
