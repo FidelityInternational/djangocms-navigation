@@ -4,10 +4,10 @@ Changelog
 
 Unreleased
 ==========
+* MenuContent dropdown actions removed
 
 1.0.0 (2022-02-18)
 ===================
-* MenuContent dropdown actions removed
 * MenuItem delete moved from dropdown action to individual delete action button
 * Python 3.8, 3.9 support added
 * Django 3.0, 3.1 and 3.2 support added
