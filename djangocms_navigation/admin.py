@@ -302,10 +302,14 @@ class MenuItemAdmin(TreeAdmin):
     change_form_template = "admin/djangocms_navigation/menuitem/change_form.html"
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
     list_display = ["__str__", "get_object_url", "soft_root", 'hide_node']
+    sortable_by = ["pk"]
 
     class Media:
         css = {
-            "all": ("djangocms_versioning/css/actions.css",)
+            "all": (
+                "djangocms_versioning/css/actions.css",
+                "djangocms_navigation/css/navigation_admin_changelist.css",
+            )
         }
 
     def get_urls(self):
