@@ -4,6 +4,10 @@ Changelog
 
 Unreleased
 ==========
+
+
+1.0.1 (2022-03-01)
+===================
 * feat: MenuContent dropdown actions removed
 * feat: MenuItem edit button added as list action button
 * feat: Hide the MenuItem boolean false icon for `Hide in Menu` and `Soft Root` fields.
