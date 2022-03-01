@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* feat: MenuItem changelist admin, remove the option to sort by `Hide In Menu` and `Soft Root`.
 
 1.0.0 (2022-02-18)
 ===================
