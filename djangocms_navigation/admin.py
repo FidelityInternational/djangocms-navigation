@@ -306,7 +306,10 @@ class MenuItemAdmin(TreeAdmin):
 
     class Media:
         css = {
-            "all": ("djangocms_versioning/css/actions.css",)
+            "all": (
+                "djangocms_versioning/css/actions.css",
+                "djangocms_navigation/css/navigation_admin_changelist.css",
+            )
         }
 
     def get_urls(self):
