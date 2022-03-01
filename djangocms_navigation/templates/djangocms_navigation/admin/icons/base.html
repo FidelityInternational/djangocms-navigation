@@ -8,8 +8,9 @@
     cms-versioning-action-btn
     cms-versioning-action-{% block name %}{% endblock %}
     {% if get|default_if_none:True %} cms-form-get-method {% endif %}
+    {% if keepsideframe|default_if_none:True %}js-versioning-keep-sideframe {% else %}js-versioning-admin-close-sideframe {% endif %}
     {% if action|default_if_none:True %} js-versioning-action{% endif %}
-    js-versioning-admin-keep-sideframe"
+    "
 {% if not disabled %}
     href="{{ url }}"
 {% endif %}

@@ -207,14 +207,14 @@ class MenuContentAdmin(admin.ModelAdmin):
         )
         return render_to_string(
             "djangocms_navigation/admin/icons/edit_icon.html",
-            {"url": url, "disabled": disabled, "get": False},
+            {"url": url, "disabled": disabled, "get": False, },
         )
 
     def _get_manage_versions_link(self, obj, request, disabled=False):
         url = version_list_url(obj)
         return render_to_string(
             "djangocms_navigation/admin/icons/manage_versions.html",
-            {"url": url, "disabled": disabled, "action": False},
+            {"url": url, "disabled": disabled, "action": False, "keepsideframe": True},
         )
 
     def get_menuitem_link(self, obj):
@@ -417,7 +417,7 @@ class MenuItemAdmin(TreeAdmin):
 
         return render_to_string(
             "djangocms_versioning/admin/edit_icon.html",
-            {"edit_url": edit_url, "disabled": disabled, "object_id": obj.id}
+            {"edit_url": edit_url, "disabled": disabled, "object_id": obj.id, "keepsideframe": True}
         )
 
     def _get_delete_link(self, obj, request, disabled=False):
@@ -430,7 +430,7 @@ class MenuItemAdmin(TreeAdmin):
 
         return render_to_string(
             "djangocms_versioning/admin/discard_icon.html",
-            {"discard_url": delete_url, "disabled": disabled, "object_id": obj.id},
+            {"discard_url": delete_url, "disabled": disabled, "object_id": obj.id, "keepsideframe": True},
         )
 
     def get_queryset(self, request):
