@@ -1362,7 +1362,7 @@ class MenuItemPermissionTestCase(CMSTestCase):
         self.assertFalse(model_admin.has_change_permission(request))
 
 
-class ListActionsTestCase(CMSTestCase):
+class MenuListActionsTestCase(CMSTestCase):
     def setUp(self):
         self.modeladmin = admin.site._registry[MenuContent]
 
@@ -1416,3 +1416,25 @@ class ListActionsTestCase(CMSTestCase):
         response = func(version.content)
 
         self.assertNotIn("cms-versioning-action-edit ", response)
+
+
+class MenuItemListActionsTestCase(CMSTestCase):
+    def setUp(self):
+        self.modeladmin = admin.site._registry[MenuItem]
+
+    def test_edit_link(self):
+        user = self.get_superuser()
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=user)
+        request = self.get_request("/")
+        request.user = self.get_superuser()
+        request.menu_content_id = menu_content.pk
+
+        func = self.modeladmin._list_actions(request)
+        edit_endpoint = reverse(
+            "admin:djangocms_navigation_menuitem_change", args=(menu_content.pk, menu_content.root.pk),
+        )
+        response = func(menu_content.root)
+
+        self.assertIn("cms-versioning-action-btn", response)
+        self.assertIn('title="Edit"', response)
+        self.assertIn(edit_endpoint, response)

@@ -304,10 +304,14 @@ class MenuItemAdmin(TreeAdmin):
     change_form_template = "admin/djangocms_navigation/menuitem/change_form.html"
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
     list_display = ["__str__", "get_object_url", "soft_root", 'hide_node']
+    sortable_by = ["pk"]
 
     class Media:
         css = {
-            "all": ("djangocms_versioning/css/actions.css",)
+            "all": (
+                "djangocms_versioning/css/actions.css",
+                "djangocms_navigation/css/navigation_admin_changelist.css",
+            )
         }
 
     def get_urls(self):
@@ -399,8 +403,22 @@ class MenuItemAdmin(TreeAdmin):
         Collect rendered actions from implemented methods and return as list
         """
         return [
+            self._get_edit_link,
             self._get_delete_link,
         ]
+
+    def _get_edit_link(self, obj, request, disabled=False):
+        app, model = self.model._meta.app_label, self.model._meta.model_name
+
+        edit_url = reverse(
+            "admin:{app}_{model}_change".format(app=app, model=model),
+            args=[request.menu_content_id, obj.id]
+        )
+
+        return render_to_string(
+            "djangocms_versioning/admin/edit_icon.html",
+            {"edit_url": edit_url, "disabled": disabled, "object_id": obj.id}
+        )
 
     def _get_delete_link(self, obj, request, disabled=False):
         app, model = self.model._meta.app_label, self.model._meta.model_name
