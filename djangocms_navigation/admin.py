@@ -176,7 +176,7 @@ class MenuContentAdmin(admin.ModelAdmin):
         :return: Preview icon template
         """
         return render_to_string(
-            "djangocms_navigation/admin/icons/preview.html",
+            "djangocms_versioning/admin/icons/preview.html",
             {"url": obj.get_preview_url(), "disabled": disabled},
         )
 
@@ -206,15 +206,15 @@ class MenuContentAdmin(admin.ModelAdmin):
             args=(version.pk,),
         )
         return render_to_string(
-            "djangocms_navigation/admin/icons/edit_icon.html",
-            {"url": url, "disabled": disabled, "get": False, "keepsideframe": True},
+            "djangocms_versioning/admin/icons/edit_icon.html",
+            {"url": url, "disabled": disabled, "get": False},
         )
 
     def _get_manage_versions_link(self, obj, request, disabled=False):
         url = version_list_url(obj)
         return render_to_string(
-            "djangocms_navigation/admin/icons/manage_versions.html",
-            {"url": url, "disabled": disabled, "action": False, "keepsideframe": True},
+            "djangocms_versioning/admin/icons/manage_versions.html",
+            {"url": url, "disabled": disabled, "action": False},
         )
 
     def get_menuitem_link(self, obj):
@@ -416,8 +416,8 @@ class MenuItemAdmin(TreeAdmin):
         )
 
         return render_to_string(
-            "djangocms_navigation/admin/icons/edit_icon.html",
-            {"url": edit_url, "disabled": disabled, "object_id": obj.id, "keepsideframe": True}
+            "djangocms_versioning/admin/icons/edit_icon.html",
+            {"url": edit_url, "disabled": disabled, "object_id": obj.id}
         )
 
     def _get_delete_link(self, obj, request, disabled=False):
@@ -429,8 +429,8 @@ class MenuItemAdmin(TreeAdmin):
         )
 
         return render_to_string(
-            "djangocms_navigation/admin/icons/discard_icon.html",
-            {"url": delete_url, "disabled": disabled, "object_id": obj.id, "keepsideframe": True},
+            "djangocms_versioning/admin/icons/discard_icon.html",
+            {"url": delete_url, "disabled": disabled, "object_id": obj.id},
         )
 
     def get_queryset(self, request):
