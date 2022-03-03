@@ -1458,7 +1458,7 @@ class ChangelistSideframeControlsTestCase(CMSTestCase):
 
         # The url link should keep the sideframe open
         self.assertIn("js-versioning-keep-sideframe", url_markup)
-        self.assertNotIn("js-versioning-admin-close-sideframe", url_markup)
+        self.assertNotIn("js-versioning-close-sideframe", url_markup)
 
     def test_menucontent_preview_link_opens_in_sideframe(self):
         """
@@ -1473,7 +1473,7 @@ class ChangelistSideframeControlsTestCase(CMSTestCase):
 
         # The url link should keep the sideframe open
         self.assertIn("js-versioning-keep-sideframe", url_markup)
-        self.assertNotIn("js-versioning-admin-close-sideframe", url_markup)
+        self.assertNotIn("js-versioning-close-sideframe", url_markup)
 
     def test_menuitem_changelist_edit_url_link_opens_in_sideframe(self):
         """
@@ -1490,7 +1490,7 @@ class ChangelistSideframeControlsTestCase(CMSTestCase):
 
         # The url link should keep the sideframe open
         self.assertIn("js-versioning-keep-sideframe", url_markup)
-        self.assertNotIn("js-versioning-admin-close-sideframe", url_markup)
+        self.assertNotIn("js-versioning-close-sideframe", url_markup)
 
     def test_menuitem_changelist_delete_url_link_opens_in_sideframe(self):
         """
@@ -1507,4 +1507,4 @@ class ChangelistSideframeControlsTestCase(CMSTestCase):
 
         # The url link should keep the sideframe open
         self.assertIn("js-versioning-keep-sideframe", url_markup)
-        self.assertNotIn("js-versioning-admin-close-sideframe", url_markup)
+        self.assertNotIn("js-versioning-close-sideframe", url_markup)

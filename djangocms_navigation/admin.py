@@ -429,8 +429,8 @@ class MenuItemAdmin(TreeAdmin):
         )
 
         return render_to_string(
-            "djangocms_versioning/admin/icons/discard_icon.html",
-            {"url": delete_url, "disabled": disabled, "object_id": obj.id},
+            "djangocms_versioning/admin/discard_icon.html",
+            {"discard_url": delete_url, "disabled": disabled, "object_id": obj.id},
         )
 
     def get_queryset(self, request):
