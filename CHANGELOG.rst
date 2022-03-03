@@ -4,6 +4,9 @@ Changelog
 
 Unreleased
 ==========
+
+1.0.2 (2022-03-03)
+==================
 * feat: MenuContent and MenuItem links open in sideframe (refactored icons)
 
 1.0.1 (2022-03-01)
