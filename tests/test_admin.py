@@ -197,7 +197,7 @@ class MenuContentAdminViewTestCase(CMSTestCase):
         self.assertIn("cms-versioning-action-edit", list_display[-1])
         self.assertIn("cms-form-get-method", list_display[-1])
         self.assertIn("js-versioning-action", list_display[-1])
-        self.assertIn("js-versioning-admin-keep-sideframe", list_display[-1])
+        self.assertIn("js-versioning-keep-sideframe", list_display[-1])
 
     @override_settings(DJANGOCMS_NAVIGATION_VERSIONING_ENABLED=False)
     @disable_versioning_for_navigation()
@@ -1438,3 +1438,73 @@ class MenuItemListActionsTestCase(CMSTestCase):
         self.assertIn("cms-versioning-action-btn", response)
         self.assertIn('title="Edit"', response)
         self.assertIn(edit_endpoint, response)
+
+
+class ChangelistSideframeControlsTestCase(CMSTestCase):
+    def setUp(self):
+        self.menucontent_modeladmin = admin.site._registry[MenuContent]
+        self.menuitem_modeladmin = admin.site._registry[MenuItem]
+
+    def test_menucontent_changelist_url_link_opens_in_sideframe(self):
+        """
+        When clicking on the navigation menucontent edit, the sideframe is kept open
+        """
+        user = self.get_superuser()
+        menucontent = factories.MenuContentWithVersionFactory(version__created_by=user)
+        request = self.get_request("/")
+        request.user = self.get_superuser()
+        request.menu_content_id = menucontent.pk
+        url_markup = self.menucontent_modeladmin._get_edit_link(menucontent, request)
+
+        # The url link should keep the sideframe open
+        self.assertIn("js-versioning-keep-sideframe", url_markup)
+        self.assertNotIn("js-versioning-close-sideframe", url_markup)
+
+    def test_menucontent_preview_link_opens_in_sideframe(self):
+        """
+        When clicking on the navigation menucontent preview, the sideframe is kept open
+        """
+        user = self.get_superuser()
+        menucontent = factories.MenuContentWithVersionFactory(version__created_by=user)
+        request = self.get_request("/")
+        request.user = self.get_superuser()
+        request.menu_content_id = menucontent.pk
+        url_markup = self.menucontent_modeladmin._get_preview_link(menucontent, request)
+
+        # The url link should keep the sideframe open
+        self.assertIn("js-versioning-keep-sideframe", url_markup)
+        self.assertNotIn("js-versioning-close-sideframe", url_markup)
+
+    def test_menuitem_changelist_edit_url_link_opens_in_sideframe(self):
+        """
+        When clicking on the navigation menuitem edit, the sideframe is kept open
+        """
+        user = self.get_superuser()
+        menucontent = factories.MenuContentWithVersionFactory(version__created_by=user)
+        child = factories.ChildMenuItemFactory(parent=menucontent.root)
+
+        request = self.get_request("/")
+        request.user = self.get_superuser()
+        request.menu_content_id = menucontent.pk
+        url_markup = self.menuitem_modeladmin._get_edit_link(child, request)
+
+        # The url link should keep the sideframe open
+        self.assertIn("js-versioning-keep-sideframe", url_markup)
+        self.assertNotIn("js-versioning-close-sideframe", url_markup)
+
+    def test_menuitem_changelist_delete_url_link_opens_in_sideframe(self):
+        """
+        When clicking on the navigation menuitem edit, the sideframe is kept open
+        """
+        user = self.get_superuser()
+        menucontent = factories.MenuContentWithVersionFactory(version__created_by=user)
+        child = factories.ChildMenuItemFactory(parent=menucontent.root)
+
+        request = self.get_request("/")
+        request.user = self.get_superuser()
+        request.menu_content_id = menucontent.pk
+        url_markup = self.menuitem_modeladmin._get_delete_link(child, request)
+
+        # The url link should keep the sideframe open
+        self.assertIn("js-versioning-keep-sideframe", url_markup)
+        self.assertNotIn("js-versioning-close-sideframe", url_markup)
