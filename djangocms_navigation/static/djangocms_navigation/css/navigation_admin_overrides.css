@@ -1,8 +1,4 @@
-/*
-    Django CMS Navigation styles
-*/
-
-/* Overriding styles for list changeview set by djangocms_admin_style and treebeard: */
+/* Overriding styles for navigation list changeview set by djangocms_admin_style and treebeard: */
 .collapse {
     display: inline-block !important;
     width: 16px;
