@@ -12,6 +12,9 @@ register = template.Library()
 '''
 This module is simply for overwriting some of treebeard's admin_tree templatetag functions
 with djangocms_navigation specific values.
+
+CAVEAT: Treebeard encapulates markup in some of it's template tags, so we are needing
+to keep the same approach in order to overwrite markup, ie. with get_space and get_collapse below.
 '''
 
 
@@ -51,8 +54,13 @@ admin_tree.register.inclusion_tag(t, takes_context=True)(admin_tree.result_tree)
 
 @admin_tree.register.simple_tag
 def treebeard_js():
+    '''
+    CAVEAT: This is an replication and overwrite of treebeard_js tag in order to insert navigation specific js file.
+            Because djangocms-navigation/change_list template still needs to inherit (block.super) in extrahead tag,
+            in order to overwrite treebeard js, javascript script injection is being kept as a template tag
+            instead of directly placed in template.
+    '''
 
-    # Overwriting treebeard_js tag to insert navigation specific js file:
     js_file = static('djangocms_navigation/js/navigation-tree-admin.js')
 
     jquery_ui = static('treebeard/jquery-ui-1.8.5.custom.min.js')

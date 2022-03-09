@@ -314,6 +314,7 @@
     });
 })(django.jQuery);
 
+// This block is here to handle animation of backgroundColor with jQuery, more information on this stackoverflow thread:
 // http://stackoverflow.com/questions/190560/jquery-animate-backgroundcolor/2302005#2302005
 (function (d) {
     d.each(["backgroundColor", "borderBottomColor", "borderLeftColor", "borderRightColor", "borderTopColor", "color", "outlineColor"], function (f, e) {
