@@ -5,6 +5,10 @@ Changelog
 Unreleased
 ==========
 
+1.0.3 (2022-03-09)
+==================
+* feat: Expand/collapse enabled for navigation tree in admin changelist view.
+
 1.0.2 (2022-03-03)
 ==================
 * feat: MenuContent and MenuItem links open in sideframe (refactored icons)
