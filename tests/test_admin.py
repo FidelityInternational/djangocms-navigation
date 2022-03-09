@@ -842,6 +842,20 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
         self.assertRedirectsToVersionList(response, version.content)
         self.assertDjangoErrorMessage("Version is not a draft", mocked_messages)
 
+    def test_menuitem_changelist_contains_expand_collapse_classes(self):
+        menu_content = factories.MenuContentWithVersionFactory()
+        factories.ChildMenuItemFactory.create_batch(5, parent=menu_content.root)
+        list_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
+        )
+
+        response = self.client.get(list_url)
+
+        self.assertContains(
+            response,
+            '<a href="#" title="" class="collapse expanded">'
+        )
+
 
 @override_settings(
     CMS_PERMISSION=True,
