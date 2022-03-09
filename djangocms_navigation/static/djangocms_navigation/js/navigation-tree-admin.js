@@ -58,6 +58,23 @@
                         }
                     }).show();
                 },
+                // collapse_all() and expand_all() show/hide the node + child nodes AND modifies classes: 
+                // (In practice these functions are only used with the root node)
+                collapse_all: function () {
+                    this.$elem.find('a.collapse').removeClass('expanded').addClass('collapsed');
+                    $.each(this.children(), function() {
+                        let node = new Node(this);
+                        node.collapse_all();
+                    }).hide();
+                },
+                expand_all: function () {
+                    this.$elem.find('a.collapse').removeClass('collapsed').addClass('expanded');
+                    $.each(this.children(), function() {
+                        let node = new Node(this);
+                        node.expand_all();
+                    }).show();
+                },
+                // Toggle show/hides the node (and child nodes), but does not modify child classes - this is so the 'state' can be perserved.
                 toggle: function () {
                     if (this.is_collapsed()) {
                         this.expand();
@@ -298,6 +315,22 @@
                 node.toggle();
                 return false;
             });
+            
+            $('.expand-all a').click(function (e) {
+                e.preventDefault();
+                // Get root node:
+                let root_node = new Node($.find('tr[level=1]')[0]);
+
+                // Toggle expand / collapse all: 
+                if (!this.hasAttribute('class') || $(this).hasClass('collapsed-all') ) {
+                    root_node.expand_all();
+                    $(this).addClass('expanded-all').removeClass('collapsed-all').text('-');
+                } else {
+                    root_node.collapse_all();
+                    $(this).addClass('collapsed-all').removeClass('expanded-all').text('+');
+                }
+            });
+
             var hash = window.location.hash;
             // This is a hack, the actual element's id ends in '-id' but the url's hash
             // doesn't, I'm doing this to avoid scrolling the page... is that a good thing?
