@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* fix: Extended app Node deletion 404 bugfix
 
 1.0.0 (2022-02-18)
 ===================

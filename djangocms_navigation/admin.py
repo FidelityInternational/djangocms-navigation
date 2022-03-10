@@ -565,7 +565,6 @@ class MenuItemAdmin(TreeAdmin):
                     messages.error(request, LOCK_MESSAGE)
                     return HttpResponseRedirect(version_list_url(menu_content))
 
-                print(f"model: {self.model}")
                 menu_item = get_object_or_404(self.model, id=object_id)
 
                 if menu_item.is_root():
