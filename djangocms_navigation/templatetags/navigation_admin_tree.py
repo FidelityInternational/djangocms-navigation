@@ -1,25 +1,27 @@
 # -*- coding: utf-8 -*-
 from django import template
+from django.contrib.admin.templatetags.admin_list import (
+    result_headers,
+    result_hidden_fields,
+)
+from django.templatetags.static import static
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from django.templatetags.static import static
-from django.contrib.admin.templatetags.admin_list import (
-    result_headers, result_hidden_fields)
 
-from treebeard.templatetags import needs_checkboxes
-from treebeard.templatetags import admin_tree
+from treebeard.templatetags import admin_tree, needs_checkboxes
 from treebeard.templatetags.admin_tree import check_empty_dict, results
+
 
 register = template.Library()
 
-'''
+"""
 This module is simply for overwriting some of treebeard's admin_tree templatetag functions
 with djangocms_navigation specific values.
 
 CAVEAT: Treebeard encapulates markup in some of it's template tags, so we are needing
 to keep the same approach in order to overwrite markup, ie. with get_space and get_collapse below.
-'''
+"""
 
 
 def get_spacer(first, result):
@@ -74,12 +76,12 @@ def result_tree(context, cl, request):
 
 @admin_tree.register.simple_tag
 def treebeard_js():
-    '''
+    """
     CAVEAT: This is an replication and overwrite of treebeard_js tag in order to insert navigation specific js file.
             Because djangocms-navigation/change_list template still needs to inherit (block.super) in extrahead tag,
             in order to overwrite treebeard js, javascript script injection is being kept as a template tag
             instead of directly placed in template.
-    '''
+    """
 
     js_file = static('djangocms_navigation/js/navigation-tree-admin.js')
 
