@@ -597,6 +597,7 @@ class MenuItemAdmin(TreeAdmin):
                     messages.error(request, str(error))
                     return HttpResponseRedirect(version_list_url(menu_content))
 
+                extra_context["menu_name"] = menu_item
                 extra_context["deleted_objects"] = self._get_to_be_deleted_objects(menu_item, request)
 
         return super(MenuItemAdmin, self).delete_view(request, object_id, extra_context)
