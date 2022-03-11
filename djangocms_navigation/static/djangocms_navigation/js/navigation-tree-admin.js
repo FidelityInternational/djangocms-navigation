@@ -1,3 +1,9 @@
+/**
+This is replicated and partially re-factored code from Treebeard,
+with specific changes implemented for djangocms-navigation.
+
+Original code found in treebeard-admin.js
+**/
 (function ($) {
     ACTIVE_NODE_BG_COLOR = '#B7D7E8';
     RECENTLY_MOVED_COLOR = '#FFFF00';
@@ -331,8 +337,7 @@
         });
         
         var hash = window.location.hash;
-        // This is a hack, the actual element's id ends in '-id' but the url's hash
-        // doesn't, I'm doing this to avoid scrolling the page... is that a good thing?
+
         if (hash) {
             $(hash + '-id').animate({
                 backgroundColor: RECENTLY_MOVED_COLOR
