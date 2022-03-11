@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* Added delete confirmation template to overwrite delete view breadcrumbs
 
 1.0.2 (2022-03-03)
 ==================
