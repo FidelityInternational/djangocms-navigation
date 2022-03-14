@@ -1,3 +1,4 @@
+from bs4 import BeautifulSoup
 import html
 from unittest.mock import patch
 
@@ -1029,6 +1030,33 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(MenuItem._base_manager.count(), 1)
+
+    def test_menuitem_delete_view_breadcrumbs(self):
+        """
+        Breadcrumbs for the delete view should render valid url's
+        """
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
+        child = factories.ChildMenuItemFactory(parent=menu_content.root)
+
+        # Get the url for deleting a single URL
+        delete_url_single = reverse(
+            "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, child.id,)
+        )
+
+        with self.login_user_context(self.user):
+            # Hit the confirmation page using get request
+            confirmation_response = self.client.get(
+                delete_url_single, data={"menu_content_id": menu_content.id}
+            )
+
+        # Get all the hrefs in the markup for the breadcrumbs div
+        soup = BeautifulSoup(confirmation_response.content, features="lxml")
+        breadcrumb_html = soup.find("div", class_="breadcrumbs")
+        for a in breadcrumb_html.find_all('a', href=True):
+            with self.login_user_context(self.user):
+                breadcrumb_url = a['href']
+                response = self.client.get(breadcrumb_url)
+                self.assertEqual(response.status_code, 200)
 
 
 class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
