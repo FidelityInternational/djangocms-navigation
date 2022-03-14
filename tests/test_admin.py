@@ -1,4 +1,3 @@
-from bs4 import BeautifulSoup
 import html
 from unittest.mock import patch
 
@@ -14,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 
 from cms.test_utils.testcases import CMSTestCase
 
+from bs4 import BeautifulSoup
 from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.exceptions import ConditionFailed
 from djangocms_versioning.helpers import version_list_url
