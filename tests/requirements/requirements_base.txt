@@ -1,4 +1,6 @@
 coverage
+beautifulsoup4
+lxml
 django-app-helper
 flake8
 factory_boy
