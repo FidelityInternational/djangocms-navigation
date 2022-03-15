@@ -1,0 +1,26 @@
+/* Overriding styles for navigation list changeview set by djangocms_admin_style and treebeard: */
+.collapse {
+    display: inline-block !important;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    text-indent: -999px;
+    background-size: 10px;
+}
+
+.collapse.expanded {
+    background-image: url(../svg/chevron-down.svg);
+    background-position: 0 0;
+    background-repeat: no-repeat;
+}
+.collapse.collapsed {
+    background-image: url(../svg/chevron-right.svg);
+    background-position: 0 0;
+    background-repeat: no-repeat;
+}
+
+[class|="spacer"] {
+    margin: 0 10px;
+    width: calc(var(--s-width) * 12px);
+    display: inline-block;
+}

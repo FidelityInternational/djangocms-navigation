@@ -1,8 +1,8 @@
 beautifulsoup4
 coverage
 django-app-helper
-flake8
 factory_boy
+flake8
 isort
 lxml
 tox

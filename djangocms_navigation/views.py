@@ -1,5 +1,6 @@
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages import get_messages
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, View
@@ -98,3 +99,12 @@ class ContentObjectSelect2View(View):
                     queryset = queryset.filter(**options)
 
         return queryset
+
+
+class MessageStorageView(View):
+
+    def get(self, request, *args, **kwargs):
+        storage = get_messages(request)
+        data = {'messages': [{'message': m.message, 'level': m.level_tag} for m in storage]}
+
+        return JsonResponse(data)
