@@ -13,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 
 from cms.test_utils.testcases import CMSTestCase
 
+from bs4 import BeautifulSoup
 from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.exceptions import ConditionFailed
 from djangocms_versioning.helpers import version_list_url
@@ -1029,6 +1030,68 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(MenuItem._base_manager.count(), 1)
+
+    def test_menuitem_delete_view_breadcrumbs(self):
+        """
+        Breadcrumbs for the delete view should render valid url's
+        """
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
+        child = factories.ChildMenuItemFactory(parent=menu_content.root)
+
+        # Get the url for deleting a single URL
+        delete_url_single = reverse(
+            "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, child.id,)
+        )
+
+        with self.login_user_context(self.user):
+            # Hit the confirmation page using get request
+            confirmation_response = self.client.get(
+                delete_url_single, data={"menu_content_id": menu_content.id}
+            )
+
+        # Get all the hrefs in the markup for the breadcrumbs div
+        soup = BeautifulSoup(confirmation_response.rendered_content, 'html.parser')
+        breadcrumb_html = soup.find("div", class_="breadcrumbs")
+        breadcrumb_url = []
+
+        for a in breadcrumb_html.find_all('a', href=True):
+            breadcrumb_url.append(a['href'])
+
+        with self.login_user_context(self.user):
+            breadcrumb_first = self.client.get(breadcrumb_url[0])
+            self.assertContains(
+                breadcrumb_first,
+                "<h1>Site administration</h1>"
+            )
+            self.assertContains(
+                breadcrumb_first,
+                '<a href="/en/admin/djangocms_navigation/menucontent/" class="changelink">Change</a>'
+            )
+            breadcrumb_second = self.client.get(breadcrumb_url[1])
+            self.assertContains(
+                breadcrumb_second, "<h1>django CMS Navigation administration</h1>")
+            self.assertContains(
+                breadcrumb_second,
+                '<a href="/en/admin/djangocms_navigation/menucontent/">Menu contents</a>'
+            )
+            breadcrumb_third = self.client.get(breadcrumb_url[2])
+            self.assertContains(
+                breadcrumb_third,
+                "<h1>Edit Menu: %s</h1>" % menu_content.root
+            )
+            self.assertContains(
+                breadcrumb_third,
+                '<a href="/en/admin/djangocms_navigation/menuitem/1/1/change/">%s</a></th>' % menu_content.root)
+            breadcrumb_fourth = self.client.get(breadcrumb_url[3])
+            self.assertContains(
+                breadcrumb_fourth,
+                "<h1>Edit Menu: %s</h1>" % menu_content.root
+            )
+            self.assertContains(
+                confirmation_response, '<li>Menu item: %s</li>' % child.title)
+            self.assertContains(
+                confirmation_response, '<p>Are you sure you want to delete the menu item "%s"? All of the following '
+                                       'related items will be deleted:</p>' % child.title)
 
 
 class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
