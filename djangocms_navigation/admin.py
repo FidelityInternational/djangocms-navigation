@@ -380,9 +380,7 @@ class MenuItemAdmin(TreeAdmin):
             re_path(
                 r"^(?P<menu_content_id>\d+)/messages/$",
                 self.admin_site.admin_view(MessageStorageView.as_view()),
-                name="{}_message_storage".format(
-                    self.model._meta.app_label
-                ),
+                name="{}_{}_message_storage".format(*info),
             ),
         ]
 

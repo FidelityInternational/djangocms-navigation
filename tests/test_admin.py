@@ -1,4 +1,5 @@
 import html
+import json
 from unittest.mock import patch
 
 import django
@@ -13,6 +14,7 @@ from django.utils.translation import gettext_lazy as _
 
 from cms.test_utils.testcases import CMSTestCase
 
+from bs4 import BeautifulSoup
 from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.exceptions import ConditionFailed
 from djangocms_versioning.helpers import version_list_url
@@ -842,18 +844,88 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
         self.assertRedirectsToVersionList(response, version.content)
         self.assertDjangoErrorMessage("Version is not a draft", mocked_messages)
 
-    def test_menuitem_changelist_contains_expand_collapse_classes(self):
+    def test_menuitem_changelist_validate_messages_endpoint(self):
+        """
+        The messages endpoint provides async code with access to the django message queue.
+        Endpoint is required to fetch update messages after common treebeard operations
+        (like moving a tree node) without reloading page.
+        """
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.get_superuser())
+        child = factories.ChildMenuItemFactory(parent=menu_content.root)
+        grandchild = factories.ChildMenuItemFactory(parent=child)
+        data = {
+            "node_id": grandchild.id,
+            "sibling_id": menu_content.root.id,
+            "as_child": 1,
+        }
+        move_endpoint = reverse(
+            "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,)
+        )
+        messages_endpoint = reverse(
+            "admin:djangocms_navigation_menuitem_message_storage", args=(menu_content.id,)
+        )
+        move_response = self.client.post(move_endpoint, data)
+        messages_response = self.client.get(messages_endpoint)
+
+        # Check both calls come back successful:
+        self.assertEqual(move_response.status_code, 200)
+        self.assertEqual(messages_response.status_code, 200)
+
+        # Check message result is as expected:
+        msg = json.loads(messages_response.content)['messages'][0]
+        self.assertEqual(msg['level'], 'info')
+        self.assertIn('Moved node', msg['message'])
+
+    def test_menuitem_changelist_default_tree_layout(self):
+        """
+        Parsing output from template tags to verify markup for default layout is present:
+        Root node (level 1) is expanded, Child nodes / level 2 are collapsed,
+        level 3 are display: none, and css spacer variable is present.
+        """
         menu_content = factories.MenuContentWithVersionFactory()
-        factories.ChildMenuItemFactory.create_batch(5, parent=menu_content.root)
+        menu_items = factories.ChildMenuItemFactory.create_batch(3, parent=menu_content.root)
+        for item in menu_items:
+            factories.ChildMenuItemFactory.create_batch(2, parent=item)
+
         list_url = reverse(
             "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
         )
+        response = self.client.get(list_url)
 
+        # Parse returned html for root and child nodes:
+        soup = BeautifulSoup(str(response.content), features="lxml")
+        root_node = soup.find("tr", level="1")  # root node is always level=1
+        level_2_nodes = soup.find_all("tr", level="2")
+        level_3_nodes = soup.find_all("tr", level="3")
+
+        # Assert / verify default root and child node layouts (set in get_collapse tag):
+        self.assertIsNotNone(root_node.find("a", class_="collapse expanded"))
+        self.assertEqual(
+            '--s-width:0',
+            root_node.find("span", class_="spacer")['style']
+        )
+        self.assertNotIn(
+            None,
+            [node.find("a", class_="collapse collapsed") for node in level_2_nodes]
+        )
+        # Assert / verify level 3 nodes are display: none (set in html via result_tree tag):
+        for node in level_3_nodes:
+            self.assertEqual("display: none;", node['style'])
+
+    def test_menuitem_changelist_custom_js(self):
+        """
+        Check that custom javascript for overriding treebeard js is present.
+        """
+        menu_content = factories.MenuContentWithVersionFactory()
+
+        list_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
+        )
         response = self.client.get(list_url)
 
         self.assertContains(
             response,
-            '<a href="#" title="" class="collapse expanded">'
+            'djangocms_navigation/js/navigation-tree-admin.js',
         )
 
 
