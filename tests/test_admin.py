@@ -1050,7 +1050,7 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
             )
 
         # Get all the hrefs in the markup for the breadcrumbs div
-        soup = BeautifulSoup(confirmation_response.rendered_content, features="lxml")
+        soup = BeautifulSoup(confirmation_response.rendered_content, 'html.parser')
         breadcrumb_html = soup.find("div", class_="breadcrumbs")
         breadcrumb_url = []
 
@@ -1068,8 +1068,8 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
                 '<a href="/en/admin/djangocms_navigation/menucontent/" class="changelink">Change</a>'
             )
             breadcrumb_second = self.client.get(breadcrumb_url[1])
-            self.assertContains(breadcrumb_second,
-                                "<h1>django CMS Navigation administration</h1>")
+            self.assertContains(
+                breadcrumb_second, "<h1>django CMS Navigation administration</h1>")
             self.assertContains(
                 breadcrumb_second,
                 '<a href="/en/admin/djangocms_navigation/menucontent/">Menu contents</a>'
@@ -1079,18 +1079,19 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
                 breadcrumb_third,
                 "<h1>Edit Menu: %s</h1>" % menu_content.root
             )
-            self.assertContains(breadcrumb_third,
-                                '<a href="/en/admin/djangocms_navigation/menuitem/1/1/change/'
-                                '">%s</a></th>' % menu_content.root)
+            self.assertContains(
+                breadcrumb_third,
+                '<a href="/en/admin/djangocms_navigation/menuitem/1/1/change/">%s</a></th>' % menu_content.root)
             breadcrumb_fourth = self.client.get(breadcrumb_url[3])
             self.assertContains(
                 breadcrumb_fourth,
                 "<h1>Edit Menu: %s</h1>" % menu_content.root
             )
-            self.assertContains(confirmation_response, '<li>Menu item: %s</li>' % child.title)
-            self.assertContains(confirmation_response, '<p>Are you sure you want to delete the menu item '
-                                                       '"%s"? All of the following related '
-                                                       'items will be deleted:</p>' % child.title)
+            self.assertContains(
+                confirmation_response, '<li>Menu item: %s</li>' % child.title)
+            self.assertContains(
+                confirmation_response, '<p>Are you sure you want to delete the menu item "%s"? All of the following '
+                                       'related items will be deleted:</p>' % child.title)
 
 
 class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
