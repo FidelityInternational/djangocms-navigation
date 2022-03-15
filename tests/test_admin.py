@@ -1,4 +1,5 @@
 import html
+import json
 from unittest.mock import patch
 
 import django
@@ -843,20 +844,37 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
         self.assertRedirectsToVersionList(response, version.content)
         self.assertDjangoErrorMessage("Version is not a draft", mocked_messages)
 
-    def test_menuitem_changelist_messages_endpoint_exists(self):
+    def test_menuitem_changelist_validate_messages_endpoint(self):
         """
         The messages endpoint provides async code with access to the django message queue.
         Endpoint is required to fetch update messages after common treebeard operations
         (like moving a tree node) without reloading page.
         """
-        menu_content = factories.MenuContentWithVersionFactory()
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.get_superuser())
+        child = factories.ChildMenuItemFactory(parent=menu_content.root)
+        grandchild = factories.ChildMenuItemFactory(parent=child)
+        data = {
+            "node_id": grandchild.id,
+            "sibling_id": menu_content.root.id,
+            "as_child": 1,
+        }
+        move_endpoint = reverse(
+            "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,)
+        )
         messages_endpoint = reverse(
             "admin:djangocms_navigation_menuitem_message_storage", args=(menu_content.id,)
         )
+        move_response = self.client.post(move_endpoint, data)
+        messages_response = self.client.get(messages_endpoint)
 
-        response = self.client.get(messages_endpoint)
+        # Check both calls come back successful:
+        self.assertEqual(move_response.status_code, 200)
+        self.assertEqual(messages_response.status_code, 200)
 
-        self.assertEqual(response.status_code, 200)
+        # Check message result is as expected:
+        msg = json.loads(messages_response.content)['messages'][0]
+        self.assertEqual(msg['level'], 'info')
+        self.assertIn('Moved node', msg['message'])
 
     def test_menuitem_changelist_default_tree_layout(self):
         """
@@ -890,7 +908,7 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
             None,
             [node.find("a", class_="collapse collapsed") for node in level_2_nodes]
         )
-        # # Assert / verify level 3 nodes are display: none (set in html via result_tree tag):
+        # Assert / verify level 3 nodes are display: none (set in html via result_tree tag):
         for node in level_3_nodes:
             self.assertEqual("display: none;", node['style'])
 
