@@ -5,7 +5,12 @@ Changelog
 Unreleased
 ==========
 * feat: Expand/collapse ALL nodes for navigation tree in admin changelist view.
+
+1.0.3 (2022-03-15)
+==================
 * feat: Expand/collapse enabled for navigation tree in admin changelist view.
+* feat: Added delete confirmation template to overwrite delete view breadcrumbs
+* fix: Extended app Node deletion 404 bugfix
 
 1.0.2 (2022-03-03)
 ==================
