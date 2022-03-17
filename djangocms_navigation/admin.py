@@ -6,6 +6,7 @@ from django.contrib.admin.options import IS_POPUP_VAR
 from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
 from django.contrib.admin.utils import get_deleted_objects, quote
 from django.contrib.admin.views.main import ChangeList
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -414,6 +415,7 @@ class MenuItemAdmin(TreeAdmin):
         return [
             self._get_edit_link,
             self._get_delete_link,
+            self._get_references_link,
         ]
 
     def _get_edit_link(self, obj, request, disabled=False):
@@ -440,6 +442,21 @@ class MenuItemAdmin(TreeAdmin):
         return render_to_string(
             "djangocms_versioning/admin/discard_icon.html",
             {"discard_url": delete_url, "disabled": disabled, "object_id": obj.id},
+        )
+
+    def _get_references_link(self, obj, request):
+        menuitem_content_type = ContentType.objects.get(
+            app_label=self.model._meta.app_label, model=self.model._meta.model_name
+        )
+
+        url = reverse(
+            "djangocms_references:references-index",
+            kwargs={"content_type_id": menuitem_content_type.id, "object_id": obj.id},
+        )
+
+        return render_to_string(
+            "admin/djangocms_navigation/menuitem/references.html",
+            {"url": url}
         )
 
     def get_queryset(self, request):
