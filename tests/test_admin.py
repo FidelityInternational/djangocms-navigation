@@ -930,7 +930,7 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
 
     def test_menuitem_changelist_check_for_expand_all(self):
         """
-        Check that custom javascript for overriding treebeard js is present.
+        Check that the expand / collapse all controls are present. 
         """
         menu_content = factories.MenuContentWithVersionFactory()
 
