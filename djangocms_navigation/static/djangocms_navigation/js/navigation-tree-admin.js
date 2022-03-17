@@ -63,6 +63,23 @@ Original code found in treebeard-admin.js
                     }
                 }).show();
             },
+            // collapse_all() and expand_all() show/hide the node + child nodes AND modifies classes: 
+            // (In practice these functions are only used with the root node)
+            collapse_all: function () {
+                this.$elem.find('a.collapse').removeClass('expanded').addClass('collapsed');
+                $.each(this.children(), function() {
+                    let node = new Node(this);
+                    node.collapse_all();
+                }).hide();
+            },
+            expand_all: function () {
+                this.$elem.find('a.collapse').removeClass('collapsed').addClass('expanded');
+                $.each(this.children(), function() {
+                    let node = new Node(this);
+                    node.expand_all();
+                }).show();
+            },
+            // Toggle show/hides the node (and child nodes), but does not modify child classes - this is so the 'state' can be perserved.
             toggle: function () {
                 if (this.is_collapsed()) {
                     this.expand();
@@ -278,8 +295,19 @@ Original code found in treebeard-admin.js
                                         let msg = document.createElement('li');
                                         msg.className = message.level;
                                         msg.innerHTML = message.message;
+                                        msg.style.opacity = 1;
 
                                         msglist.append(msg);
+
+                                        setTimeout(() => {
+                                            let fader = setInterval(() => {
+                                                msg.style.opacity -= 0.05;
+                                                if(msg.style.opacity < 0) {
+                                                    msg.style.display = "none";
+                                                    clearInterval(fader);
+                                                }
+                                            }, 20);
+                                        }, 5000);
                                     })
                                 })
                                 .catch(err => {
@@ -303,6 +331,22 @@ Original code found in treebeard-admin.js
             node.toggle();
             return false;
         });
+
+        $('.expand-all a').click(function (e) {
+            e.preventDefault();
+            // Get root node:
+            let root_node = new Node($.find('tr[level=1]')[0]);
+
+            // Toggle expand / collapse all: 
+            if (!this.hasAttribute('class') || $(this).hasClass('collapsed-all') ) {
+                root_node.expand_all();
+                $(this).addClass('expanded-all').removeClass('collapsed-all').text('-');
+            } else {
+                root_node.collapse_all();
+                $(this).addClass('collapsed-all').removeClass('expanded-all').text('+');
+            }
+        });
+        
         var hash = window.location.hash;
 
         if (hash) {
@@ -369,4 +413,3 @@ Original code found in treebeard-admin.js
 
     var a = {aqua: [0, 255, 255], azure: [240, 255, 255], beige: [245, 245, 220], black: [0, 0, 0], blue: [0, 0, 255], brown: [165, 42, 42], cyan: [0, 255, 255], darkblue: [0, 0, 139], darkcyan: [0, 139, 139], darkgrey: [169, 169, 169], darkgreen: [0, 100, 0], darkkhaki: [189, 183, 107], darkmagenta: [139, 0, 139], darkolivegreen: [85, 107, 47], darkorange: [255, 140, 0], darkorchid: [153, 50, 204], darkred: [139, 0, 0], darksalmon: [233, 150, 122], darkviolet: [148, 0, 211], fuchsia: [255, 0, 255], gold: [255, 215, 0], green: [0, 128, 0], indigo: [75, 0, 130], khaki: [240, 230, 140], lightblue: [173, 216, 230], lightcyan: [224, 255, 255], lightgreen: [144, 238, 144], lightgrey: [211, 211, 211], lightpink: [255, 182, 193], lightyellow: [255, 255, 224], lime: [0, 255, 0], magenta: [255, 0, 255], maroon: [128, 0, 0], navy: [0, 0, 128], olive: [128, 128, 0], orange: [255, 165, 0], pink: [255, 192, 203], purple: [128, 0, 128], violet: [128, 0, 128], red: [255, 0, 0], silver: [192, 192, 192], white: [255, 255, 255], yellow: [255, 255, 0], transparent: [255, 255, 255]}
 })(django.jQuery);
-    

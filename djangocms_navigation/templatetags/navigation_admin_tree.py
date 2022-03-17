@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 from django import template
-from django.template.loader import get_template
+from django.contrib.admin.templatetags.admin_list import (
+    result_headers,
+    result_hidden_fields,
+)
 from django.templatetags.static import static
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
 
-from treebeard.templatetags import admin_tree
+from treebeard.templatetags import admin_tree, needs_checkboxes
+from treebeard.templatetags.admin_tree import check_empty_dict, results
 
 
 register = template.Library()
@@ -49,8 +54,24 @@ def get_collapse(result):
 admin_tree.get_collapse = get_collapse
 
 
-t = get_template('djangocms_navigation/admin/tree_change_list_results.html')
-admin_tree.register.inclusion_tag(t, takes_context=True)(admin_tree.result_tree)
+@admin_tree.register.inclusion_tag(
+    'djangocms_navigation/admin/tree_change_list_results.html', takes_context=True)
+def result_tree(context, cl, request):
+
+    headers = list(result_headers(cl))
+    headers.insert(1 if needs_checkboxes(context) else 0, {
+        'text': '+',
+        'sortable': True,
+        'url': request.path,
+        'tooltip': _('Toggle expand/collapse all'),
+        'class_attrib': mark_safe(' class="expand-all"')
+    })
+    return {
+        'filtered': not check_empty_dict(request.GET),
+        'result_hidden_fields': list(result_hidden_fields(cl)),
+        'result_headers': headers,
+        'results': list(results(cl)),
+    }
 
 
 @admin_tree.register.simple_tag

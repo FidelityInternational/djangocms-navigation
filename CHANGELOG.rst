@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* feat: Expand/collapse ALL nodes for navigation tree in admin changelist view.
 
 1.0.3 (2022-03-15)
 ==================

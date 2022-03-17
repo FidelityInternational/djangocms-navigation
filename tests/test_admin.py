@@ -928,6 +928,25 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
             'djangocms_navigation/js/navigation-tree-admin.js',
         )
 
+    def test_menuitem_changelist_check_for_expand_all(self):
+        """
+        Check that the expand / collapse all controls are present.
+        """
+        menu_content = factories.MenuContentWithVersionFactory()
+
+        list_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
+        )
+        response = self.client.get(list_url)
+
+        soup = BeautifulSoup(str(response.content), features="lxml")
+        element = soup.find("th", class_="expand-all")
+        link = element.find("a")
+
+        self.assertIsNotNone(element)
+        self.assertEqual(_('Toggle expand/collapse all'), link['title'])
+        self.assertIn('+', link.string)
+
 
 @override_settings(
     CMS_PERMISSION=True,
