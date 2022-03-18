@@ -415,7 +415,7 @@ class MenuItemAdmin(TreeAdmin):
         return [
             self._get_edit_link,
             self._get_delete_link,
-            self._get_references_link,
+            #self._get_references_link,
         ]
 
     def _get_edit_link(self, obj, request, disabled=False):
@@ -449,10 +449,11 @@ class MenuItemAdmin(TreeAdmin):
             app_label=self.model._meta.app_label, model=self.model._meta.model_name
         )
 
-        url = reverse_lazy(
+        url = "www.google.com"
+        """reverse_lazy(
             "djangocms_references:references-index",
             kwargs={"content_type_id": menuitem_content_type.id, "object_id": obj.id},
-        )
+        )"""
 
         return render_to_string(
             "admin/djangocms_navigation/menuitem/references.html",
