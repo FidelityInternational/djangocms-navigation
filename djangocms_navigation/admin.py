@@ -443,22 +443,22 @@ class MenuItemAdmin(TreeAdmin):
             "djangocms_versioning/admin/discard_icon.html",
             {"discard_url": delete_url, "disabled": disabled, "object_id": obj.id},
         )
-
+    """
     def _get_references_link(self, obj, request):
         menuitem_content_type = ContentType.objects.get(
             app_label=self.model._meta.app_label, model=self.model._meta.model_name
         )
 
-        url = "www.google.com"
-        """reverse_lazy(
+        url = reverse_lazy(
             "djangocms_references:references-index",
             kwargs={"content_type_id": menuitem_content_type.id, "object_id": obj.id},
-        )"""
+        )
 
         return render_to_string(
             "admin/djangocms_navigation/menuitem/references.html",
             {"url": url}
         )
+    """
 
     def get_queryset(self, request):
         if hasattr(request, "menu_content_id"):
