@@ -12,7 +12,7 @@ from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
-from django.urls import re_path, reverse
+from django.urls import re_path, reverse, reverse_lazy
 from django.utils.html import format_html, format_html_join
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
@@ -449,7 +449,7 @@ class MenuItemAdmin(TreeAdmin):
             app_label=self.model._meta.app_label, model=self.model._meta.model_name
         )
 
-        url = reverse(
+        url = reverse_lazy(
             "djangocms_references:references-index",
             kwargs={"content_type_id": menuitem_content_type.id, "object_id": obj.id},
         )
