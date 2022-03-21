@@ -443,7 +443,7 @@ class MenuItemAdmin(TreeAdmin):
             "djangocms_versioning/admin/discard_icon.html",
             {"discard_url": delete_url, "disabled": disabled, "object_id": obj.id},
         )
-    """
+
     def _get_references_link(self, obj, request):
         menuitem_content_type = ContentType.objects.get(
             app_label=self.model._meta.app_label, model=self.model._meta.model_name
@@ -458,7 +458,6 @@ class MenuItemAdmin(TreeAdmin):
             "admin/djangocms_navigation/menuitem/references.html",
             {"url": url}
         )
-    """
 
     def get_queryset(self, request):
         if hasattr(request, "menu_content_id"):
