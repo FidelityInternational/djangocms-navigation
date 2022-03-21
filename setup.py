@@ -1,4 +1,4 @@
-from setuptools import find_namespace_packages, setup
+from setuptools import find_packages, setup
 
 import djangocms_navigation
 
@@ -11,7 +11,7 @@ INSTALL_REQUIREMENTS = [
 
 setup(
     name="djangocms-navigation",
-    packages=find_namespace_packages(),
+    packages=find_packages(),
     include_package_data=True,
     version=djangocms_navigation.__version__,
     description=djangocms_navigation.__doc__,
