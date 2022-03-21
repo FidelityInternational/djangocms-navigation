@@ -1,4 +1,4 @@
-from setuptools import find_packages, setup
+from setuptools import find_namespace_packages, setup
 
 import djangocms_navigation
 
@@ -7,12 +7,11 @@ INSTALL_REQUIREMENTS = [
     "Django>=1.11,<3.3",
     "django-treebeard>=4.3",
     "django-cms",
-    "djangocms-references",
 ]
 
 setup(
     name="djangocms-navigation",
-    packages=find_packages(),
+    packages=find_namespace_packages(),
     include_package_data=True,
     version=djangocms_navigation.__version__,
     description=djangocms_navigation.__doc__,

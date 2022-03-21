@@ -8,7 +8,6 @@ HELPER_SETTINGS = {
         "djangocms_versioning",
         "djangocms_version_locking",
         "djangocms_moderation",
-        "djangocms_references",
     ],
     "DJANGOCMS_VERSIONING_ENABLE_MENU_REGISTRATION": False,
     "MIGRATION_MODULES": {
@@ -23,7 +22,6 @@ HELPER_SETTINGS = {
         "djangocms_versioning": None,
         'djangocms_version_locking': None,
         'djangocms_moderation': None,
-        "djangocms_references": None,
     },
     "LANGUAGES": (
         ("en", "English"),
