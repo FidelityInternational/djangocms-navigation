@@ -415,7 +415,7 @@ class MenuItemAdmin(TreeAdmin):
         return [
             self._get_edit_link,
             self._get_delete_link,
-            #self._get_references_link,
+            self._get_references_link,
         ]
 
     def _get_edit_link(self, obj, request, disabled=False):
