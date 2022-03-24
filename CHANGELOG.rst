@@ -4,6 +4,9 @@ Changelog
 
 Unreleased
 ==========
+
+1.0.5 (2022-03-24)
+==================
 * feat: Admin list action for references
 
 1.0.4 (2022-03-18)
