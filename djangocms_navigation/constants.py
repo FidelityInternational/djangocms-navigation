@@ -1,5 +1,3 @@
-import sys
-
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
@@ -28,6 +26,3 @@ PLUGIN_URL_NAME_PREFIX = "djangocms_navigation"
 SELECT2_CONTENT_OBJECT_URL_NAME = "{}_select2_content_object".format(
     PLUGIN_URL_NAME_PREFIX
 )
-
-# Used to effectively disable django admin pagination:
-MAX_RESULTS_PER_PAGE = sys.maxsize

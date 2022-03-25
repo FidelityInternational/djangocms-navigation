@@ -1,6 +1,8 @@
 import json
+import sys
 
 from django.apps import apps
+from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.options import IS_POPUP_VAR
 from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
@@ -21,7 +23,6 @@ from django.views.i18n import JavaScriptCatalog
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 from treebeard.admin import TreeAdmin
 
-from .constants import MAX_RESULTS_PER_PAGE
 from .filters import LanguageFilter
 from .forms import MenuContentForm, MenuItemForm
 from .helpers import proxy_model
@@ -55,6 +56,9 @@ try:
 except ImportError:
     using_version_lock = False
     LOCK_MESSAGE = _("You don't have permission to change this item")
+
+# This setting is used to effectively disable django pagination for MenuItem changelist view:
+MAX_RESULTS_PER_PAGE = getattr(settings, "MAX_RESULTS_PER_PAGE", sys.maxsize)
 
 
 class MenuItemChangeList(ChangeList):
