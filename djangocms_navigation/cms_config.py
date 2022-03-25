@@ -5,7 +5,7 @@ from cms.app_base import CMSAppConfig, CMSAppExtension
 from cms.models import Page
 from cms.utils.i18n import get_language_tuple
 
-from .models import MenuContent, MenuItem
+from .models import MenuContent, MenuItem, NavigationPlugin
 from .utils import purge_menu_cache
 
 
@@ -94,6 +94,10 @@ class NavigationCMSAppConfig(CMSAppConfig):
         # model_class : field(s) to search in menu item form UI
         Page: ["title"]
     }
+    djangocms_references_enabled = True
+    reference_fields = [
+        (NavigationPlugin, "menu")
+    ]
 
     if djangocms_versioning_enabled:
         from djangocms_versioning.datastructures import VersionableItem

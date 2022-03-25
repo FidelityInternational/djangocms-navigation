@@ -224,13 +224,13 @@ class MenuContentAdmin(admin.ModelAdmin):
         )
 
     def _get_references_link(self, obj, request):
-        menuitem_content_type = ContentType.objects.get(
-            app_label=self.model._meta.app_label, model=self.model._meta.model_name
+        menu_content_type = ContentType.objects.get(
+            app_label=self.model._meta.app_label, model=Menu._meta.model_name,
         )
 
         url = reverse_lazy(
             "djangocms_references:references-index",
-            kwargs={"content_type_id": menuitem_content_type.id, "object_id": obj.id},
+            kwargs={"content_type_id": menu_content_type.id, "object_id": obj.menu.id},
         )
 
         return render_to_string(
