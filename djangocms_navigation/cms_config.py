@@ -96,7 +96,7 @@ class NavigationCMSAppConfig(CMSAppConfig):
     }
     djangocms_references_enabled = True
     reference_fields = [
-        (NavigationPlugin, "menu")
+        (NavigationPlugin, "menu"),
     ]
 
     if djangocms_versioning_enabled:

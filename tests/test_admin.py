@@ -1693,7 +1693,7 @@ class ReferencesIntegrationTestCase(CMSTestCase):
         )
         menu = menucontent.menu
 
-        add_plugin(
+        navigation_plugin = add_plugin(
             placeholder,
             "Navigation",
             language="en",
@@ -1710,4 +1710,5 @@ class ReferencesIntegrationTestCase(CMSTestCase):
         with self.login_user_context(self.user):
             response = self.client.get(references_endpoint)
 
-        self.assertContains(response, pagecontent.title)
+        self.assertContains(response, navigation_plugin.__str__())
+        self.assertContains(response, navigation_plugin.plugin_type)
