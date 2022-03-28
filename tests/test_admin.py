@@ -1686,13 +1686,15 @@ class ReferencesIntegrationTestCase(CMSTestCase):
         self.page = factories.PageContentFactory().page
 
     def test_menucontent_references_integration(self):
+        """
+        When opening the references for a given navigation menu, the objects which reference it should be listed
+        """
         menucontent = factories.MenuContentWithVersionFactory(version__created_by=self.user)
         pagecontent = PageContent._base_manager.get(page=self.page)
         placeholder = factories.PlaceholderFactory(
             source=pagecontent,
         )
         menu = menucontent.menu
-
         navigation_plugin = add_plugin(
             placeholder,
             "Navigation",
@@ -1700,13 +1702,12 @@ class ReferencesIntegrationTestCase(CMSTestCase):
             template="default",
             menu=menu,
         )
-        navigation_content_type = ContentType.objects.get(app_label="djangocms_navigation", model="menu")
 
+        navigation_content_type = ContentType.objects.get(app_label="djangocms_navigation", model="menu")
         references_endpoint = reverse(
             "djangocms_references:references-index",
             kwargs={"content_type_id": navigation_content_type.id, "object_id": menu.id}
         )
-
         with self.login_user_context(self.user):
             response = self.client.get(references_endpoint)
 
