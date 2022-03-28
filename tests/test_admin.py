@@ -1711,4 +1711,4 @@ class ReferencesIntegrationTestCase(CMSTestCase):
             response = self.client.get(references_endpoint)
 
         self.assertContains(response, navigation_plugin.__str__())
-        self.assertContains(response, navigation_plugin.plugin_type)
+        self.assertContains(response, navigation_plugin.plugin_type.lower())
