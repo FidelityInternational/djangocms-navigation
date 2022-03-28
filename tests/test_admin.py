@@ -12,6 +12,8 @@ from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
 from django.utils.translation import gettext_lazy as _
 
+from cms.api import add_plugin
+from cms.models.titlemodels import PageContent
 from cms.test_utils.testcases import CMSTestCase
 
 from bs4 import BeautifulSoup
@@ -1675,3 +1677,39 @@ class ChangelistSideframeControlsTestCase(CMSTestCase):
         # The url link should keep the sideframe open
         self.assertIn("js-versioning-keep-sideframe", url_markup)
         self.assertNotIn("js-versioning-close-sideframe", url_markup)
+
+
+class ReferencesIntegrationTestCase(CMSTestCase):
+
+    def setUp(self):
+        self.user = self.get_superuser()
+        self.page = factories.PageContentFactory().page
+
+    def test_menucontent_references_integration(self):
+        """
+        When opening the references for a given navigation menu, the objects which reference it should be listed
+        """
+        menucontent = factories.MenuContentWithVersionFactory(version__created_by=self.user)
+        pagecontent = PageContent._base_manager.get(page=self.page)
+        placeholder = factories.PlaceholderFactory(
+            source=pagecontent,
+        )
+        menu = menucontent.menu
+        navigation_plugin = add_plugin(
+            placeholder,
+            "Navigation",
+            language="en",
+            template="default",
+            menu=menu,
+        )
+
+        navigation_content_type = ContentType.objects.get(app_label="djangocms_navigation", model="menu")
+        references_endpoint = reverse(
+            "djangocms_references:references-index",
+            kwargs={"content_type_id": navigation_content_type.id, "object_id": menu.id}
+        )
+        with self.login_user_context(self.user):
+            response = self.client.get(references_endpoint)
+
+        self.assertContains(response, navigation_plugin.__str__())
+        self.assertContains(response, navigation_plugin.plugin_type.lower())

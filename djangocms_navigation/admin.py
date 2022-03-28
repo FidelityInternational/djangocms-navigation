@@ -143,6 +143,7 @@ class MenuContentAdmin(admin.ModelAdmin):
             self._get_preview_link,
             self._get_edit_link,
             self._get_manage_versions_link,
+            self._get_references_link,
         ]
 
     def get_list_display(self, request):
@@ -220,6 +221,21 @@ class MenuContentAdmin(admin.ModelAdmin):
         return render_to_string(
             "djangocms_versioning/admin/icons/manage_versions.html",
             {"url": url, "disabled": disabled, "action": False},
+        )
+
+    def _get_references_link(self, obj, request):
+        menu_content_type = ContentType.objects.get(
+            app_label=self.model._meta.app_label, model=Menu._meta.model_name,
+        )
+
+        url = reverse_lazy(
+            "djangocms_references:references-index",
+            kwargs={"content_type_id": menu_content_type.id, "object_id": obj.menu.id},
+        )
+
+        return render_to_string(
+            "djangocms_references/references_icon.html",
+            {"url": url}
         )
 
     def get_menuitem_link(self, obj):
@@ -415,7 +431,6 @@ class MenuItemAdmin(TreeAdmin):
         return [
             self._get_edit_link,
             self._get_delete_link,
-            self._get_references_link,
         ]
 
     def _get_edit_link(self, obj, request, disabled=False):
@@ -442,21 +457,6 @@ class MenuItemAdmin(TreeAdmin):
         return render_to_string(
             "djangocms_versioning/admin/discard_icon.html",
             {"discard_url": delete_url, "disabled": disabled, "object_id": obj.id},
-        )
-
-    def _get_references_link(self, obj, request):
-        menuitem_content_type = ContentType.objects.get(
-            app_label=self.model._meta.app_label, model=self.model._meta.model_name
-        )
-
-        url = reverse_lazy(
-            "djangocms_references:references-index",
-            kwargs={"content_type_id": menuitem_content_type.id, "object_id": obj.id},
-        )
-
-        return render_to_string(
-            "admin/djangocms_navigation/menuitem/references.html",
-            {"url": url}
         )
 
     def get_queryset(self, request):

@@ -10,11 +10,11 @@ admin.autodiscover()
 
 urlpatterns = [
     re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT, "show_indexes": True}),  # NOQA
+    re_path(r"^", include('djangocms_references.urls')),
 ]
 i18n_urls = [
     re_path(r"^admin/", admin.site.urls),
     re_path(r"^", include("cms.urls")),
-    re_path(r"^", include('djangocms_references.urls')),
 ]
 
 urlpatterns += i18n_patterns(*i18n_urls)

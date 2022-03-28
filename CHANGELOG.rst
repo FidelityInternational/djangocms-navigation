@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* fix: Moved admin list actions to appropriate menu
 
 1.0.5 (2022-03-24)
 ==================
