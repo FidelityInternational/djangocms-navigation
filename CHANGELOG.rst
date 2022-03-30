@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* feat: Removed pagination in MenuItem changelist view by max-ing the list_per_page value.
 
 1.0.6 (2022-03-29)
 ==================
