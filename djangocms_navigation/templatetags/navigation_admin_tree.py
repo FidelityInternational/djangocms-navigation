@@ -2,7 +2,6 @@
 
 import datetime
 
-from django import template
 from django.contrib.admin.templatetags.admin_list import (
     result_headers,
     result_hidden_fields,
