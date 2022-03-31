@@ -1,5 +1,7 @@
 import html
 import json
+import re
+
 from unittest.mock import patch
 
 import django
@@ -215,6 +217,20 @@ class MenuContentAdminViewTestCase(CMSTestCase):
         self.assertEqual(
             menu_content_admin.get_list_display(request), ["title", "get_menuitem_link", "get_preview_link"]
         )
+
+    def test_menucontent_changelist_verify_burger_menu_available(self):
+        """
+        The actions column should display a burger menu for any actions in addition
+        to edit or preview. Dependent on djangocms_versioning, verify media is
+        present.
+        """
+        factories.MenuContentWithVersionFactory()
+        list_url = reverse("admin:djangocms_navigation_menucontent_changelist")
+
+        response = self.client.get(list_url)
+        soup = BeautifulSoup(str(response.content), features="lxml")
+
+        self.assertTrue(soup.find("script", src=re.compile("djangocms_versioning/js/actions.js")))
 
 
 class MenuItemModelAdminTestCase(TestCase):
@@ -948,6 +964,23 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
         self.assertIsNotNone(element)
         self.assertEqual(_('Toggle expand/collapse all'), link['title'])
         self.assertIn('+', link.string)
+
+    def test_menuitem_changelist_verify_burger_menu_available(self):
+        """
+        The actions burger menu should be available for MenuItem. Dependent on
+        djangocms_versioning, verify css class is present and js is loaded.
+        """
+        menu_content = factories.MenuContentWithVersionFactory()
+
+        list_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
+        )
+        response = self.client.get(list_url)
+
+        soup = BeautifulSoup(str(response.content), features="lxml")
+
+        self.assertTrue(soup.find_all("a", class_="cms-versioning-action-btn"))
+        self.assertTrue(soup.find("script", src=re.compile("djangocms_versioning/js/actions.js")))
 
 
 @override_settings(

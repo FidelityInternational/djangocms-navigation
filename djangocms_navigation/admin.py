@@ -324,10 +324,10 @@ class MenuItemAdmin(TreeAdmin):
     actions = None
     change_form_template = "admin/djangocms_navigation/menuitem/change_form.html"
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
-    list_display = ["__str__", "get_object_url", "soft_root", 'hide_node']
     sortable_by = ["pk"]
 
     class Media:
+        js = ("admin/js/jquery.init.js", "djangocms_versioning/js/actions.js")
         css = {
             "all": (
                 "djangocms_versioning/css/actions.css",
