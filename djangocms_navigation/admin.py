@@ -21,6 +21,7 @@ from django.views.i18n import JavaScriptCatalog
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 from treebeard.admin import TreeAdmin
 
+from .conf import TREE_MAX_RESULT_PER_PAGE_COUNT
 from .filters import LanguageFilter
 from .forms import MenuContentForm, MenuItemForm
 from .helpers import proxy_model
@@ -326,6 +327,7 @@ class MenuItemAdmin(TreeAdmin):
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
     list_display = ["__str__", "get_object_url", "soft_root", 'hide_node']
     sortable_by = ["pk"]
+    list_per_page = TREE_MAX_RESULT_PER_PAGE_COUNT
 
     class Media:
         css = {
