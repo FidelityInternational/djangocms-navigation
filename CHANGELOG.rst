@@ -5,6 +5,10 @@ Changelog
 Unreleased
 ==========
 
+1.0.7 (2022-04-01)
+==================
+* feat: MenuItem tree removed pagination with the option to configure the paging amount
+
 1.0.6 (2022-03-29)
 ==================
 * fix: Moved admin list actions to appropriate menu
