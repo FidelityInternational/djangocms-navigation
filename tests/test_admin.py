@@ -1,7 +1,8 @@
 import html
+import importlib
 import json
 import re
-
+import sys
 from unittest.mock import patch
 
 import django
@@ -90,6 +91,29 @@ class MenuItemChangelistTestCase(CMSTestCase):
             menu_content.pk, menu_content.root.pk
         )
         self.assertEqual(url, expected_url)
+
+    @patch('djangocms_navigation.conf.TREE_MAX_RESULT_PER_PAGE_COUNT', 11)
+    def test_menuitem_changelist_pagination_setting_override(self):
+        """
+        The pagination should be driven by the setting:
+        DJANGOCMS_NAVIGATION_TREE_MAX_RESULT_PER_PAGE_COUNT
+        """
+        # Remove the admin and then reload it which will reregister the models and the setting changes
+        admin.site.unregister(MenuItem)
+        admin.site.unregister(MenuContent)
+        importlib.reload(nav_admin)
+
+        admin_changelist = admin.site._registry[MenuItem]
+
+        self.assertEqual(admin_changelist.list_per_page, 11)
+
+    def test_menuitem_changelist_pagination_setting_default(self):
+        """
+        By default the pagination should be a higher than the django default of 100
+        """
+        admin_changelist = admin.site._registry[MenuItem]
+
+        self.assertEqual(admin_changelist.list_per_page, sys.maxsize)
 
 
 class MenuContentAdminViewTestCase(CMSTestCase):

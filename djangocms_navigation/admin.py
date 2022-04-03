@@ -21,6 +21,7 @@ from django.views.i18n import JavaScriptCatalog
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 from treebeard.admin import TreeAdmin
 
+from .conf import TREE_MAX_RESULT_PER_PAGE_COUNT
 from .filters import LanguageFilter
 from .forms import MenuContentForm, MenuItemForm
 from .helpers import proxy_model
@@ -81,8 +82,13 @@ class MenuContentAdmin(admin.ModelAdmin):
     list_filter = (LanguageFilter, )
 
     class Media:
-        js = ("admin/js/jquery.init.js", "djangocms_versioning/js/actions.js",)
-        css = {"all": ("djangocms_versioning/css/actions.css", "djangocms_version_locking/css/version-locking.css",)}
+        js = ("admin/js/jquery.init.js", "djangocms_versioning/js/actions.js")
+        css = {
+            "all": (
+                "djangocms_versioning/css/actions.css",
+                "djangocms_version_locking/css/version-locking.css",
+            )
+        }
 
     def get_version(self, obj):
         """
@@ -325,6 +331,7 @@ class MenuItemAdmin(TreeAdmin):
     change_form_template = "admin/djangocms_navigation/menuitem/change_form.html"
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
     sortable_by = ["pk"]
+    list_per_page = TREE_MAX_RESULT_PER_PAGE_COUNT
 
     class Media:
         js = ("admin/js/jquery.init.js", "djangocms_versioning/js/actions.js")

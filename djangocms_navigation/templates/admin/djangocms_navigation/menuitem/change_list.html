@@ -1,16 +1,10 @@
 {# Used for MP and NS trees #}
 {% extends "admin/tree_change_list.html" %}
-{% load static admin_list admin_urls cms_static navigation_admin_tree i18n djangocms_versioning %}
+{% load static admin_list admin_urls navigation_admin_tree i18n djangocms_versioning %}
 
 {% block extrahead %}
     {{ block.super }}
-
-    {# INFO: To avoid conflicts with adminstyle css we need to add styles here #}
-    {# instead of inside "extrastyle" block or admin Media class. #}
-    <link rel="stylesheet" href="{% static_with_version 'cms/css/cms.base.css' %}">
-    <link rel="stylesheet" href="{% static_with_version 'cms/css/cms.pagetree.css' %}">
-    
-    {# INFO: versioning_static_url_prefix variable is used in versioning actions.js #}
+    {# INFO: versioning_static_url_prefix variable is used to inject static_url into actions.js #}
     <script>
         let versioning_static_url_prefix = "{% static "djangocms_versioning/" %}";
     </script>
