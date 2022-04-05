@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* feat: MeneContent Changelist, use ExtendedVersionAdminMixin
 
 1.0.7 (2022-04-01)
 ==================
