@@ -7,7 +7,10 @@ from django.contrib.admin.templatetags.admin_list import (
     result_hidden_fields,
 )
 from django.contrib.admin.utils import (
-    lookup_field, display_for_field, display_for_value)
+    display_for_field,
+    display_for_value,
+    lookup_field,
+)
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.template import Library
