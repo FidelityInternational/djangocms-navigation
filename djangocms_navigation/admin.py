@@ -19,7 +19,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.i18n import JavaScriptCatalog
 
 from djangocms_versioning.admin import ExtendedVersionAdminMixin
-from djangocms_versioning.constants import DRAFT, PUBLISHED
+from djangocms_versioning.constants import DRAFT
 from djangocms_versioning.exceptions import ConditionFailed
 from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
@@ -28,7 +28,6 @@ from treebeard.admin import TreeAdmin
 from .conf import TREE_MAX_RESULT_PER_PAGE_COUNT
 from .filters import LanguageFilter
 from .forms import MenuContentForm, MenuItemForm
-from .helpers import proxy_model
 from .models import Menu, MenuContent, MenuItem
 from .utils import is_versioning_enabled, purge_menu_cache, reverse_admin_name
 from .views import (
