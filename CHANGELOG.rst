@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* feat: MenuContent Changelist now uses ExtendedVersionAdminMixin
 
 1.0.7 (2022-04-01)
 ==================
