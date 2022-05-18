@@ -1,5 +1,6 @@
 {% extends "djangocms_navigation/base.html" %}
 {% load i18n cms_tags %}
+{% load navigation_menu_tags  %}
 
 {% block navigation_content %}
     <div class="cms-navigation-page container">
@@ -9,7 +10,7 @@
             </span>
         </h2>
         <div class="cms-navigation-detail">
-          {% render_placeholder navigation_content.placeholder %}
+            {% menuitem_get_annotated_list %}
         </div>
     </div>
 {% endblock navigation_content %}

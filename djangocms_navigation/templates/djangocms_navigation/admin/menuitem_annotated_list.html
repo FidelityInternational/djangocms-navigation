@@ -1,0 +1,19 @@
+{% for item, info in annotated_list %}
+
+    {% if info.open %}<ul>{% else %}</li>{% endif %}
+
+    <li 
+        data-form-data="{ 
+        menu_title: {{item.title}},
+        url: {% if item.content %}{{item.content.get_absolute_url}}{% endif %},
+        link_target: {{item.link_target}},
+        soft_root: {{item.soft_root}},
+        hide-in-menu: {{item.hide_node}}
+    }"
+    >
+    {{ item.title }}
+
+    {% for close in info.close %}
+        </li></ul>
+    {% endfor %}
+{% endfor %}

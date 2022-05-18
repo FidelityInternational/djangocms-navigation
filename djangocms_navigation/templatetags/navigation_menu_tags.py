@@ -8,6 +8,8 @@ from classytags.arguments import Argument
 from classytags.core import Options
 from classytags.helpers import InclusionTag
 
+from djangocms_navigation.models import MenuItem
+
 
 register = template.Library()
 
@@ -15,7 +17,6 @@ register = template.Library()
 class NavigationShowBreadcrumb(InclusionTag):
     """
     Shows the breadcrumb from the node that has the same url as the current request
-
     - start level: after which level should the breadcrumb start? 0=home
     - template: template used to render the breadcrumb
     """
@@ -81,3 +82,17 @@ class NavigationShowBreadcrumb(InclusionTag):
 
 
 register.tag(NavigationShowBreadcrumb)
+
+
+@register.inclusion_tag("djangocms_navigation/admin/menuitem_annotated_list.html", takes_context=True)
+def menuitem_get_annotated_list(context):
+    """
+    Returns an 'annotated_list' for a given root node (a MenuItem(MP_Node) instance).
+    Used in compare versions view for MenuContent.
+    """
+    annotated_list = MenuItem.get_annotated_list(parent=context['navigation_menu_content'].root)
+    context.update({
+        "annotated_list": annotated_list,
+        "opts": MenuItem._meta
+    })
+    return context
