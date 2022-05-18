@@ -6,6 +6,7 @@ from cms.models import Page
 from cms.utils.i18n import get_language_tuple
 
 from .models import MenuContent, MenuItem, NavigationPlugin
+from .rendering import render_navigation_content
 from .utils import purge_menu_cache
 
 
@@ -101,6 +102,8 @@ class NavigationCMSAppConfig(CMSAppConfig):
 
     if djangocms_versioning_enabled:
         from djangocms_versioning.datastructures import VersionableItem
+        cms_enabled = True
+        cms_toolbar_enabled_models = [(MenuContent, render_navigation_content)]
 
         versioning = [
             VersionableItem(

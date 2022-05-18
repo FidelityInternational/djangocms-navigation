@@ -1,0 +1,15 @@
+{% extends "djangocms_navigation/base.html" %}
+{% load i18n cms_tags %}
+
+{% block navigation_content %}
+    <div class="cms-navigation-page container">
+        <h2 class="cms-navigation-page-heading" id="{{ navigation_content.name|slugify }}">
+            <span class="cms-navigation-page-heading-inner">
+                {{ navigation_content.title }}
+            </span>
+        </h2>
+        <div class="cms-navigation-detail">
+          {% render_placeholder navigation_content.placeholder %}
+        </div>
+    </div>
+{% endblock navigation_content %}
