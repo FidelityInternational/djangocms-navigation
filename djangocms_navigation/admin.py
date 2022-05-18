@@ -6,34 +6,36 @@ from django.contrib.admin.options import IS_POPUP_VAR
 from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
 from django.contrib.admin.utils import get_deleted_objects, quote
 from django.contrib.admin.views.main import ChangeList
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
-from django.urls import re_path, reverse
+from django.urls import re_path, reverse, reverse_lazy
 from django.utils.html import format_html, format_html_join
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from django.views.i18n import JavaScriptCatalog
 
-from djangocms_versioning.constants import DRAFT, PUBLISHED
+from djangocms_versioning.admin import ExtendedVersionAdminMixin
+from djangocms_versioning.constants import DRAFT
+from djangocms_versioning.exceptions import ConditionFailed
+from djangocms_versioning.helpers import version_list_url
+from djangocms_versioning.models import Version
 from treebeard.admin import TreeAdmin
 
+from .conf import TREE_MAX_RESULT_PER_PAGE_COUNT
 from .filters import LanguageFilter
 from .forms import MenuContentForm, MenuItemForm
-from .helpers import proxy_model
 from .models import Menu, MenuContent, MenuItem
 from .utils import is_versioning_enabled, purge_menu_cache, reverse_admin_name
-from .views import ContentObjectSelect2View, MenuContentPreviewView
+from .views import (
+    ContentObjectSelect2View,
+    MenuContentPreviewView,
+    MessageStorageView,
+)
 
-
-try:
-    from djangocms_versioning.exceptions import ConditionFailed
-    from djangocms_versioning.helpers import version_list_url
-    from djangocms_versioning.models import Version
-except ImportError:
-    pass
 
 try:
     from djangocms_version_locking.helpers import (
@@ -66,7 +68,7 @@ class MenuItemChangeList(ChangeList):
         )
 
 
-class MenuContentAdmin(admin.ModelAdmin):
+class MenuContentAdmin(ExtendedVersionAdminMixin, admin.ModelAdmin):
     form = MenuContentForm
     menu_model = Menu
     menu_item_model = MenuItem
@@ -79,48 +81,11 @@ class MenuContentAdmin(admin.ModelAdmin):
         js = ("admin/js/jquery.init.js", "djangocms_versioning/js/actions.js",)
         css = {"all": ("djangocms_versioning/css/actions.css", "djangocms_version_locking/css/version-locking.css",)}
 
-    def get_version(self, obj):
-        """
-        Return the latest version of a given object
-        :param obj: MenuContent instance
-        :return: Latest Version linked with MenuContent instance
-        """
-        return obj.versions.all()[0]
-
-    def get_versioning_state(self, obj):
-        """
-        Return the state of a given version
-        """
-        return self.get_version(obj).get_state_display()
-
-    get_versioning_state.short_description = _("State")
-
-    def get_author(self, obj):
-        """
-        Return the author who created a version
-        :param obj: MenuContent Instance
-        :return: Author
-        """
-        return self.get_version(obj).created_by
-
-    get_author.short_description = _("Author")
-
-    def get_modified_date(self, obj):
-        """
-        Get the last modified date of a version
-        :param obj: MenuContent Instance
-        :return: Modified Date
-        """
-        return self.get_version(obj).modified
-
-    get_modified_date.short_description = _("Modified")
-
     def _list_actions(self, request):
         """
         A closure that makes it possible to pass request object to
         list action button functions.
         """
-
         def list_actions(obj):
             """Display links to state change endpoints
             """
@@ -138,6 +103,7 @@ class MenuContentAdmin(admin.ModelAdmin):
             self._get_preview_link,
             self._get_edit_link,
             self._get_manage_versions_link,
+            self._get_references_link,
         ]
 
     def get_list_display(self, request):
@@ -166,55 +132,19 @@ class MenuContentAdmin(admin.ModelAdmin):
 
     is_locked.short_description = _("Lock State")
 
-    def _get_preview_link(self, obj, request, disabled=False):
-        """
-        Return a user friendly button for previewing the menu contents
-
-        :param obj: Instance of Versioned MenuContent
-        :param request: The request to admin menu
-        :param disabled: Should the link be marked disabled?
-        :return: Preview icon template
-        """
-        return render_to_string(
-            "djangocms_versioning/admin/icons/preview.html",
-            {"url": obj.get_preview_url(), "disabled": disabled},
+    def _get_references_link(self, obj, request):
+        menu_content_type = ContentType.objects.get(
+            app_label=self.model._meta.app_label, model=Menu._meta.model_name,
         )
 
-    def _get_edit_link(self, obj, request, disabled=False):
-        """
-        Return a user friendly button for editing the menu contents
-        - mark disabled if user doesn't have permission
-        - hide completely if instance cannot be edited
-        :param obj: Instance of Versioned MenuContent
-        :param request: The request to admin menu
-        :param disabled: Should the link be marked disabled?
-        :return: Preview icon template
-        """
-        version = proxy_model(self.get_version(obj), self.model)
-
-        if version.state not in (DRAFT, PUBLISHED):
-            # Don't display the link if it can't be edited
-            return ""
-
-        if not version.check_edit_redirect.as_bool(request.user):
-            disabled = True
-
-        url = reverse(
-            "admin:{app}_{model}_edit_redirect".format(
-                app=version._meta.app_label, model=version._meta.model_name
-            ),
-            args=(version.pk,),
-        )
-        return render_to_string(
-            "djangocms_versioning/admin/icons/edit_icon.html",
-            {"url": url, "disabled": disabled, "get": False},
+        url = reverse_lazy(
+            "djangocms_references:references-index",
+            kwargs={"content_type_id": menu_content_type.id, "object_id": obj.menu.id},
         )
 
-    def _get_manage_versions_link(self, obj, request, disabled=False):
-        url = version_list_url(obj)
         return render_to_string(
-            "djangocms_versioning/admin/icons/manage_versions.html",
-            {"url": url, "disabled": disabled, "action": False},
+            "djangocms_references/references_icon.html",
+            {"url": url}
         )
 
     def get_menuitem_link(self, obj):
@@ -239,17 +169,6 @@ class MenuContentAdmin(admin.ModelAdmin):
         )
 
     get_menuitem_link.short_description = _("Menu Items")
-
-    def get_preview_link(self, obj):
-        return format_html(
-            '<a href="{}" class="js-moderation-close-sideframe" target="_top">'
-            '<span class="cms-icon cms-icon-eye"></span> {}'
-            "</a>",
-            obj.get_preview_url(),
-            _("Preview"),
-        )
-
-    get_preview_link.short_description = _("Preview")
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -305,6 +224,7 @@ class MenuItemAdmin(TreeAdmin):
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
     list_display = ["__str__", "get_object_url", "soft_root", 'hide_node']
     sortable_by = ["pk"]
+    list_per_page = TREE_MAX_RESULT_PER_PAGE_COUNT
 
     class Media:
         css = {
@@ -372,6 +292,11 @@ class MenuItemAdmin(TreeAdmin):
                     menu_item_model=self.model,
                 )),
                 name="{}_{}_preview".format(*info),
+            ),
+            re_path(
+                r"^(?P<menu_content_id>\d+)/messages/$",
+                self.admin_site.admin_view(MessageStorageView.as_view()),
+                name="{}_{}_message_storage".format(*info),
             ),
         ]
 
@@ -584,7 +509,9 @@ class MenuItemAdmin(TreeAdmin):
                 if not delete_perm:
                     messages.error(request, LOCK_MESSAGE)
                     return HttpResponseRedirect(version_list_url(menu_content))
-                menu_item = get_object_or_404(MenuItem, id=object_id)
+
+                menu_item = get_object_or_404(self.model, id=object_id)
+
                 if menu_item.is_root():
                     messages.error(
                         request, _("This item is the root of a menu, therefore it cannot be deleted.")
@@ -597,9 +524,10 @@ class MenuItemAdmin(TreeAdmin):
                     messages.error(request, str(error))
                     return HttpResponseRedirect(version_list_url(menu_content))
 
+                extra_context["menu_name"] = menu_item
                 extra_context["deleted_objects"] = self._get_to_be_deleted_objects(menu_item, request)
 
-        return super(MenuItemAdmin, self).delete_view(request, object_id, extra_context)
+        return super().delete_view(request, object_id, extra_context)
 
     def response_delete(self, request, obj_display, obj_id):
         """

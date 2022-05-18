@@ -5,6 +5,32 @@ Changelog
 Unreleased
 ==========
 
+1.1.0 (2022-04-06)
+==================
+* feat: MenuContent Changelist now uses ExtendedVersionAdminMixin
+
+1.0.7 (2022-04-01)
+==================
+* feat: MenuItem tree removed pagination with the option to configure the paging amount
+
+1.0.6 (2022-03-29)
+==================
+* fix: Moved admin list actions to appropriate menu
+
+1.0.5 (2022-03-24)
+==================
+* feat: Admin list action for references
+
+1.0.4 (2022-03-18)
+==================
+* feat: Expand/collapse ALL nodes for navigation tree in admin changelist view.
+
+1.0.3 (2022-03-15)
+==================
+* feat: Expand/collapse enabled for navigation tree in admin changelist view.
+* feat: Added delete confirmation template to overwrite delete view breadcrumbs
+* fix: Extended app Node deletion 404 bugfix
+
 1.0.2 (2022-03-03)
 ==================
 * feat: MenuContent and MenuItem links open in sideframe (refactored icons)

@@ -1,4 +1,7 @@
 import html
+import importlib
+import json
+import sys
 from unittest.mock import patch
 
 import django
@@ -11,8 +14,11 @@ from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
 from django.utils.translation import gettext_lazy as _
 
+from cms.api import add_plugin
+from cms.models.titlemodels import PageContent
 from cms.test_utils.testcases import CMSTestCase
 
+from bs4 import BeautifulSoup
 from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.exceptions import ConditionFailed
 from djangocms_versioning.helpers import version_list_url
@@ -84,6 +90,29 @@ class MenuItemChangelistTestCase(CMSTestCase):
             menu_content.pk, menu_content.root.pk
         )
         self.assertEqual(url, expected_url)
+
+    @patch('djangocms_navigation.conf.TREE_MAX_RESULT_PER_PAGE_COUNT', 11)
+    def test_menuitem_changelist_pagination_setting_override(self):
+        """
+        The pagination should be driven by the setting:
+        DJANGOCMS_NAVIGATION_TREE_MAX_RESULT_PER_PAGE_COUNT
+        """
+        # Remove the admin and then reload it which will reregister the models and the setting changes
+        admin.site.unregister(MenuItem)
+        admin.site.unregister(MenuContent)
+        importlib.reload(nav_admin)
+
+        admin_changelist = admin.site._registry[MenuItem]
+
+        self.assertEqual(admin_changelist.list_per_page, 11)
+
+    def test_menuitem_changelist_pagination_setting_default(self):
+        """
+        By default the pagination should be a higher than the django default of 100
+        """
+        admin_changelist = admin.site._registry[MenuItem]
+
+        self.assertEqual(admin_changelist.list_per_page, sys.maxsize)
 
 
 class MenuContentAdminViewTestCase(CMSTestCase):
@@ -842,6 +871,109 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
         self.assertRedirectsToVersionList(response, version.content)
         self.assertDjangoErrorMessage("Version is not a draft", mocked_messages)
 
+    def test_menuitem_changelist_validate_messages_endpoint(self):
+        """
+        The messages endpoint provides async code with access to the django message queue.
+        Endpoint is required to fetch update messages after common treebeard operations
+        (like moving a tree node) without reloading page.
+        """
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.get_superuser())
+        child = factories.ChildMenuItemFactory(parent=menu_content.root)
+        grandchild = factories.ChildMenuItemFactory(parent=child)
+        data = {
+            "node_id": grandchild.id,
+            "sibling_id": menu_content.root.id,
+            "as_child": 1,
+        }
+        move_endpoint = reverse(
+            "admin:djangocms_navigation_menuitem_move_node", args=(menu_content.id,)
+        )
+        messages_endpoint = reverse(
+            "admin:djangocms_navigation_menuitem_message_storage", args=(menu_content.id,)
+        )
+        move_response = self.client.post(move_endpoint, data)
+        messages_response = self.client.get(messages_endpoint)
+
+        # Check both calls come back successful:
+        self.assertEqual(move_response.status_code, 200)
+        self.assertEqual(messages_response.status_code, 200)
+
+        # Check message result is as expected:
+        msg = json.loads(messages_response.content)['messages'][0]
+        self.assertEqual(msg['level'], 'info')
+        self.assertIn('Moved node', msg['message'])
+
+    def test_menuitem_changelist_default_tree_layout(self):
+        """
+        Parsing output from template tags to verify markup for default layout is present:
+        Root node (level 1) is expanded, Child nodes / level 2 are collapsed,
+        level 3 are display: none, and css spacer variable is present.
+        """
+        menu_content = factories.MenuContentWithVersionFactory()
+        menu_items = factories.ChildMenuItemFactory.create_batch(3, parent=menu_content.root)
+        for item in menu_items:
+            factories.ChildMenuItemFactory.create_batch(2, parent=item)
+
+        list_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
+        )
+        response = self.client.get(list_url)
+
+        # Parse returned html for root and child nodes:
+        soup = BeautifulSoup(str(response.content), features="lxml")
+        root_node = soup.find("tr", level="1")  # root node is always level=1
+        level_2_nodes = soup.find_all("tr", level="2")
+        level_3_nodes = soup.find_all("tr", level="3")
+
+        # Assert / verify default root and child node layouts (set in get_collapse tag):
+        self.assertIsNotNone(root_node.find("a", class_="collapse expanded"))
+        self.assertEqual(
+            '--s-width:0',
+            root_node.find("span", class_="spacer")['style']
+        )
+        self.assertNotIn(
+            None,
+            [node.find("a", class_="collapse collapsed") for node in level_2_nodes]
+        )
+        # Assert / verify level 3 nodes are display: none (set in html via result_tree tag):
+        for node in level_3_nodes:
+            self.assertEqual("display: none;", node['style'])
+
+    def test_menuitem_changelist_custom_js(self):
+        """
+        Check that custom javascript for overriding treebeard js is present.
+        """
+        menu_content = factories.MenuContentWithVersionFactory()
+
+        list_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
+        )
+        response = self.client.get(list_url)
+
+        self.assertContains(
+            response,
+            'djangocms_navigation/js/navigation-tree-admin.js',
+        )
+
+    def test_menuitem_changelist_check_for_expand_all(self):
+        """
+        Check that the expand / collapse all controls are present.
+        """
+        menu_content = factories.MenuContentWithVersionFactory()
+
+        list_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
+        )
+        response = self.client.get(list_url)
+
+        soup = BeautifulSoup(str(response.content), features="lxml")
+        element = soup.find("th", class_="expand-all")
+        link = element.find("a")
+
+        self.assertIsNotNone(element)
+        self.assertEqual(_('Toggle expand/collapse all'), link['title'])
+        self.assertIn('+', link.string)
+
 
 @override_settings(
     CMS_PERMISSION=True,
@@ -1029,6 +1161,68 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(MenuItem._base_manager.count(), 1)
+
+    def test_menuitem_delete_view_breadcrumbs(self):
+        """
+        Breadcrumbs for the delete view should render valid url's
+        """
+        menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
+        child = factories.ChildMenuItemFactory(parent=menu_content.root)
+
+        # Get the url for deleting a single URL
+        delete_url_single = reverse(
+            "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, child.id,)
+        )
+
+        with self.login_user_context(self.user):
+            # Hit the confirmation page using get request
+            confirmation_response = self.client.get(
+                delete_url_single, data={"menu_content_id": menu_content.id}
+            )
+
+        # Get all the hrefs in the markup for the breadcrumbs div
+        soup = BeautifulSoup(confirmation_response.rendered_content, 'html.parser')
+        breadcrumb_html = soup.find("div", class_="breadcrumbs")
+        breadcrumb_url = []
+
+        for a in breadcrumb_html.find_all('a', href=True):
+            breadcrumb_url.append(a['href'])
+
+        with self.login_user_context(self.user):
+            breadcrumb_first = self.client.get(breadcrumb_url[0])
+            self.assertContains(
+                breadcrumb_first,
+                "<h1>Site administration</h1>"
+            )
+            self.assertContains(
+                breadcrumb_first,
+                '<a href="/en/admin/djangocms_navigation/menucontent/" class="changelink">Change</a>'
+            )
+            breadcrumb_second = self.client.get(breadcrumb_url[1])
+            self.assertContains(
+                breadcrumb_second, "<h1>django CMS Navigation administration</h1>")
+            self.assertContains(
+                breadcrumb_second,
+                '<a href="/en/admin/djangocms_navigation/menucontent/">Menu contents</a>'
+            )
+            breadcrumb_third = self.client.get(breadcrumb_url[2])
+            self.assertContains(
+                breadcrumb_third,
+                "<h1>Edit Menu: %s</h1>" % menu_content.root
+            )
+            self.assertContains(
+                breadcrumb_third,
+                '<a href="/en/admin/djangocms_navigation/menuitem/1/1/change/">%s</a></th>' % menu_content.root)
+            breadcrumb_fourth = self.client.get(breadcrumb_url[3])
+            self.assertContains(
+                breadcrumb_fourth,
+                "<h1>Edit Menu: %s</h1>" % menu_content.root
+            )
+            self.assertContains(
+                confirmation_response, '<li>Menu item: %s</li>' % child.title)
+            self.assertContains(
+                confirmation_response, '<p>Are you sure you want to delete the menu item "%s"? All of the following '
+                                       'related items will be deleted:</p>' % child.title)
 
 
 class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
@@ -1508,3 +1702,39 @@ class ChangelistSideframeControlsTestCase(CMSTestCase):
         # The url link should keep the sideframe open
         self.assertIn("js-versioning-keep-sideframe", url_markup)
         self.assertNotIn("js-versioning-close-sideframe", url_markup)
+
+
+class ReferencesIntegrationTestCase(CMSTestCase):
+
+    def setUp(self):
+        self.user = self.get_superuser()
+        self.page = factories.PageContentFactory().page
+
+    def test_menucontent_references_integration(self):
+        """
+        When opening the references for a given navigation menu, the objects which reference it should be listed
+        """
+        menucontent = factories.MenuContentWithVersionFactory(version__created_by=self.user)
+        pagecontent = PageContent._base_manager.get(page=self.page)
+        placeholder = factories.PlaceholderFactory(
+            source=pagecontent,
+        )
+        menu = menucontent.menu
+        navigation_plugin = add_plugin(
+            placeholder,
+            "Navigation",
+            language="en",
+            template="default",
+            menu=menu,
+        )
+
+        navigation_content_type = ContentType.objects.get(app_label="djangocms_navigation", model="menu")
+        references_endpoint = reverse(
+            "djangocms_references:references-index",
+            kwargs={"content_type_id": navigation_content_type.id, "object_id": menu.id}
+        )
+        with self.login_user_context(self.user):
+            response = self.client.get(references_endpoint)
+
+        self.assertContains(response, navigation_plugin.__str__())
+        self.assertContains(response, navigation_plugin.plugin_type.lower())
