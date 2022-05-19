@@ -6,8 +6,8 @@ from django.test import RequestFactory
 from django.test.signals import setting_changed
 from django.test.utils import TestContextDecorator
 
-from cms.toolbar.toolbar import CMSToolbar
 from cms.middleware.toolbar import ToolbarMiddleware
+from cms.toolbar.toolbar import CMSToolbar
 
 from djangocms_versioning.helpers import version_list_url
 
