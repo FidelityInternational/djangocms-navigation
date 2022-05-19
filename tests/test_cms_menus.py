@@ -18,7 +18,7 @@ from djangocms_versioning.constants import (
 from djangocms_navigation.cms_menus import CMSMenu
 from djangocms_navigation.test_utils import factories
 
-from .utils import disable_versioning_for_navigation
+from .utils import disable_versioning_for_navigation, get_toolbar
 
 
 class CMSMenuTestCase(CMSTestCase):
@@ -526,6 +526,11 @@ class SoftrootTests(CMSTestCase):
 
         page = self.aaa_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
+        toolbar = get_toolbar(self.aaa_pagecontent, preview_mode=False, user=self.get_superuser())
+        context["request"].toolbar = toolbar
+        context["request"].toolbar.edit_mode_active = True
+        context["request"].toolbar.app_name = False
+        context["request"].toolbar.obj = False
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -575,6 +580,11 @@ class SoftrootTests(CMSTestCase):
 
         page = self.aaa_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
+        toolbar = get_toolbar(self.aaa_pagecontent, preview_mode=False, user=self.get_superuser())
+        context["request"].toolbar = toolbar
+        context["request"].toolbar.edit_mode_active = True
+        context["request"].toolbar.app_name = False
+        context["request"].toolbar.obj = False
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -623,6 +633,11 @@ class SoftrootTests(CMSTestCase):
 
         page = self.bbb_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
+        toolbar = get_toolbar(self.bbb_pagecontent, preview_mode=False, user=self.get_superuser())
+        context["request"].toolbar = toolbar
+        context["request"].toolbar.edit_mode_active = True
+        context["request"].toolbar.app_name = False
+        context["request"].toolbar.obj = False
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -663,6 +678,11 @@ class SoftrootTests(CMSTestCase):
 
         page = self.bbb_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
+        toolbar = get_toolbar(self.bbb_pagecontent, preview_mode=False, user=self.get_superuser())
+        context["request"].toolbar = toolbar
+        context["request"].toolbar.edit_mode_active = True
+        context["request"].toolbar.app_name = False
+        context["request"].toolbar.obj = False
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -710,6 +730,11 @@ class SoftrootTests(CMSTestCase):
 
         page = self.aaa_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
+        toolbar = get_toolbar(self.aaa_pagecontent, preview_mode=False, user=self.get_superuser())
+        context["request"].toolbar = toolbar
+        context["request"].toolbar.edit_mode_active = True
+        context["request"].toolbar.app_name = False
+        context["request"].toolbar.obj = False
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -764,6 +789,11 @@ class SoftrootTests(CMSTestCase):
 
         page = self.ccc_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
+        toolbar = get_toolbar(self.ccc_pagecontent, preview_mode=False, user=self.get_superuser())
+        context["request"].toolbar = toolbar
+        context["request"].toolbar.edit_mode_active = True
+        context["request"].toolbar.app_name = False
+        context["request"].toolbar.obj = False
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -830,6 +860,11 @@ class SoftrootTests(CMSTestCase):
 
         page = self.aaa_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
+        toolbar = get_toolbar(self.aaa_pagecontent, preview_mode=False, user=self.get_superuser())
+        context["request"].toolbar = toolbar
+        context["request"].toolbar.edit_mode_active = True
+        context["request"].toolbar.app_name = False
+        context["request"].toolbar.obj = False
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         soft_root = context['children']
@@ -879,6 +914,11 @@ class SoftrootTests(CMSTestCase):
 
         page = self.aaa_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
+        toolbar = get_toolbar(self.aaa_pagecontent, preview_mode=False, user=self.get_superuser())
+        context["request"].toolbar = toolbar
+        context["request"].toolbar.edit_mode_active = True
+        context["request"].toolbar.app_name = False
+        context["request"].toolbar.obj = False
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         soft_root = context['children']
@@ -920,6 +960,11 @@ class SoftrootTests(CMSTestCase):
 
         page = self.ccc_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
+        toolbar = get_toolbar(self.ccc_pagecontent, preview_mode=False, user=self.get_superuser())
+        context["request"].toolbar = toolbar
+        context["request"].toolbar.edit_mode_active = True
+        context["request"].toolbar.app_name = False
+        context["request"].toolbar.obj = False
         tpl = Template("{% load menu_tags %}{% show_menu 1 100 100 100 %}")
         tpl.render(context)
         soft_root = context['children']
@@ -964,6 +1009,11 @@ class SoftrootTests(CMSTestCase):
 
         page = self.ddd_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
+        toolbar = get_toolbar(self.ddd_pagecontent, preview_mode=False, user=self.get_superuser())
+        context["request"].toolbar = toolbar
+        context["request"].toolbar.edit_mode_active = True
+        context["request"].toolbar.app_name = False
+        context["request"].toolbar.obj = False
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
 
@@ -1030,6 +1080,11 @@ class SoftrootTests(CMSTestCase):
 
         page = pagecontent_draft.page
         context = self.get_context(page.get_absolute_url(), page=page)
+        toolbar = get_toolbar(pagecontent_draft, preview_mode=False, user=self.get_superuser())
+        context["request"].toolbar = toolbar
+        context["request"].toolbar.edit_mode_active = True
+        context["request"].toolbar.app_name = False
+        context["request"].toolbar.obj = False
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         rendered_menu = context['children']
@@ -1105,6 +1160,11 @@ class SoftrootTests(CMSTestCase):
 
         page = projects_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
+        toolbar = get_toolbar(projects_pagecontent, preview_mode=False, user=self.get_superuser())
+        context["request"].toolbar = toolbar
+        context["request"].toolbar.edit_mode_active = True
+        context["request"].toolbar.app_name = False
+        context["request"].toolbar.obj = False
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
 
@@ -1157,6 +1217,12 @@ class SoftrootTests(CMSTestCase):
 
         page = self.ccc_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
+        toolbar = get_toolbar(aaa_pagecontent, preview_mode=False, user=self.get_superuser())
+        context["request"].toolbar = toolbar
+        context["request"].toolbar.edit_mode_active = True
+        context["request"].toolbar.app_name = False
+        context["request"].toolbar.obj = False
+
         tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb %}")
         tpl.render(context)
         nodes = context['ancestors']
@@ -1170,6 +1236,11 @@ class SoftrootTests(CMSTestCase):
         self.assertEqual(len(nodes), 2)
 
         context = self.get_context()
+        toolbar = get_toolbar(aaa_pagecontent, preview_mode=False, user=self.get_superuser())
+        context["request"].toolbar = toolbar
+        context["request"].toolbar.edit_mode_active = True
+        context["request"].toolbar.app_name = False
+        context["request"].toolbar.obj = False
         tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb %}")
         tpl.render(context)
         nodes = context['ancestors']
@@ -1218,6 +1289,13 @@ class SoftrootTests(CMSTestCase):
 
         page = self.ccc_pagecontent.page
         context = self.get_context(page.get_absolute_url(), page=page)
+
+        toolbar = get_toolbar(self.ccc_pagecontent, preview_mode=False, user=self.get_superuser())
+        context["request"].toolbar = toolbar
+        context["request"].toolbar.edit_mode_active = True
+        context["request"].toolbar.app_name = False
+        context["request"].toolbar.obj = False
+
         tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb %}")
         tpl.render(context)
         nodes = context['ancestors']
@@ -1296,6 +1374,11 @@ class MultisiteNavigationTests(CMSTestCase):
                 root_pagecontent_en.page.get_absolute_url(language="en"), language="en", page=root_pagecontent_en.page)
         }
         context_en = Context(context_en_raw)
+        toolbar = get_toolbar(root_pagecontent_en, preview_mode=False, user=self.get_superuser())
+        context_en["request"].toolbar = toolbar
+        context_en["request"].toolbar.edit_mode_active = True
+        context_en["request"].toolbar.app_name = False
+        context_en["request"].toolbar.obj = False
         template.render(context_en)
 
         mock_en_tree = [
@@ -1313,6 +1396,11 @@ class MultisiteNavigationTests(CMSTestCase):
                 root_pagecontent_it.page.get_absolute_url(language="it"), language="it", page=root_pagecontent_it.page)
         }
         context_it = Context(context_it_raw)
+        toolbar = get_toolbar(root_pagecontent_it, preview_mode=False, user=self.get_superuser())
+        context_it["request"].toolbar = toolbar
+        context_it["request"].toolbar.edit_mode_active = True
+        context_it["request"].toolbar.app_name = False
+        context_it["request"].toolbar.obj = False
         template.render(context_it)
 
         mock_it_tree = [

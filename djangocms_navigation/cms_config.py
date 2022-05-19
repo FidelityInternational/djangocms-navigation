@@ -102,6 +102,7 @@ class NavigationCMSAppConfig(CMSAppConfig):
 
     if djangocms_versioning_enabled:
         from djangocms_versioning.datastructures import VersionableItem
+
         cms_enabled = True
         cms_toolbar_enabled_models = [(MenuContent, render_navigation_content)]
 

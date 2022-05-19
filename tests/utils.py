@@ -2,10 +2,17 @@ from contextlib import contextmanager
 
 from django.apps import apps
 from django.conf import UserSettingsHolder, settings
+from django.test import RequestFactory
 from django.test.signals import setting_changed
 from django.test.utils import TestContextDecorator
 
+from cms.toolbar.toolbar import CMSToolbar
+from cms.middleware.toolbar import ToolbarMiddleware
+
 from djangocms_versioning.helpers import version_list_url
+
+from djangocms_navigation.cms_toolbars import NavigationToolbar
+from djangocms_navigation.test_utils import factories
 
 
 class UsefulAssertsMixin(object):
@@ -105,3 +112,31 @@ class disable_versioning_for_navigation(disable_versioning_for):
         del self.wrapped
         # Reset djangocms_versioning_enabled to previous value
         self.navigation_config.djangocms_versioning_enabled = self._prev_versioning_enabled
+
+
+def get_page_request(page, user):
+    request = RequestFactory().get("/")
+    request.session = {}
+    request.user = user
+    request.current_page = page
+    mid = ToolbarMiddleware(request)
+    mid.process_request(request)
+    if hasattr(request, "toolbar"):
+        request.toolbar.populate()
+    return request
+
+
+def get_toolbar(content_obj, user=None, **kwargs):
+    """Helper method to set up the toolbar
+    """
+    if not user:
+        user = factories.UserFactory(is_staff=True)
+    request = get_page_request(
+        page=content_obj.page if content_obj else None, user=user
+    )
+    cms_toolbar = CMSToolbar(request)
+    toolbar = NavigationToolbar(
+        cms_toolbar.request, toolbar=cms_toolbar, is_current_app=True, app_path="/"
+    )
+    toolbar.toolbar.set_object(content_obj)
+    return toolbar
