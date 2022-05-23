@@ -106,3 +106,36 @@ class CopyFunctionTestCase(TestCase):
         ]
         new_paths = [item.path for item in MenuItem.get_tree(new_version.content.root)]
         self.assertListEqual(new_paths, expected_paths)
+
+from cms.test_utils.testcases import CMSTestCase
+
+class NavigationCompareTestCase(CMSTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = factories.UserFactory()
+
+    def test_navigation_compare_view(self):
+        original_root = factories.RootMenuItemFactory()
+        original_version = factories.MenuVersionFactory(content__root=original_root)
+        original_child = factories.ChildMenuItemFactory(parent=original_root, soft_root=True, hide_node=True)
+
+        new_version = original_version.copy(self.user)
+
+        new_root = new_version.content.root
+        # If this throws DoesNotExist then the child clearly wasn't duplicated
+        new_child = MenuItem.objects.exclude(
+            pk__in=[original_root.pk, original_child.pk, new_root.pk]
+        ).get()
+
+
+        endpoint = "/en/admin/djangocms_versioning/menucontentversion/"
+        endpoint += "%d/compare/?compare_to=%d" % (
+            new_version.pk, original_version.pk
+        )
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(endpoint)
+
+        self.assertContains(response, "Comparing Version #{}".format(new_version.number))
+        self.assertContains(response, "Version #{}".format(new_version.number))
+        self.assertContains(response, "Version #{}".format(original_version.number))
