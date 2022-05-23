@@ -1,5 +1,7 @@
 from django.test import TestCase
 
+from cms.test_utils.testcases import CMSTestCase
+
 from djangocms_navigation.models import MenuItem
 from djangocms_navigation.test_utils import factories
 
@@ -107,14 +109,15 @@ class CopyFunctionTestCase(TestCase):
         new_paths = [item.path for item in MenuItem.get_tree(new_version.content.root)]
         self.assertListEqual(new_paths, expected_paths)
 
-from cms.test_utils.testcases import CMSTestCase
 
 class NavigationCompareTestCase(CMSTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = factories.UserFactory()
+    def setUp(self):
+        self.user = self.get_superuser()
 
     def test_navigation_compare_view(self):
+        """
+        When comparing navigation content, the original and new version should be in the context
+        """
         original_root = factories.RootMenuItemFactory()
         original_version = factories.MenuVersionFactory(content__root=original_root)
         original_child = factories.ChildMenuItemFactory(parent=original_root, soft_root=True, hide_node=True)
@@ -123,19 +126,19 @@ class NavigationCompareTestCase(CMSTestCase):
 
         new_root = new_version.content.root
         # If this throws DoesNotExist then the child clearly wasn't duplicated
-        new_child = MenuItem.objects.exclude(
+        MenuItem.objects.exclude(
             pk__in=[original_root.pk, original_child.pk, new_root.pk]
         ).get()
-
 
         endpoint = "/en/admin/djangocms_versioning/menucontentversion/"
         endpoint += "%d/compare/?compare_to=%d" % (
             new_version.pk, original_version.pk
         )
 
-        with self.login_user_context(self.get_superuser()):
+        with self.login_user_context(self.user):
             response = self.client.get(endpoint)
 
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Comparing Version #{}".format(new_version.number))
         self.assertContains(response, "Version #{}".format(new_version.number))
         self.assertContains(response, "Version #{}".format(original_version.number))
