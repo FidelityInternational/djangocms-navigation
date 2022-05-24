@@ -1082,7 +1082,8 @@ class SoftrootTests(CMSTestCase):
         context = self.get_context(page.get_absolute_url(), page=page)
         toolbar = get_toolbar(pagecontent_draft, preview_mode=False, user=self.get_superuser())
         context["request"].toolbar = toolbar
-        context["request"].toolbar.edit_mode_active = True
+        context["request"].toolbar.preview_mode_active = False
+        context["request"].toolbar.edit_mode_active = False
         context["request"].toolbar.app_name = False
         context["request"].toolbar.obj = False
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
