@@ -140,3 +140,20 @@ def get_toolbar(content_obj, user=None, **kwargs):
     )
     toolbar.toolbar.set_object(content_obj)
     return toolbar
+
+
+def add_toolbar_to_request(context, page_content, view_mode=False):
+    """
+    Attaching a toolbar object to the request object
+    :param context: A context object
+    :param page_content: A page content object
+    :param view_mode: Possible modes: "edit, preview, structure, live", default is "live"
+    :return: Context with toolbar attached
+    """
+    toolbar = get_toolbar(page_content, preview_mode=view_mode)
+    context["request"].toolbar = toolbar
+    context["request"].toolbar.edit_mode_active = view_mode
+    context["request"].toolbar.preview_mode_active = view_mode
+    context["request"].toolbar.app_name = False
+    context["request"].toolbar.obj = False
+    return context
