@@ -14,9 +14,9 @@ from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
 from django.utils.translation import gettext_lazy as _
 
-from cms.api import add_plugin
-from cms.models.titlemodels import PageContent
+from cms.api import add_plugin, create_page, create_title
 from cms.test_utils.testcases import CMSTestCase
+from cms.toolbar.utils import get_object_preview_url
 
 from bs4 import BeautifulSoup
 from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
@@ -1708,16 +1708,25 @@ class ReferencesIntegrationTestCase(CMSTestCase):
 
     def setUp(self):
         self.user = self.get_superuser()
-        self.page = factories.PageContentFactory().page
 
     def test_menucontent_references_integration(self):
         """
         When opening the references for a given navigation menu, the objects which reference it should be listed
         """
         menucontent = factories.MenuContentWithVersionFactory(version__created_by=self.user)
-        pagecontent = PageContent._base_manager.get(page=self.page)
+        kwargs = {"created_by": self.user}
+        page = create_page(
+            title="Navigation Integration Page",
+            template="page.html",
+            language="en",
+            menu_title="",
+            in_navigation=True,
+            **kwargs
+        )
+        page_content = create_title("en", "Draft Page", page, created_by=self.user)
+
         placeholder = factories.PlaceholderFactory(
-            source=pagecontent,
+            source=page_content,
         )
         menu = menucontent.menu
         navigation_plugin = add_plugin(
@@ -1733,8 +1742,11 @@ class ReferencesIntegrationTestCase(CMSTestCase):
             "djangocms_references:references-index",
             kwargs={"content_type_id": navigation_content_type.id, "object_id": menu.id}
         )
+
         with self.login_user_context(self.user):
             response = self.client.get(references_endpoint)
 
-        self.assertContains(response, navigation_plugin.__str__())
+        self.assertContains(response, navigation_plugin.menu.__str__())
+        self.assertContains(response, "menu")
         self.assertContains(response, navigation_plugin.plugin_type.lower())
+        self.assertContains(response, get_object_preview_url(page_content))
