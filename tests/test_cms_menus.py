@@ -1316,11 +1316,7 @@ class MultisiteNavigationTests(CMSTestCase):
                 root_pagecontent_en.page.get_absolute_url(language="en"), language="en", page=root_pagecontent_en.page)
         }
         context_en = Context(context_en_raw)
-        toolbar = get_toolbar(root_pagecontent_en, preview_mode=False, user=self.get_superuser())
-        context_en["request"].toolbar = toolbar
-        context_en["request"].toolbar.edit_mode_active = True
-        context_en["request"].toolbar.app_name = False
-        context_en["request"].toolbar.obj = False
+        context_en = add_toolbar_to_request(context_en, root_pagecontent_en, view_mode=False)
         template.render(context_en)
 
         mock_en_tree = [
@@ -1338,11 +1334,7 @@ class MultisiteNavigationTests(CMSTestCase):
                 root_pagecontent_it.page.get_absolute_url(language="it"), language="it", page=root_pagecontent_it.page)
         }
         context_it = Context(context_it_raw)
-        toolbar = get_toolbar(root_pagecontent_it, preview_mode=False, user=self.get_superuser())
-        context_it["request"].toolbar = toolbar
-        context_it["request"].toolbar.edit_mode_active = True
-        context_it["request"].toolbar.app_name = False
-        context_it["request"].toolbar.obj = False
+        context_it = add_toolbar_to_request(context_it,  root_pagecontent_it, view_mode=False)
         template.render(context_it)
 
         mock_it_tree = [
