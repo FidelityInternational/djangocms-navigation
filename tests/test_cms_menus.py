@@ -18,7 +18,7 @@ from djangocms_versioning.constants import (
 from djangocms_navigation.cms_menus import CMSMenu
 from djangocms_navigation.test_utils import factories
 
-from .utils import disable_versioning_for_navigation
+from .utils import add_toolbar_to_request, disable_versioning_for_navigation
 
 
 class CMSMenuTestCase(CMSTestCase):
@@ -525,7 +525,8 @@ class SoftrootTests(CMSTestCase):
         bbb = factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
         page = self.aaa_pagecontent.page
-        context = self.get_context(page.get_absolute_url(), page=page)
+        page_context = self.get_context(page.get_absolute_url(), page=page)
+        context = add_toolbar_to_request(page_context, self.aaa_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -574,7 +575,8 @@ class SoftrootTests(CMSTestCase):
         bbb = factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
         page = self.aaa_pagecontent.page
-        context = self.get_context(page.get_absolute_url(), page=page)
+        page_context = self.get_context(page.get_absolute_url(), page=page)
+        context = add_toolbar_to_request(page_context, self.aaa_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -622,7 +624,8 @@ class SoftrootTests(CMSTestCase):
         bbb = factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
         page = self.bbb_pagecontent.page
-        context = self.get_context(page.get_absolute_url(), page=page)
+        page_context = self.get_context(page.get_absolute_url(), page=page)
+        context = add_toolbar_to_request(page_context, self.bbb_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -662,7 +665,8 @@ class SoftrootTests(CMSTestCase):
         bbb = factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
         page = self.bbb_pagecontent.page
-        context = self.get_context(page.get_absolute_url(), page=page)
+        page_context = self.get_context(page.get_absolute_url(), page=page)
+        context = add_toolbar_to_request(page_context, self.bbb_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -709,7 +713,8 @@ class SoftrootTests(CMSTestCase):
         factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
         page = self.aaa_pagecontent.page
-        context = self.get_context(page.get_absolute_url(), page=page)
+        page_context = self.get_context(page.get_absolute_url(), page=page)
+        context = add_toolbar_to_request(page_context, self.aaa_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -763,7 +768,8 @@ class SoftrootTests(CMSTestCase):
         factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
         page = self.ccc_pagecontent.page
-        context = self.get_context(page.get_absolute_url(), page=page)
+        page_context = self.get_context(page.get_absolute_url(), page=page)
+        context = add_toolbar_to_request(page_context, self.ccc_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -829,7 +835,8 @@ class SoftrootTests(CMSTestCase):
         factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
         page = self.aaa_pagecontent.page
-        context = self.get_context(page.get_absolute_url(), page=page)
+        page_context = self.get_context(page.get_absolute_url(), page=page)
+        context = add_toolbar_to_request(page_context, self.aaa_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         soft_root = context['children']
@@ -878,7 +885,8 @@ class SoftrootTests(CMSTestCase):
         factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
         page = self.aaa_pagecontent.page
-        context = self.get_context(page.get_absolute_url(), page=page)
+        page_context = self.get_context(page.get_absolute_url(), page=page)
+        context = add_toolbar_to_request(page_context, self.aaa_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         soft_root = context['children']
@@ -919,7 +927,8 @@ class SoftrootTests(CMSTestCase):
         factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
         page = self.ccc_pagecontent.page
-        context = self.get_context(page.get_absolute_url(), page=page)
+        page_context = self.get_context(page.get_absolute_url(), page=page)
+        context = add_toolbar_to_request(page_context, self.ccc_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 1 100 100 100 %}")
         tpl.render(context)
         soft_root = context['children']
@@ -963,7 +972,8 @@ class SoftrootTests(CMSTestCase):
         factories.ChildMenuItemFactory(parent=root, content=self.bbb_pagecontent.page)
 
         page = self.ddd_pagecontent.page
-        context = self.get_context(page.get_absolute_url(), page=page)
+        page_context = self.get_context(page.get_absolute_url(), page=page)
+        context = add_toolbar_to_request(page_context, self.ddd_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
 
@@ -1029,7 +1039,8 @@ class SoftrootTests(CMSTestCase):
         self.assertEqual(menu_cont_draft.menu, menu_cont_published.menu)
 
         page = pagecontent_draft.page
-        context = self.get_context(page.get_absolute_url(), page=page)
+        page_context = self.get_context(page.get_absolute_url(), page=page)
+        context = add_toolbar_to_request(page_context, pagecontent_draft, view_mode="preview")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         rendered_menu = context['children']
@@ -1104,7 +1115,8 @@ class SoftrootTests(CMSTestCase):
         factories.ChildMenuItemFactory(parent=root, content=people_pagecontent.page)
 
         page = projects_pagecontent.page
-        context = self.get_context(page.get_absolute_url(), page=page)
+        page_context = self.get_context(page.get_absolute_url(), page=page)
+        context = add_toolbar_to_request(page_context, projects_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
 
@@ -1156,7 +1168,8 @@ class SoftrootTests(CMSTestCase):
         factories.ChildMenuItemFactory(parent=menu_content.root, content=self.bbb_pagecontent.page)
 
         page = self.ccc_pagecontent.page
-        context = self.get_context(page.get_absolute_url(), page=page)
+        page_context = self.get_context(page.get_absolute_url(), page=page)
+        context = add_toolbar_to_request(page_context, self.ccc_pagecontent, view_mode="edit")
         tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb %}")
         tpl.render(context)
         nodes = context['ancestors']
@@ -1169,7 +1182,9 @@ class SoftrootTests(CMSTestCase):
 
         self.assertEqual(len(nodes), 2)
 
-        context = self.get_context()
+        page_context = self.get_context()
+        context = add_toolbar_to_request(page_context, aaa_pagecontent, view_mode="edit")
+
         tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb %}")
         tpl.render(context)
         nodes = context['ancestors']
@@ -1217,7 +1232,8 @@ class SoftrootTests(CMSTestCase):
         factories.ChildMenuItemFactory(parent=ccc, content=self.ddd_pagecontent.page)
 
         page = self.ccc_pagecontent.page
-        context = self.get_context(page.get_absolute_url(), page=page)
+        page_context = self.get_context(page.get_absolute_url(), page=page)
+        context = add_toolbar_to_request(page_context, self.ccc_pagecontent, view_mode="edit")
         tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb %}")
         tpl.render(context)
         nodes = context['ancestors']
@@ -1296,6 +1312,7 @@ class MultisiteNavigationTests(CMSTestCase):
                 root_pagecontent_en.page.get_absolute_url(language="en"), language="en", page=root_pagecontent_en.page)
         }
         context_en = Context(context_en_raw)
+        context_en = add_toolbar_to_request(context_en, root_pagecontent_en, view_mode="edit")
         template.render(context_en)
 
         mock_en_tree = [
@@ -1313,6 +1330,7 @@ class MultisiteNavigationTests(CMSTestCase):
                 root_pagecontent_it.page.get_absolute_url(language="it"), language="it", page=root_pagecontent_it.page)
         }
         context_it = Context(context_it_raw)
+        context_it = add_toolbar_to_request(context_it,  root_pagecontent_it, view_mode="edit")
         template.render(context_it)
 
         mock_it_tree = [
