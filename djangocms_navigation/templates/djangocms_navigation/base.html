@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load i18n static sekizai_tags %}
+
+{% block title %}{% trans "Navigation" %}{% endblock %}
+
+{% block breadcrumb %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+    <div class="navigation">
+        {% block navigation_content %}
+        {% endblock navigation_content %}
+    </div>
+{% endblock content %}
