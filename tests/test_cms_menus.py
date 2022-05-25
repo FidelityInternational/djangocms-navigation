@@ -18,7 +18,11 @@ from djangocms_versioning.constants import (
 from djangocms_navigation.cms_menus import CMSMenu
 from djangocms_navigation.test_utils import factories
 
-from .utils import add_toolbar_to_request, disable_versioning_for_navigation, get_toolbar
+from .utils import (
+    add_toolbar_to_request,
+    disable_versioning_for_navigation,
+    get_toolbar
+)
 
 
 class CMSMenuTestCase(CMSTestCase):
