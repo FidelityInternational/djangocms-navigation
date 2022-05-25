@@ -526,7 +526,7 @@ class SoftrootTests(CMSTestCase):
 
         page = self.aaa_pagecontent.page
         page_context = self.get_context(page.get_absolute_url(), page=page)
-        context = add_toolbar_to_request(page_context, self.aaa_pagecontent, view_mode=False)
+        context = add_toolbar_to_request(page_context, self.aaa_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -576,7 +576,7 @@ class SoftrootTests(CMSTestCase):
 
         page = self.aaa_pagecontent.page
         page_context = self.get_context(page.get_absolute_url(), page=page)
-        context = add_toolbar_to_request(page_context, self.aaa_pagecontent, view_mode=False)
+        context = add_toolbar_to_request(page_context, self.aaa_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -625,7 +625,7 @@ class SoftrootTests(CMSTestCase):
 
         page = self.bbb_pagecontent.page
         page_context = self.get_context(page.get_absolute_url(), page=page)
-        context = add_toolbar_to_request(page_context, self.bbb_pagecontent, view_mode=False)
+        context = add_toolbar_to_request(page_context, self.bbb_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -666,7 +666,7 @@ class SoftrootTests(CMSTestCase):
 
         page = self.bbb_pagecontent.page
         page_context = self.get_context(page.get_absolute_url(), page=page)
-        context = add_toolbar_to_request(page_context, self.bbb_pagecontent, view_mode=False)
+        context = add_toolbar_to_request(page_context, self.bbb_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -714,7 +714,7 @@ class SoftrootTests(CMSTestCase):
 
         page = self.aaa_pagecontent.page
         page_context = self.get_context(page.get_absolute_url(), page=page)
-        context = add_toolbar_to_request(page_context, self.aaa_pagecontent, view_mode=False)
+        context = add_toolbar_to_request(page_context, self.aaa_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -769,7 +769,7 @@ class SoftrootTests(CMSTestCase):
 
         page = self.ccc_pagecontent.page
         page_context = self.get_context(page.get_absolute_url(), page=page)
-        context = add_toolbar_to_request(page_context, self.ccc_pagecontent, view_mode=False)
+        context = add_toolbar_to_request(page_context, self.ccc_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         hard_root = context['children']
@@ -836,7 +836,7 @@ class SoftrootTests(CMSTestCase):
 
         page = self.aaa_pagecontent.page
         page_context = self.get_context(page.get_absolute_url(), page=page)
-        context = add_toolbar_to_request(page_context, self.aaa_pagecontent, view_mode=False)
+        context = add_toolbar_to_request(page_context, self.aaa_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         soft_root = context['children']
@@ -886,7 +886,7 @@ class SoftrootTests(CMSTestCase):
 
         page = self.aaa_pagecontent.page
         page_context = self.get_context(page.get_absolute_url(), page=page)
-        context = add_toolbar_to_request(page_context, self.aaa_pagecontent, view_mode=False)
+        context = add_toolbar_to_request(page_context, self.aaa_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         soft_root = context['children']
@@ -928,7 +928,7 @@ class SoftrootTests(CMSTestCase):
 
         page = self.ccc_pagecontent.page
         page_context = self.get_context(page.get_absolute_url(), page=page)
-        context = add_toolbar_to_request(page_context, self.ccc_pagecontent, view_mode=False)
+        context = add_toolbar_to_request(page_context, self.ccc_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 1 100 100 100 %}")
         tpl.render(context)
         soft_root = context['children']
@@ -973,7 +973,7 @@ class SoftrootTests(CMSTestCase):
 
         page = self.ddd_pagecontent.page
         page_context = self.get_context(page.get_absolute_url(), page=page)
-        context = add_toolbar_to_request(page_context, self.ddd_pagecontent, view_mode=False)
+        context = add_toolbar_to_request(page_context, self.ddd_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
 
@@ -1040,7 +1040,7 @@ class SoftrootTests(CMSTestCase):
 
         page = pagecontent_draft.page
         page_context = self.get_context(page.get_absolute_url(), page=page)
-        context = add_toolbar_to_request(page_context, pagecontent_draft, view_mode=False)
+        context = add_toolbar_to_request(page_context, pagecontent_draft, view_mode="preview")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
         rendered_menu = context['children']
@@ -1116,7 +1116,7 @@ class SoftrootTests(CMSTestCase):
 
         page = projects_pagecontent.page
         page_context = self.get_context(page.get_absolute_url(), page=page)
-        context = add_toolbar_to_request(page_context, projects_pagecontent, view_mode=False)
+        context = add_toolbar_to_request(page_context, projects_pagecontent, view_mode="edit")
         tpl = Template("{% load menu_tags %}{% show_menu 0 100 100 100 %}")
         tpl.render(context)
 
@@ -1169,7 +1169,7 @@ class SoftrootTests(CMSTestCase):
 
         page = self.ccc_pagecontent.page
         page_context = self.get_context(page.get_absolute_url(), page=page)
-        context = add_toolbar_to_request(page_context, self.ccc_pagecontent, view_mode=False)
+        context = add_toolbar_to_request(page_context, self.ccc_pagecontent, view_mode="edit")
         tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb %}")
         tpl.render(context)
         nodes = context['ancestors']
@@ -1183,7 +1183,7 @@ class SoftrootTests(CMSTestCase):
         self.assertEqual(len(nodes), 2)
 
         page_context = self.get_context()
-        context = add_toolbar_to_request(page_context, aaa_pagecontent, view_mode=False)
+        context = add_toolbar_to_request(page_context, aaa_pagecontent, view_mode="edit")
 
         tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb %}")
         tpl.render(context)
@@ -1233,7 +1233,7 @@ class SoftrootTests(CMSTestCase):
 
         page = self.ccc_pagecontent.page
         page_context = self.get_context(page.get_absolute_url(), page=page)
-        context = add_toolbar_to_request(page_context, self.ccc_pagecontent, view_mode=False)
+        context = add_toolbar_to_request(page_context, self.ccc_pagecontent, view_mode="edit")
         tpl = Template("{% load navigation_menu_tags %}{% navigation_breadcrumb %}")
         tpl.render(context)
         nodes = context['ancestors']
@@ -1312,7 +1312,7 @@ class MultisiteNavigationTests(CMSTestCase):
                 root_pagecontent_en.page.get_absolute_url(language="en"), language="en", page=root_pagecontent_en.page)
         }
         context_en = Context(context_en_raw)
-        context_en = add_toolbar_to_request(context_en, root_pagecontent_en, view_mode=False)
+        context_en = add_toolbar_to_request(context_en, root_pagecontent_en, view_mode="edit")
         template.render(context_en)
 
         mock_en_tree = [
@@ -1330,7 +1330,7 @@ class MultisiteNavigationTests(CMSTestCase):
                 root_pagecontent_it.page.get_absolute_url(language="it"), language="it", page=root_pagecontent_it.page)
         }
         context_it = Context(context_it_raw)
-        context_it = add_toolbar_to_request(context_it,  root_pagecontent_it, view_mode=False)
+        context_it = add_toolbar_to_request(context_it,  root_pagecontent_it, view_mode="edit")
         template.render(context_it)
 
         mock_it_tree = [
