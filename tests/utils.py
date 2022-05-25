@@ -115,6 +115,12 @@ class disable_versioning_for_navigation(disable_versioning_for):
 
 
 def get_page_request(page, user):
+    """
+    Helper method to get the current page request object
+    :param page: A page object
+    :param user: The user requesting the page request object
+    :return: A page request object
+    """
     request = RequestFactory().get("/")
     request.session = {}
     request.user = user
@@ -127,7 +133,11 @@ def get_page_request(page, user):
 
 
 def get_toolbar(content_obj, user=None, **kwargs):
-    """Helper method to set up the toolbar
+    """
+    Helper method to set up the toolbar
+    :param content_obj: A content object
+    :param user: The user requesting the toolbar
+    :return: A toolbar object
     """
     if not user:
         user = factories.UserFactory(is_staff=True)
@@ -151,7 +161,8 @@ def add_toolbar_to_request(context, page_content, view_mode):
     :return: Context with toolbar attached
     """
     toolbar = get_toolbar(page_content)
-    context["request"].toolbar = toolbar
+    context["request"].toolbar = toolbar.toolbar
+
     if view_mode == "edit":
         context["request"].toolbar.edit_mode_active = True
         context["request"].toolbar.preview_mode_active = False
@@ -165,6 +176,4 @@ def add_toolbar_to_request(context, page_content, view_mode):
         context["request"].toolbar.preview_mode_active = False
         context["request"].toolbar.structure_mode_active = True
 
-    context["request"].toolbar.app_name = False
-    context["request"].toolbar.obj = False
     return context
