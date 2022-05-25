@@ -4,6 +4,9 @@ Changelog
 
 Unreleased
 ==========
+
+1.2.0 (2022-05-25)
+==================
 * feat: MenuContent compare view renders menu changes
 
 1.1.0 (2022-04-06)
