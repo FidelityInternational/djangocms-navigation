@@ -21,7 +21,7 @@ from djangocms_navigation.test_utils import factories
 from .utils import (
     add_toolbar_to_request,
     disable_versioning_for_navigation,
-    get_toolbar
+    get_toolbar,
 )
 
 
