@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* feat: Replaced CircleCi with GitHub Actions for the test runner
 
 1.2.0 (2022-05-25)
 ==================
