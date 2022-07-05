@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* feat: The navigation will output the preview url for any navigation nodes that have a page attached in the edit or preview mode.
 
 1.2.0 (2022-05-25)
 ==================
