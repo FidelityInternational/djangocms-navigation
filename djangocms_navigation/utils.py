@@ -77,7 +77,7 @@ def purge_menu_cache(site_id=None, language=None):
 
 def is_preview_or_edit_mode(request):
     """
-    Detemrine if the view is in the preview or edit mode.
+    Determine if the view is in the preview or edit mode.
 
     :param request: A request object
     :return: True if the view is the preview or edit mode, False if not.
