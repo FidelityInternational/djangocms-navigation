@@ -9,7 +9,6 @@ from cms.toolbar.utils import get_object_edit_url, get_object_preview_url
 from menus.menu_pool import menu_pool
 
 from bs4 import BeautifulSoup
-
 from djangocms_versioning.constants import (
     ARCHIVED,
     DRAFT,

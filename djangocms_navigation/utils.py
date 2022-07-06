@@ -5,11 +5,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 
 from cms.models import PageContent
+from menus.menu_pool import menu_pool
 
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 from djangocms_versioning.helpers import remove_published_where
-
-from menus.menu_pool import menu_pool
 
 
 def get_admin_name(model, name):
