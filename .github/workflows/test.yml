@@ -1,0 +1,42 @@
+name: CodeCov
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+  push:
+    branches:
+    - master
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ 3.7, 3.8, 3.9 ]
+        requirements-file: [
+            dj22_cms40.txt,
+            dj32_cms40.txt,
+        ]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: 'tests/requirements/*.txt'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r tests/requirements/${{ matrix.requirements-file }}
+          python setup.py install
+
+      - name: Run coverage
+        run: coverage run setup.py test
