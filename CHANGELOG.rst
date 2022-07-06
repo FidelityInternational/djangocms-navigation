@@ -5,6 +5,7 @@ Changelog
 Unreleased
 ==========
 * feat: The navigation will output the preview url for any navigation nodes that have a page attached in the edit or preview mode.
+* feat: Replaced CircleCi with GitHub Actions for the test runner
 
 1.2.0 (2022-05-25)
 ==================
