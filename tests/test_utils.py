@@ -98,7 +98,7 @@ class IsModelSupportedTestCase(TestCase):
             self.assertFalse(is_model_supported(MenuContent, model))
 
 
-class CMSMenuTestCase(CMSTestCase):
+class IsPreviewEditModeTestCase(CMSTestCase):
     """
     Test case for the utility: is_preview_or_edit_mode
     """
