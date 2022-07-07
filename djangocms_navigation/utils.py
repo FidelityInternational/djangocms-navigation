@@ -77,7 +77,7 @@ def purge_menu_cache(site_id=None, language=None):
 
 def is_preview_or_edit_mode(request):
     """
-    Detemrine if the view is in the preview or edit mode.
+    Determine if the view is in the preview or edit mode.
 
     :param request: A request object
     :return: True if the view is the preview or edit mode, False if not.
@@ -91,7 +91,7 @@ def is_preview_or_edit_mode(request):
 
 def get_latest_page_content_for_page_grouper(obj, language):
     """
-    Determine if the view is in the preview or edit mode.
+    Get the latest draft or published page content from a page grouper object
 
     :param obj: A Page object
     :return: A queryset if an item exists, or None if not.
