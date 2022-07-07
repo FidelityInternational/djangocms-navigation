@@ -526,7 +526,7 @@ class CMSMenuWithPagesTestCase(CMSTestCase):
         menu_item_pagecontent = factories.PageContentWithVersionFactory(
             language=self.language,
             version__created_by=self.get_superuser(),
-            version__state=UNPUBLISHED,
+            version__state=ARCHIVED,
         )
         factories.ChildMenuItemFactory(parent=self.published_menu_content.root, content=menu_item_pagecontent.page)
 
