@@ -4,7 +4,11 @@ from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 
+from cms.models import PageContent
 from menus.menu_pool import menu_pool
+
+from djangocms_versioning.constants import DRAFT, PUBLISHED
+from djangocms_versioning.helpers import remove_published_where
 
 
 def get_admin_name(model, name):
@@ -69,3 +73,33 @@ def get_versionable_for_content(content):
 
 def purge_menu_cache(site_id=None, language=None):
     menu_pool.clear(site_id=site_id, language=language)
+
+
+def is_preview_or_edit_mode(request):
+    """
+    Determine if the view is in the preview or edit mode.
+
+    :param request: A request object
+    :return: True if the view is the preview or edit mode, False if not.
+    :rtype: Boolean
+    """
+    toolbar = getattr(request, "toolbar", None)
+    if toolbar and (toolbar.edit_mode_active or toolbar.preview_mode_active):
+        return True
+    return False
+
+
+def get_latest_page_content_for_page_grouper(obj, language):
+    """
+    Determine if the view is in the preview or edit mode.
+
+    :param obj: A Page object
+    :return: A queryset if an item exists, or None if not.
+    :rtype: Queryset object, or None
+    """
+    page_contents = PageContent.objects.filter(
+        page=obj,
+        language=language,
+        versions__state__in=[DRAFT, PUBLISHED]
+    ).order_by("-versions__pk")
+    return remove_published_where(page_contents).first()

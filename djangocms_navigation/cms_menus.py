@@ -2,6 +2,7 @@ from django.db.models import Q
 
 from cms.cms_menus import CMSMenu as OriginalCMSMenu
 from cms.models import Page
+from cms.toolbar.utils import get_object_preview_url
 from cms.utils import get_current_site, get_language_from_request
 from menus.base import Menu, Modifier, NavigationNode
 from menus.menu_pool import menu_pool
@@ -9,7 +10,11 @@ from menus.menu_pool import menu_pool
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 
 from .models import MenuContent, MenuItem
-from .utils import get_versionable_for_content
+from .utils import (
+    get_latest_page_content_for_page_grouper,
+    get_versionable_for_content,
+    is_preview_or_edit_mode,
+)
 
 
 class MenuItemNavigationNode(NavigationNode):
@@ -53,10 +58,24 @@ class CMSMenu(Menu):
             path_q |= Q(path__startswith=path) & ~Q(path=path)
         return self.menu_item_model.get_tree().filter(path_q).order_by("path")
 
-    def get_navigation_nodes(self, nodes, root_ids):
+    def get_url(self, request, obj):
+        # If the node is attached to a page and we are on the admin edit
+        # or preview endpoint, get the preview url
+        if isinstance(obj, Page) and is_preview_or_edit_mode(request):
+            language = get_language_from_request(request)
+            latest_page_content = get_latest_page_content_for_page_grouper(obj, language)
+            # if there is no DRAFT or PUBLISHED version we should use it
+            if latest_page_content:
+                return get_object_preview_url(latest_page_content, language=language)
+            # Otherwise, there is no DRAFT or PUBLISHED version, we shouldn't show a link for
+            # ARCHIVED or UNPUBLISHED
+            return ""
+        return obj.get_absolute_url() if obj else ""
+
+    def get_navigation_nodes(self, nodes, root_ids, request):
         for node in nodes:
             parent = node.get_parent()
-            url = node.content.get_absolute_url() if node.content else ""
+            url = self.get_url(request, node.content)
             if parent:
                 if parent.id in root_ids:
                     parent_id = root_ids[parent.id]
@@ -86,7 +105,7 @@ class CMSMenu(Menu):
             root_ids[navigation.pk] = identifier
         menu_nodes = self.get_menu_nodes(navigations)
         return root_navigation_nodes + list(
-            self.get_navigation_nodes(menu_nodes, root_ids)
+            self.get_navigation_nodes(menu_nodes, root_ids, request)
         )
 
 
