@@ -91,15 +91,15 @@ def is_preview_or_edit_mode(request):
 
 def get_latest_page_content_for_page_grouper(obj, language):
     """
-    Get the latest draft or published page content from a page grouper object
+    Determine if the view is in the preview or edit mode.
 
     :param obj: A Page object
     :return: A queryset if an item exists, or None if not.
     :rtype: Queryset object, or None
     """
-    page_contents = PageContent._original_manager.filter(
+    page_contents = PageContent.objects.filter(
         page=obj,
         language=language,
         versions__state__in=[DRAFT, PUBLISHED]
     ).order_by("-versions__pk")
-    return page_contents.first()
+    return remove_published_where(page_contents).first()
