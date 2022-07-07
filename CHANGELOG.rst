@@ -4,7 +4,10 @@ Changelog
 
 Unreleased
 ==========
-* feat: Navigation nodes with a page attached use the preview url in the edit or preview mode. 
+
+1.3.0 (2022-07-07)
+==================
+* feat: Navigation nodes with a page attached use the preview url in the edit or preview mode.
 * feat: Replaced CircleCi with GitHub Actions for the test runner
 
 1.2.0 (2022-05-25)
