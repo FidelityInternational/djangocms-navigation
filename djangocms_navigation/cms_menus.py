@@ -64,8 +64,12 @@ class CMSMenu(Menu):
         if isinstance(obj, Page) and is_preview_or_edit_mode(request):
             language = get_language_from_request(request)
             latest_page_content = get_latest_page_content_for_page_grouper(obj, language)
+            # if there is no DRAFT or PUBLISHED version we should use it
             if latest_page_content:
                 return get_object_preview_url(latest_page_content, language=language)
+            # Otherwise, there is no DRAFT or PUBLISHED version, we shouldn't show a link for
+            # ARCHIVED or UNPUBLISHED
+            return ""
         return obj.get_absolute_url() if obj else ""
 
     def get_navigation_nodes(self, nodes, root_ids, request):

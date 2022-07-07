@@ -97,9 +97,9 @@ def get_latest_page_content_for_page_grouper(obj, language):
     :return: A queryset if an item exists, or None if not.
     :rtype: Queryset object, or None
     """
-    page_contents = PageContent.objects.filter(
+    page_contents = PageContent._original_manager.filter(
         page=obj,
         language=language,
         versions__state__in=[DRAFT, PUBLISHED]
     ).order_by("-versions__pk")
-    return remove_published_where(page_contents).first()
+    return page_contents.first()

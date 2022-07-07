@@ -391,119 +391,157 @@ class CMSMenuTestCase(CMSTestCase):
         self.assertIn(published_child.title, str(response.content))
         self.assertNotIn(draft_child.title, str(response.content))
 
-    def test_page_menu_links_in_edit_mode(self):
+
+class CMSMenuWithPagesTestCase(CMSTestCase):
+    def setUp(self):
+        self.language = "en"
+        # A page that will contain a menu i.e. we can see the menu rendered on this page
+        preview_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            version__state=PUBLISHED,
+        )
+        self.edit_endpoint = get_object_edit_url(preview_pagecontent, language=self.language)
+        self.preview_endpoint = get_object_preview_url(preview_pagecontent, language=self.language)
+        self.live_endpoint = preview_pagecontent.get_absolute_url(language=self.language)
+        # Menu creation
+        self.menu = factories.MenuFactory()
+        self.published_menu_content = factories.MenuContentWithVersionFactory(
+            menu=self.menu,
+            version__state=PUBLISHED,
+            language=self.language
+        )
+
+    def _get_first_navigation_node_link_from_response(self, response):
+        """
+        Get the first menu node link from a supplied response.
+
+        :param response: Response object
+        :return: A href value or None
+        """
+        soup = BeautifulSoup(str(response.content), features="lxml")
+        navigation_tree = soup.find("ul", class_="nav")
+        return navigation_tree.find('a', href=True)['href']
+
+    def test_published_page_in_menu_links_in_edit_mode(self):
         """
         The edit mode should show preview links for any menu items attached to a page
         """
-        preview_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            version__state=PUBLISHED,
-        )
-        menu = factories.MenuFactory()
-        menu_content = factories.MenuContentWithVersionFactory(
-            menu=menu,
-            version__state=PUBLISHED,
-            language=self.language
-        )
         menu_item_pagecontent = factories.PageContentWithVersionFactory(
             language=self.language,
             version__created_by=self.get_superuser(),
             version__state=PUBLISHED,
         )
-        factories.ChildMenuItemFactory(parent=menu_content.root, content=menu_item_pagecontent.page)
-        # Endpoints
-        edit_endpoint = get_object_edit_url(preview_pagecontent, language=self.language)
-        expected_preview_endpoint = get_object_preview_url(menu_item_pagecontent, language=self.language)
-        not_expected_live_endpoint = menu_item_pagecontent.get_absolute_url(language=self.language)
+        factories.ChildMenuItemFactory(parent=self.published_menu_content.root, content=menu_item_pagecontent.page)
 
         with self.login_user_context(self.get_superuser()):
-            response = self.client.get(edit_endpoint)
+            response = self.client.get(self.edit_endpoint)
+
+        expected_preview_endpoint = get_object_preview_url(menu_item_pagecontent, language=self.language)
+        not_expected_edit_endpoint = get_object_edit_url(menu_item_pagecontent, language=self.language)
+        not_expected_live_endpoint = menu_item_pagecontent.get_absolute_url(language=self.language)
+        actual_link = self._get_first_navigation_node_link_from_response(response)
 
         self.assertEqual(response.status_code, 200)
+        self.assertIn(expected_preview_endpoint, actual_link)
+        self.assertNotIn(not_expected_edit_endpoint, actual_link)
+        self.assertNotIn(not_expected_live_endpoint, actual_link)
 
-        soup = BeautifulSoup(str(response.content), features="lxml")
-        navigation_tree = soup.find("ul", class_="nav")
-        first_child_link = navigation_tree.find('a', href=True)['href']
-
-        self.assertIn(expected_preview_endpoint, first_child_link)
-        self.assertNotIn(not_expected_live_endpoint, first_child_link)
-
-    def test_page_menu_links_in_preview_mode(self):
+    def test_published_page_in_menu_links_in_preview_mode(self):
         """
         The preview should show preview links for any menu items attached to a page
         """
-        preview_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            version__state=PUBLISHED,
-        )
-        menu = factories.MenuFactory()
-        menu_content = factories.MenuContentWithVersionFactory(
-            menu=menu,
-            version__state=PUBLISHED,
-            language=self.language
-        )
         menu_item_pagecontent = factories.PageContentWithVersionFactory(
             language=self.language,
             version__created_by=self.get_superuser(),
             version__state=PUBLISHED,
         )
-        factories.ChildMenuItemFactory(parent=menu_content.root, content=menu_item_pagecontent.page)
-        # Endpoints
-        preview_endpoint = get_object_preview_url(preview_pagecontent, language=self.language)
-        expected_preview_endpoint = get_object_preview_url(menu_item_pagecontent, language=self.language)
-        not_expected_live_endpoint = menu_item_pagecontent.get_absolute_url(language=self.language)
+        factories.ChildMenuItemFactory(parent=self.published_menu_content.root, content=menu_item_pagecontent.page)
 
         with self.login_user_context(self.get_superuser()):
-            response = self.client.get(preview_endpoint)
+            response = self.client.get(self.preview_endpoint)
+
+        expected_preview_endpoint = get_object_preview_url(menu_item_pagecontent, language=self.language)
+        not_expected_edit_endpoint = get_object_edit_url(menu_item_pagecontent, language=self.language)
+        not_expected_live_endpoint = menu_item_pagecontent.get_absolute_url(language=self.language)
+        actual_link = self._get_first_navigation_node_link_from_response(response)
 
         self.assertEqual(response.status_code, 200)
+        self.assertIn(expected_preview_endpoint, actual_link)
+        self.assertNotIn(not_expected_edit_endpoint, actual_link)
+        self.assertNotIn(not_expected_live_endpoint, actual_link)
 
-        soup = BeautifulSoup(str(response.content), features="lxml")
-        navigation_tree = soup.find("ul", class_="nav")
-        first_child_link = navigation_tree.find('a', href=True)['href']
-
-        self.assertIn(expected_preview_endpoint, first_child_link)
-        self.assertNotIn(not_expected_live_endpoint, first_child_link)
-
-    def test_page_menu_links_in_live_mode(self):
+    def test_published_page_in_menu_links_in_live_mode(self):
         """
         The live mode should show live links for any menu items attached to a page
         """
-        preview_pagecontent = factories.PageContentWithVersionFactory(
-            language=self.language,
-            version__created_by=self.get_superuser(),
-            version__state=PUBLISHED,
-        )
-        menu = factories.MenuFactory()
-        menu_content = factories.MenuContentWithVersionFactory(
-            menu=menu,
-            version__state=PUBLISHED,
-            language=self.language
-        )
         menu_item_pagecontent = factories.PageContentWithVersionFactory(
             language=self.language,
             version__created_by=self.get_superuser(),
             version__state=PUBLISHED,
         )
-        factories.ChildMenuItemFactory(parent=menu_content.root, content=menu_item_pagecontent.page)
-        # Endpoints
-        live_endpoint = preview_pagecontent.get_absolute_url(language=self.language)
-        expected_live_endpoint = menu_item_pagecontent.get_absolute_url(language=self.language)
-        not_expected_preview_endpoint = get_object_preview_url(menu_item_pagecontent, language=self.language)
+        factories.ChildMenuItemFactory(parent=self.published_menu_content.root, content=menu_item_pagecontent.page)
 
         with self.login_user_context(self.get_superuser()):
-            response = self.client.get(live_endpoint)
+            response = self.client.get(self.live_endpoint)
+
+        expected_live_endpoint = menu_item_pagecontent.get_absolute_url(language=self.language)
+        not_expected_edit_endpoint = get_object_edit_url(menu_item_pagecontent, language=self.language)
+        not_expected_preview_endpoint = get_object_preview_url(menu_item_pagecontent, language=self.language)
+        actual_link = self._get_first_navigation_node_link_from_response(response)
 
         self.assertEqual(response.status_code, 200)
+        self.assertIn(expected_live_endpoint, actual_link)
+        self.assertNotIn(not_expected_edit_endpoint, actual_link)
+        self.assertNotIn(not_expected_preview_endpoint, actual_link)
 
-        soup = BeautifulSoup(str(response.content), features="lxml")
-        navigation_tree = soup.find("ul", class_="nav")
-        first_child_link = navigation_tree.find('a', href=True)['href']
+    def test_unpublished_page_in_menu_links_in_preview_mode(self):
+        """
+        The preview should show no link for any menu items attached to an unpublished page
+        """
+        menu_item_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            version__state=UNPUBLISHED,
+        )
+        factories.ChildMenuItemFactory(parent=self.published_menu_content.root, content=menu_item_pagecontent.page)
 
-        self.assertIn(expected_live_endpoint, first_child_link)
-        self.assertNotIn(not_expected_preview_endpoint, first_child_link)
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(self.preview_endpoint)
+
+        not_expected_edit_endpoint = get_object_edit_url(menu_item_pagecontent, language=self.language)
+        not_expected_preview_endpoint = get_object_preview_url(menu_item_pagecontent, language=self.language)
+        not_expected_live_endpoint = menu_item_pagecontent.get_absolute_url(language=self.language)
+        actual_link = self._get_first_navigation_node_link_from_response(response)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(not_expected_edit_endpoint, actual_link)
+        self.assertNotIn(not_expected_preview_endpoint, actual_link)
+        self.assertNotIn(not_expected_live_endpoint, actual_link)
+
+    def test_archived_page_in_menu_links_in_preview_mode(self):
+        """
+        The preview should show no link for any menu items attached to an archived page
+        """
+        menu_item_pagecontent = factories.PageContentWithVersionFactory(
+            language=self.language,
+            version__created_by=self.get_superuser(),
+            version__state=UNPUBLISHED,
+        )
+        factories.ChildMenuItemFactory(parent=self.published_menu_content.root, content=menu_item_pagecontent.page)
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(self.preview_endpoint)
+
+        not_expected_edit_endpoint = get_object_edit_url(menu_item_pagecontent, language=self.language)
+        not_expected_preview_endpoint = get_object_preview_url(menu_item_pagecontent, language=self.language)
+        not_expected_live_endpoint = menu_item_pagecontent.get_absolute_url(language=self.language)
+        actual_link = self._get_first_navigation_node_link_from_response(response)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(not_expected_edit_endpoint, actual_link)
+        self.assertNotIn(not_expected_preview_endpoint, actual_link)
+        self.assertNotIn(not_expected_live_endpoint, actual_link)
 
 
 class SoftrootTests(CMSTestCase):
