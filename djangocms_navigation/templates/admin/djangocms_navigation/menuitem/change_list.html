@@ -2,6 +2,14 @@
 {% extends "admin/tree_change_list.html" %}
 {% load static admin_list admin_urls navigation_admin_tree i18n djangocms_versioning %}
 
+{% block extrahead %}
+    {{ block.super }}
+    {# INFO: versioning_static_url_prefix variable is used to inject static_url into actions.js #}
+    <script>
+        let versioning_static_url_prefix = "{% static "djangocms_versioning/" %}";
+    </script>
+{% endblock extrahead %}
+
 {% block extrastyle %}
 {{ block.super }}
 <link rel="stylesheet" type="text/css" href="{% static 'djangocms_navigation/css/navigation_admin_overrides.css' %}"/>
