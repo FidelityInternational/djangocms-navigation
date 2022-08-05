@@ -1,6 +1,6 @@
 from django.template import Template
 from django.template.context import Context
-from django.test import RequestFactory
+from django.test import RequestFactory, override_settings
 
 from cms.test_utils.testcases import CMSTestCase
 from cms.test_utils.util.mock import AttributeObject
@@ -17,6 +17,7 @@ from djangocms_versioning.constants import (
 )
 
 from djangocms_navigation.cms_menus import CMSMenu
+from djangocms_navigation.models import MenuContent
 from djangocms_navigation.test_utils import factories
 
 from .utils import add_toolbar_to_request, disable_versioning_for_navigation
@@ -252,6 +253,53 @@ class CMSMenuTestCase(CMSTestCase):
         self.assertListEqual(
             list(roots), [menucontent_1.root, menucontent_2.root, menucontent_3.root]
         )
+
+    @override_settings(MAIN_NAVIGATION_ENABLED=True)
+    def test_get_roots_with_with_main_navigation_enabled(self):
+        """Check that when MAIN_NAVIGATION_ENABLED is True that the queryset of MenuContent objects is limited to only
+        the root MenuItem of the MenuContent object marked as the main navigation
+        """
+        not_main_navigation = factories.MenuContentWithVersionFactory(
+            is_main_navigation=False,
+            version__state=PUBLISHED,
+            language=self.language,
+        )
+        main_navigation = factories.MenuContentWithVersionFactory(
+            is_main_navigation=True,
+            version__state=PUBLISHED,
+            language=self.language,
+        )
+        menu = CMSMenu(self.renderer)
+
+        roots = list(menu.get_roots(self.request))
+
+        self.assertEqual(len(roots), 1)
+        self.assertIn(main_navigation.root, roots)
+        self.assertNotIn(not_main_navigation.root, roots)
+
+    @override_settings(MAIN_NAVIGATION_ENABLED=False)
+    def test_get_roots_with_with_main_navigation_disable(self):
+        """Check that when MAIN_NAVIGATION_ENABLED is False that the queryset of MenuItem objects returned contains
+        roots of all MenuContent objects
+        """
+        not_main_navigation = factories.MenuContentWithVersionFactory(
+            is_main_navigation=False,
+            version__state=PUBLISHED,
+            language=self.language,
+        )
+        main_navigation = factories.MenuContentWithVersionFactory(
+            is_main_navigation=True,
+            version__state=PUBLISHED,
+            language=self.language,
+        )
+        menu = CMSMenu(self.renderer)
+
+        roots = list(menu.get_roots(self.request))
+
+        self.assertEqual(len(roots), 2)
+        self.assertIn(main_navigation.root, roots)
+        self.assertIn(not_main_navigation.root, roots)
+        self.assertListEqual(roots, [not_main_navigation.root, main_navigation.root])
 
     def test_draft_menu_on_draft_page(self):
         """
@@ -1495,3 +1543,54 @@ class MultisiteNavigationTests(CMSTestCase):
         ]
 
         self.assertTreeQuality(context_it['children'], mock_it_tree, 'title')
+
+
+class CMSMenuMainNavigationTestCase(CMSTestCase):
+
+    def setUp(self):
+        self.request = RequestFactory().get("/")
+        self.user = factories.UserFactory()
+        self.request.user = self.user
+        self.renderer = menu_pool.get_renderer(self.request)
+        self.menu = CMSMenu(self.renderer)
+
+    def test_main_navigation_found(self):
+        """
+        When a single MenuContent marked as the main navigation is returned, a queryset containing only that
+        object should be returned
+        """
+        not_main_navigation = factories.MenuContentFactory(language="en", is_main_navigation=False)
+        main_navigation = factories.MenuContentFactory(language="en", is_main_navigation=True)
+        all_menucontents = MenuContent._base_manager.all()
+
+        result = self.menu.get_main_navigation(menucontents=all_menucontents)
+
+        self.assertEqual(result.count(), 1)
+        self.assertIn(main_navigation, result)
+        self.assertNotIn(not_main_navigation, result)
+
+    def test_main_navigation_not_found(self):
+        """
+        When no MenuContent marked as main navigation is found, the queryset of MenuContent objects should be
+        returned unchanged
+        """
+        factories.MenuContentFactory.create_batch(2, language="en", is_main_navigation=False)
+        all_menucontents = MenuContent._base_manager.all()
+
+        result = self.menu.get_main_navigation(menucontents=all_menucontents)
+
+        self.assertEqual(result, all_menucontents)
+        self.assertEqual(all_menucontents.count(), result.count())
+
+    def test_multiple_main_navigation(self):
+        """
+        When multiple MenuContent marked as main navigation are found, the queryset of MenuContent objects should be
+        returned unchanged
+        """
+        factories.MenuContentFactory.create_batch(2, language="en", is_main_navigation=True)
+        all_menucontents = MenuContent._base_manager.all()
+
+        result = self.menu.get_main_navigation(menucontents=all_menucontents)
+
+        self.assertEqual(result, all_menucontents)
+        self.assertEqual(all_menucontents.count(), result.count())
