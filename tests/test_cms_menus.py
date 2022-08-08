@@ -19,6 +19,7 @@ from djangocms_versioning.constants import (
 from djangocms_navigation.cms_menus import CMSMenu
 from djangocms_navigation.models import MenuContent
 from djangocms_navigation.test_utils import factories
+from djangocms_navigation.utils import purge_menu_cache
 
 from .utils import add_toolbar_to_request, disable_versioning_for_navigation
 
@@ -1594,3 +1595,60 @@ class CMSMenuMainNavigationTestCase(CMSTestCase):
 
         self.assertEqual(result, all_menucontents)
         self.assertEqual(all_menucontents.count(), result.count())
+
+    @override_settings(MAIN_NAVIGATION_ENABLED=True)
+    def test_main_navigation_displayed(self):
+        """
+        Integration test to check that when making a request to a page, that the correct navigation menu is
+        displayed.
+        """
+        # create a page that we can use to test with
+        pagecontent = factories.PageContentWithVersionFactory(
+            language="en",
+            version__created_by=self.get_superuser(),
+            version__state=PUBLISHED,
+        )
+        url = get_object_edit_url(pagecontent, language="en")
+
+        # setup two menucontents each with a different child item, neither marked as main nav
+        first_menucontent = factories.MenuContentWithVersionFactory(
+            language="en",
+            version__state=PUBLISHED,
+            is_main_navigation=False,
+        )
+        first_menucontent_child = factories.ChildMenuItemFactory(parent=first_menucontent.root)
+        second_menucontent = factories.MenuContentWithVersionFactory(
+            language="en",
+            version__state=PUBLISHED,
+            is_main_navigation=False,
+        )
+        second_menucontent_child = factories.ChildMenuItemFactory(parent=second_menucontent.root)
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(url)
+
+        # find the nav menu from the response
+        nav_tree = BeautifulSoup(str(response.content), features="lxml").find("ul", class_="nav")
+        child_item = nav_tree.find("a")
+
+        # as neither nav is marked was the main nav, we expect the first created to be displayed
+        self.assertEqual(child_item["href"], first_menucontent_child.content.get_absolute_url())
+        self.assertIn(first_menucontent_child.title, nav_tree.getText())
+        self.assertNotIn(second_menucontent_child.title, nav_tree.getText())
+
+        # now make second menucontent as the main nav and make a fresh response
+        second_menucontent.is_main_navigation = True
+        second_menucontent.save()
+        # TODO ensure that menucache is purged when a main nav is changed
+        purge_menu_cache(1)
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(url)
+
+        nav_tree = BeautifulSoup(str(response.content), features="lxml").find("ul", class_="nav")
+        child_item = nav_tree.find("a")
+
+        # now we expect the second menucontent's child item to be displayed
+        self.assertEqual(child_item["href"], second_menucontent_child.content.get_absolute_url())
+        self.assertIn(second_menucontent_child.title, nav_tree.getText())
+        self.assertNotIn(first_menucontent_child.title, nav_tree.getText())
