@@ -58,16 +58,14 @@ class CMSMenu(Menu):
 
     def get_main_navigation(self, menucontents):
         """
-        There should only be a single MenuContent object marked as the main navigation.
-        If we find it, the given queryset of MenuContent objects is filtered to only include the main navigation.
-        If none is found, or more than one is found, return the original queryset of MenuContent objects unchanged.
+        Takes a queryset of MenuContent objects, filters to include only those flagged as main navigation, and returns a
+        queryset containing only the most recently modified object.
+        If there is no object marked as the main navigation, returns the queryset of MenuContent objects unchanged.
         """
-        try:
-            main_navigation_id = menucontents.get(is_main_navigation=True).id
-            menucontents = menucontents.filter(id=main_navigation_id)
-        except (MenuContent.DoesNotExist, MenuContent.MultipleObjectsReturned):
-            pass
-        return menucontents
+        main_navigation = menucontents.filter(is_main_navigation=True).order_by("-versions__modified").first()
+        if not main_navigation:
+            return menucontents
+        return menucontents.filter(id=main_navigation.id)
 
     def get_menu_nodes(self, roots):
         root_paths = roots.values_list("path", flat=True)
