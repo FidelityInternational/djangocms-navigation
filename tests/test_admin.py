@@ -1,7 +1,6 @@
 import html
 import importlib
 import json
-import pdb
 import sys
 from unittest.mock import patch
 
@@ -1386,7 +1385,7 @@ class MenuItemMainNavigationViewTestCase(CMSTestCase):
             response,
             (
                 f"<h4>Are you sure you would like to set the menu: <u>{expected_identifier}</u>"
-             " as the main navigation?</h4>"
+                " as the main navigation?</h4>"
             )
         )
         self.assertContains(
@@ -1431,7 +1430,7 @@ class MenuItemMainNavigationViewTestCase(CMSTestCase):
             response,
             (
                 f"<h4>Are you sure you would like to set the menu: <u>{expected_identifier}</u>"
-             " as the main navigation?</h4>"
+                " as the main navigation?</h4>"
             )
         )
         # No need to warn users if there is no other main navigation
