@@ -260,12 +260,12 @@ class CMSMenuTestCase(CMSTestCase):
         the root MenuItem of the MenuContent object marked as the main navigation
         """
         not_main_navigation = factories.MenuContentWithVersionFactory(
-            is_main_navigation=False,
+            menu__main_navigation=False,
             version__state=PUBLISHED,
             language=self.language,
         )
         main_navigation = factories.MenuContentWithVersionFactory(
-            is_main_navigation=True,
+            menu__main_navigation=True,
             version__state=PUBLISHED,
             language=self.language,
         )
@@ -283,12 +283,12 @@ class CMSMenuTestCase(CMSTestCase):
         roots of all MenuContent objects
         """
         not_main_navigation = factories.MenuContentWithVersionFactory(
-            is_main_navigation=False,
+            menu__main_navigation=False,
             version__state=PUBLISHED,
             language=self.language,
         )
         main_navigation = factories.MenuContentWithVersionFactory(
-            is_main_navigation=True,
+            menu__main_navigation=True,
             version__state=PUBLISHED,
             language=self.language,
         )
@@ -1559,8 +1559,8 @@ class CMSMenuMainNavigationTestCase(CMSTestCase):
         When a single MenuContent marked as the main navigation is returned, a queryset containing only that
         object should be returned
         """
-        not_main_navigation = factories.MenuContentFactory(language="en", is_main_navigation=False)
-        main_navigation = factories.MenuContentFactory(language="en", is_main_navigation=True)
+        not_main_navigation = factories.MenuContentFactory(language="en", menu__main_navigation=False)
+        main_navigation = factories.MenuContentFactory(language="en", menu__main_navigation=True)
         all_menucontents = MenuContent._base_manager.all()
 
         result = self.menu.get_main_navigation(menucontents=all_menucontents)
@@ -1574,7 +1574,7 @@ class CMSMenuMainNavigationTestCase(CMSTestCase):
         When no MenuContent marked as main navigation is found, the queryset of MenuContent objects should be
         returned unchanged
         """
-        factories.MenuContentFactory.create_batch(2, language="en", is_main_navigation=False)
+        factories.MenuContentFactory.create_batch(2, language="en", menu__main_navigation=False)
         all_menucontents = MenuContent._base_manager.all()
 
         result = self.menu.get_main_navigation(menucontents=all_menucontents)
@@ -1584,18 +1584,18 @@ class CMSMenuMainNavigationTestCase(CMSTestCase):
 
     def test_multiple_main_navigation(self):
         """
-        When multiple MenuContent marked as main navigation are found, the queryset of MenuContent objects should be
-        returned unchanged
+        When multiple MenuContent marked as main navigation are found, all the MenuContent objects should be
+        returned
         """
-        older = factories.MenuContentWithVersionFactory(language="en", is_main_navigation=True)
-        newer = factories.MenuContentWithVersionFactory(language="en", is_main_navigation=True)
+        older = factories.MenuContentWithVersionFactory(language="en", menu__main_navigation=True)
+        newer = factories.MenuContentWithVersionFactory(language="en", menu__main_navigation=True)
         all_menucontents = MenuContent._base_manager.all()
 
         result = self.menu.get_main_navigation(menucontents=all_menucontents)
 
-        self.assertEqual(result.count(), 1)
+        self.assertEqual(result.count(), 2)
         self.assertIn(newer, result)
-        self.assertNotIn(older, result)
+        self.assertIn(older, result)
 
 
 @override_settings(MAIN_NAVIGATION_ENABLED=True)
@@ -1615,13 +1615,13 @@ class CMSMenuPublishingMainNavigationTestCase(CMSTestCase):
         self.first_menucontent = factories.MenuContentWithVersionFactory(
             language="en",
             version__state=PUBLISHED,
-            is_main_navigation=False,
+            menu__main_navigation=False,
         )
         self.first_menucontent_child = factories.ChildMenuItemFactory(parent=self.first_menucontent.root)
         self.second_menucontent = factories.MenuContentWithVersionFactory(
             language="en",
             version__state=PUBLISHED,
-            is_main_navigation=False,
+            menu__main_navigation=False,
         )
         self.second_menucontent_child = factories.ChildMenuItemFactory(parent=self.second_menucontent.root)
         self.superuser = self.get_superuser()
@@ -1632,20 +1632,19 @@ class CMSMenuPublishingMainNavigationTestCase(CMSTestCase):
         """
         return BeautifulSoup(str(response.content), features="lxml").find("ul", class_="nav")
 
-    def _create_draft_main_navigation(self, menucontent):
+    def _make_main_navigation(self, menucontent):
         """
-        Takes a menucontent object, creates a new draft version, and sets the related MenuContent object to the
-        main navigation
+        Helper that takes a menucontent object, gets the related Menu grouper object, and marks it as the main
+        navigation menu. This is a change that would be made in the admin by a user, but we make the change directly to
+        the object for the purpose of the tests.
         """
-        new_version = menucontent.versions.get().copy(self.superuser)
-        content = new_version.content
-        content.is_main_navigation = True
-        content.save()
-        return new_version
+        menu = menucontent.menu
+        menu.main_navigation = True
+        menu.save()
 
     def test_no_main_navigation(self):
         """
-        When no main navigation is set, the first created MenuContent object is used
+        When no main navigation is set, the first created MenuContent object is used as the root
         """
         with self.login_user_context(self.get_superuser()):
             edit_response = self.client.get(self.edit_url)
@@ -1660,46 +1659,11 @@ class CMSMenuPublishingMainNavigationTestCase(CMSTestCase):
                 self.assertIn(self.first_menucontent_child.title, nav_tree.getText())
                 self.assertNotIn(self.second_menucontent_child.title, nav_tree.getText())
 
-    def test_draft_main_navigation_live_mode(self):
+    def test_main_navigation_changed(self):
         """
-        When a MenuContent object has been marked as the main navigation, but is still in draft mode, the original
-        MenuContent object should be displayed as the navigation in live mode
+        When a MenuContent object has been marked as the main navigation, this is now used as the main navigation
         """
-        user = self.get_superuser()
-        self._create_draft_main_navigation(self.second_menucontent)
-        with self.login_user_context(user):
-            live_response = self.client.get(self.live_url)
-
-        nav_tree = self._get_nav_from_response(live_response)
-        child_item = nav_tree.find("a")
-
-        self.assertEqual(child_item["href"], self.first_menucontent_child.content.get_absolute_url())
-        self.assertIn(self.first_menucontent_child.title, nav_tree.getText())
-        self.assertNotIn(self.second_menucontent_child.title, nav_tree.getText())
-
-    def test_draft_main_navigation_edit_mode(self):
-        """
-        When a MenuContent object has been marked as the main navigation, but is still in draft mode, it should be
-        displayed as the navigation when in edit mode
-        """
-        self._create_draft_main_navigation(self.second_menucontent)
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(self.edit_url)
-
-        nav_tree = self._get_nav_from_response(response)
-        child_item = nav_tree.find("a")
-
-        self.assertEqual(child_item["href"], self.second_menucontent_child.content.get_absolute_url())
-        self.assertIn(self.second_menucontent_child.title, nav_tree.getText())
-        self.assertNotIn(self.first_menucontent_child.title, nav_tree.getText())
-
-    def test_published_main_navigation(self):
-        """
-        After publishing the MenuContent object as the main navigation, this should now be displayed in both live
-        and edit mode
-        """
-        new_version = self._create_draft_main_navigation(self.second_menucontent)
-        new_version.publish(self.superuser)
+        self._make_main_navigation(self.second_menucontent)
 
         with self.login_user_context(self.get_superuser()):
             edit_response = self.client.get(self.edit_url)
@@ -1714,14 +1678,34 @@ class CMSMenuPublishingMainNavigationTestCase(CMSTestCase):
                 self.assertIn(self.second_menucontent_child.title, nav_tree.getText())
                 self.assertNotIn(self.first_menucontent_child.title, nav_tree.getText())
 
+    def test_both_main_navigation(self):
+        """
+        When both are set as main navigation, the first created MenuContent object is used, as this matches original
+        behaviour before main_navigation was added
+        """
+        self._make_main_navigation(self.first_menucontent)
+        self._make_main_navigation(self.second_menucontent)
+
+        with self.login_user_context(self.get_superuser()):
+            edit_response = self.client.get(self.edit_url)
+            live_response = self.client.get(self.live_url)
+
+        for response in [edit_response, live_response]:
+            with self.subTest(response):
+                nav_tree = self._get_nav_from_response(response)
+                child_item = nav_tree.find("a")
+
+                self.assertEqual(child_item["href"], self.first_menucontent_child.content.get_absolute_url())
+                self.assertIn(self.first_menucontent_child.title, nav_tree.getText())
+                self.assertNotIn(self.second_menucontent_child.title, nav_tree.getText())
+
     @override_settings(MAIN_NAVIGATION_ENABLED=False)
     def test_main_navigation_not_enabled(self):
         """
         When the MAIN_NAVIGATION_ENABLED setting is False, the original MenuContent object is displayed in live and
-        edit mode
+        edit mode, despite second MenuContent object being marked as the main navigation
         """
-        new_version = self._create_draft_main_navigation(self.second_menucontent)
-        new_version.publish(self.superuser)
+        self._make_main_navigation(self.second_menucontent)
 
         with self.login_user_context(self.get_superuser()):
             edit_response = self.client.get(self.edit_url)

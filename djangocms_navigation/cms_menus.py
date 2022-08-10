@@ -62,10 +62,11 @@ class CMSMenu(Menu):
         queryset containing only the most recently modified object.
         If there is no object marked as the main navigation, returns the queryset of MenuContent objects unchanged.
         """
-        main_navigation = menucontents.filter(is_main_navigation=True).order_by("-versions__modified").first()
+        # main_navigation = menucontents.filter(menu__main_navigation=True).order_by("-versions__modified").first()
+        main_navigation = menucontents.filter(menu__main_navigation=True)
         if not main_navigation:
             return menucontents
-        return menucontents.filter(id=main_navigation.id)
+        return main_navigation
 
     def get_menu_nodes(self, roots):
         root_paths = roots.values_list("path", flat=True)
