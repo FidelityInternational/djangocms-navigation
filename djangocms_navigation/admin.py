@@ -548,7 +548,7 @@ class MenuItemAdmin(TreeAdmin):
                 menucontent=menu.identifier,
             )
             return render(
-                request, "djangocms_navigation/admin/main_navigation_confirmation.html", context
+                request, "admin/djangocms_navigation/main_navigation_confirmation.html", context
             )
         if request.method == "POST":
             for obj in menu_queryset:
@@ -557,6 +557,9 @@ class MenuItemAdmin(TreeAdmin):
                     obj.save()
             menu.main_navigation = True
             menu.save()
+            self.message_user(
+                request, _(f"You have set the navigation {menu.identifier} as the main navigation.")
+            )
 
         return redirect(changelist_url)
 

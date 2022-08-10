@@ -1,6 +1,7 @@
 import html
 import importlib
 import json
+import pdb
 import sys
 from unittest.mock import patch
 
@@ -239,6 +240,21 @@ class MenuContentAdminViewTestCase(CMSTestCase):
         self.assertEqual(len(menu_content_admin.get_list_display(request)), 3)
         self.assertEqual(
             menu_content_admin.get_list_display(request), ["title", "get_menuitem_link", "get_preview_link"]
+        )
+
+    @override_settings(MAIN_NAVIGATION_ENABLED=True)
+    @patch('djangocms_navigation.admin.using_version_lock', False)
+    @disable_versioning_for_navigation()
+    def test_list_display_with_main_navigation(self):
+        request = self.get_request("/")
+        request.user = self.get_superuser()
+
+        menu_content_admin = MenuContentAdmin(MenuContent, admin.AdminSite())
+
+        self.assertEqual(len(menu_content_admin.get_list_display(request)), 4)
+        self.assertEqual(
+            menu_content_admin.get_list_display(request),
+            ['title', 'get_main_navigation', 'get_menuitem_link', 'get_preview_link']
         )
 
 
@@ -1344,6 +1360,89 @@ class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
         child.refresh_from_db()
         child_of_child.refresh_from_db()
         self.assertFalse(child_of_child.is_sibling_of(child))
+
+
+class MenuItemMainNavigationViewTestCase(CMSTestCase):
+    def test_make_main_navigation_view_with_existing_main_navigation(self):
+        # Create a menucontent, with a menu that is already the main navigation
+        original_menu_content = factories.MenuContentWithVersionFactory(language="en")
+        original_menu = original_menu_content.menu
+        original_menu.main_navigation = True
+        original_menu.save()
+        # Create another, without main_navigation set
+        new_menu_content = factories.MenuContentWithVersionFactory(language="en")
+        main_navigation_url = reverse(
+            "admin:{app}_{model}_main_navigation".format(
+                app=new_menu_content._meta.app_label, model=new_menu_content._meta.model_name,
+            ),
+            args=[new_menu_content.pk],
+        )
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(main_navigation_url)
+        expected_identifier = new_menu_content.menu.identifier
+
+        # Verify that we have rendered the confirmation screen
+        self.assertContains(
+            response,
+            (
+                f"<h4>Are you sure you would like to set the menu: <u>{expected_identifier}</u>"
+             " as the main navigation?</h4>"
+            )
+        )
+        self.assertContains(
+            response,
+            "<h4>By doing this, the existing main navigation below will no longer be the main navigation.</h4>"
+        )
+        self.assertContains(
+            response, f"<p>{original_menu.identifier}</p>"
+        )
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.post(main_navigation_url, follow=True)
+
+        self.assertContains(
+            response,
+            f'<li class="info">You have set the navigation {expected_identifier} as the main navigation.</li>'
+        )
+        self.assertEqual(original_menu.main_navigation, False)
+        self.assertEqual(new_menu_content.main_navigation, True)
+
+    def test_make_main_navigation_view_without_existing_main_navigation(self):
+        # Create another, without main_navigation set
+        new_menu_content = factories.MenuContentWithVersionFactory(language="en")
+        # Create a menucontent, with a menu that is already the main navigation
+        main_navigation_url = reverse(
+            "admin:{app}_{model}_main_navigation".format(
+                app=new_menu_content._meta.app_label, model=new_menu_content._meta.model_name,
+            ),
+            args=[new_menu_content.pk],
+        )
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(main_navigation_url)
+        expected_identifier = new_menu_content.menu.identifier
+
+        # Verify that we have rendered the confirmation screen
+        self.assertContains(
+            response,
+            (
+                f"<h4>Are you sure you would like to set the menu: <u>{expected_identifier}</u>"
+             " as the main navigation?</h4>"
+            )
+        )
+        # No need to warn users if there is no other main navigation
+        self.assertNotContains(
+            response,
+            "<h4>By doing this, the existing main navigation below will no longer be the main navigation.</h4>"
+        )
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.post(main_navigation_url, follow=True)
+
+        self.assertContains(
+            response,
+            f'<li class="info">You have set the navigation {expected_identifier} as the main navigation.</li>'
+        )
+        self.assertEqual(new_menu_content.main_navigation, True)
 
 
 class MenuItemPermissionTestCase(CMSTestCase):
