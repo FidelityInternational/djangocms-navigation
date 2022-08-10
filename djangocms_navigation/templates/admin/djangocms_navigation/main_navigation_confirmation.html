@@ -1,0 +1,42 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+{% block title %}{% trans "Revert Confirmation" %}{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {{ media }}
+    <script type="text/javascript" src="{% static 'admin/js/cancel.js' %}"></script>
+{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} main-navigation-confirmation{% endblock %}
+
+{% block content %}
+<h2>{% trans "Change Main Navigation" %}</h2>
+<h3>{{ object_name }}</h3>
+    <h4>{% blocktrans %}Are you sure you would like to set the menu: <u>{{ menucontent }}</u> as the main navigation?{% endblocktrans %}</h4>
+<div>
+{% if extra_context %}
+    <h4>By doing this, the existing navigation below will no longer be the main navigation.</h4>
+{% endif %}
+<br>
+<ul>
+    {% for menucontent_name in extra_context %}
+        <li>
+        <p>{{menucontent_name}}</p>
+        </li>
+    {% endfor %}
+</ul>
+    <br>
+<form action="" method="POST">
+    {% csrf_token %}
+    <input  class="button confirm-link js-versioning-keep-sideframe"
+            type="submit"
+            value="{% trans 'Yes, I\'m sure' %}">
+    <a href="{{ back_url }}">
+        <input type="button"
+               class="button js-versioning-keep-sideframe"
+               value="{% trans 'No, take me back' %}">
+    </a>
+</form>
+{% endblock %}

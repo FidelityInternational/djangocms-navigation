@@ -1,6 +1,7 @@
 import json
 
 from django.apps import apps
+from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.options import IS_POPUP_VAR
 from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
@@ -9,7 +10,7 @@ from django.contrib.admin.views.main import ChangeList
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import re_path, reverse, reverse_lazy
@@ -21,7 +22,7 @@ from django.views.i18n import JavaScriptCatalog
 from djangocms_versioning.admin import ExtendedVersionAdminMixin
 from djangocms_versioning.constants import DRAFT
 from djangocms_versioning.exceptions import ConditionFailed
-from djangocms_versioning.helpers import version_list_url
+from djangocms_versioning.helpers import get_admin_url, version_list_url
 from djangocms_versioning.models import Version
 from treebeard.admin import TreeAdmin
 
@@ -110,6 +111,9 @@ class MenuContentAdmin(ExtendedVersionAdminMixin, admin.ModelAdmin):
         menu_content_list_display = ["title"]
         versioning_enabled = is_versioning_enabled(self.model)
 
+        if getattr(settings, "MAIN_NAVIGATION_ENABLED", False):
+            menu_content_list_display.extend(["get_main_navigation"])
+
         if versioning_enabled:
             menu_content_list_display.extend(
                 ["get_author", "get_modified_date", "get_versioning_state"]
@@ -145,6 +149,39 @@ class MenuContentAdmin(ExtendedVersionAdminMixin, admin.ModelAdmin):
         return render_to_string(
             "djangocms_references/references_icon.html",
             {"url": url}
+        )
+
+    def get_main_navigation(self, obj):
+        """
+        Return main_navigation field from Menu associated with MenuContent.
+        :param: obj: MenuContent Instance
+        :return: Boolean
+        """
+        return obj.menu.main_navigation
+
+    get_main_navigation.short_description = "Main Navigation"
+    get_main_navigation.boolean = True
+
+    def _get_main_navigation_link(self, obj, request, disabled=False):
+        """
+        Return an admin link to the confirmation page for setting main confirmations
+        :param: obj: MenuContent Instance
+        :param: request: Request
+        :param: disabled: Boolean
+        :return: Url
+        """
+        main_navigation_url = reverse(
+            "admin:{app}_{model}_main_navigation".format(
+                app=obj._meta.app_label, model=obj._meta.model_name,
+            ),
+            args=[obj.pk],
+        )
+        if obj.menu.main_navigation:
+            disabled = True
+
+        return render_to_string(
+            "djangocms_navigation/admin/icons/main_navigation.html",
+            {"url": main_navigation_url, "disabled": disabled}
         )
 
     def get_menuitem_link(self, obj):
@@ -219,6 +256,7 @@ class MenuContentAdmin(ExtendedVersionAdminMixin, admin.ModelAdmin):
 class MenuItemAdmin(TreeAdmin):
     form = MenuItemForm
     menu_content_model = MenuContent
+    menu_model = Menu
     actions = None
     change_form_template = "admin/djangocms_navigation/menuitem/change_form.html"
     change_list_template = "admin/djangocms_navigation/menuitem/change_list.html"
@@ -297,6 +335,12 @@ class MenuItemAdmin(TreeAdmin):
                 r"^(?P<menu_content_id>\d+)/messages/$",
                 self.admin_site.admin_view(MessageStorageView.as_view()),
                 name="{}_{}_message_storage".format(*info),
+            ),
+            re_path(
+                r"^(?P<menu_content_id>\d+)/main_navigation/",
+                self.admin_site.admin_view(self.set_main_navigation_view),
+                name="{}_{}_main_navigation".format(self.model._meta.app_label,
+                                                    self.menu_content_model._meta.model_name)
             ),
         ]
 
@@ -473,6 +517,48 @@ class MenuItemAdmin(TreeAdmin):
             extra_context["versioning_enabled_for_nav"] = self._versioning_enabled
 
         return super().changelist_view(request, extra_context)
+
+    def set_main_navigation_view(self, request, menu_content_id):
+        """Sets the selected navigation as the main navigation, if possible,
+        and redirects to the changelist.
+        """
+        changelist_url = get_admin_url(self.menu_content_model, "changelist")
+        menu_content = get_object_or_404(
+            self.menu_content_model._base_manager, id=menu_content_id
+        )
+        menu = menu_content.menu
+        menu_queryset = self.menu_model._base_manager.filter(
+            site=menu.site,
+            main_navigation=True,
+            menucontent__language=menu_content.language,
+        )
+        if request.method != "POST":
+            # If this isn't a POST method, it is the first interaction, therefore redirect to confirmation
+            context = dict(
+                object_id=menu_content_id,
+                set_main_url=reverse(
+                    "admin:{app}_{model}_main_navigation".format(
+                        app=self.model._meta.app_label,
+                        model=self.menu_content_model._meta.model_name,
+                    ),
+                    args=(menu_content_id,),
+                ),
+                back_url=changelist_url,
+                extra_context=menu_queryset.values_list("identifier", flat=True),
+                menucontent=menu.identifier,
+            )
+            return render(
+                request, "djangocms_navigation/admin/main_navigation_confirmation.html", context
+            )
+        if request.method == "POST":
+            for obj in menu_queryset:
+                if obj.main_navigation:
+                    obj.main_navigation = False
+                    obj.save()
+            menu.main_navigation = True
+            menu.save()
+
+        return redirect(changelist_url)
 
     def _get_to_be_deleted_objects(self, menu_item, request):
         def _get_related_objects(menu_item):
