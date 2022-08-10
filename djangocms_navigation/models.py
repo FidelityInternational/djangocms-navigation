@@ -76,7 +76,6 @@ class MenuContent(AbstractMenuContent):
     root = models.OneToOneField(
         "djangocms_navigation.MenuItem", on_delete=models.PROTECT
     )
-    is_main_navigation = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
