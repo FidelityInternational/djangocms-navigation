@@ -105,6 +105,7 @@ class MenuContentAdmin(ExtendedVersionAdminMixin, admin.ModelAdmin):
             self._get_edit_link,
             self._get_manage_versions_link,
             self._get_references_link,
+            self._get_main_navigation_link,
         ]
 
     def get_list_display(self, request):

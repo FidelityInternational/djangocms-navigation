@@ -1404,8 +1404,13 @@ class MenuItemMainNavigationViewTestCase(CMSTestCase):
             response,
             f'<li class="info">You have set the navigation {expected_identifier} as the main navigation.</li>'
         )
+
+        # Refresh from db, since these instances won't have ipdates
+        original_menu.refresh_from_db()
+        new_menu_content.refresh_from_db()
+
         self.assertEqual(original_menu.main_navigation, False)
-        self.assertEqual(new_menu_content.main_navigation, True)
+        self.assertEqual(new_menu_content.menu.main_navigation, True)
 
     def test_make_main_navigation_view_without_existing_main_navigation(self):
         # Create another, without main_navigation set
@@ -1442,7 +1447,10 @@ class MenuItemMainNavigationViewTestCase(CMSTestCase):
             response,
             f'<li class="info">You have set the navigation {expected_identifier} as the main navigation.</li>'
         )
-        self.assertEqual(new_menu_content.main_navigation, True)
+
+        # Refresh from db as this instance won't have updated.
+        new_menu_content.refresh_from_db()
+        self.assertEqual(new_menu_content.menu.main_navigation, True)
 
 
 class MenuItemPermissionTestCase(CMSTestCase):
