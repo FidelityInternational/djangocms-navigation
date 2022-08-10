@@ -181,7 +181,7 @@ class MenuContentAdmin(ExtendedVersionAdminMixin, admin.ModelAdmin):
             disabled = True
 
         return render_to_string(
-            "djangocms_navigation/admin/icons/main_navigation.html",
+            "admin/djangocms_navigation/icons/main_navigation.html",
             {"url": main_navigation_url, "disabled": disabled}
         )
 
