@@ -254,10 +254,10 @@ class CMSMenuTestCase(CMSTestCase):
             list(roots), [menucontent_1.root, menucontent_2.root, menucontent_3.root]
         )
 
-    @override_settings(MAIN_NAVIGATION_ENABLED=True)
-    def test_get_roots_with_with_main_navigation_enabled(self):
-        """Check that when MAIN_NAVIGATION_ENABLED is True that the queryset of MenuContent objects is limited to only
-        objects where the associated Menu has been marked as the main navigation
+    @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=True)
+    def test_get_roots_with_with_DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED(self):
+        """Check that when DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED is True that the queryset of MenuContent objects
+        is limited to only objects where the associated Menu has been marked as the main navigation
         """
         not_main_navigation = factories.MenuContentWithVersionFactory(
             menu__main_navigation=False,
@@ -277,10 +277,10 @@ class CMSMenuTestCase(CMSTestCase):
         self.assertIn(main_navigation.root, roots)
         self.assertNotIn(not_main_navigation.root, roots)
 
-    @override_settings(MAIN_NAVIGATION_ENABLED=False)
+    @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=False)
     def test_get_roots_with_with_main_navigation_disabled(self):
-        """Check that when MAIN_NAVIGATION_ENABLED is False that the queryset of MenuItem objects returned contains
-        roots of all MenuContent objects
+        """Check that when DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED is False that the queryset of MenuItem objects
+        returned contains roots of all MenuContent objects
         """
         not_main_navigation = factories.MenuContentWithVersionFactory(
             menu__main_navigation=False,
@@ -1598,7 +1598,7 @@ class GetMainNavigationTestCase(CMSTestCase):
         self.assertIn(older, result)
 
 
-@override_settings(MAIN_NAVIGATION_ENABLED=True)
+@override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=True)
 class MainNavigationIntegrationTestCase(CMSTestCase):
     """
     Integration tests to check which navigation menu is displayed when having multiple Menu and MenuContent objects and
@@ -1707,11 +1707,11 @@ class MainNavigationIntegrationTestCase(CMSTestCase):
                 self.assertIn(self.first_menucontent_child.title, nav_tree.getText())
                 self.assertNotIn(self.second_menucontent_child.title, nav_tree.getText())
 
-    @override_settings(MAIN_NAVIGATION_ENABLED=False)
+    @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=False)
     def test_main_navigation_not_enabled(self):
         """
-        When the MAIN_NAVIGATION_ENABLED setting is False, the original MenuContent object and its child item is
-        displayed despite the second object being marked as the main navigation
+        When the DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED setting is False, the original MenuContent object and its
+        child item is displayed despite the second object being marked as the main navigation
         """
         self._make_main_navigation(self.second_menucontent)
 

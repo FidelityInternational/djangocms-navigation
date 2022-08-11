@@ -50,7 +50,7 @@ class CMSMenu(Menu):
                 inner_filter["versions__state__in"] += [DRAFT]
             menucontents = versionable.distinct_groupers(**inner_filter)
 
-            if getattr(settings, "MAIN_NAVIGATION_ENABLED", False):
+            if getattr(settings, "DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED", False):
                 menucontents = self.get_main_navigation(menucontents=menucontents)
 
             queryset = queryset.filter(menucontent__in=menucontents)
