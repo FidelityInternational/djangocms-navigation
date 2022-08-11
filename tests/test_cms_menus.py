@@ -259,7 +259,7 @@ class CMSMenuTestCase(CMSTestCase):
         )
 
     @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=True)
-    def test_get_roots_with_with_DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED(self):
+    def test_get_roots_with_with_main_navigation_enabled(self):
         """Check that when DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED is True that the queryset of MenuContent objects
         is limited to only objects where the associated Menu has been marked as the main navigation
         """

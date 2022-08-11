@@ -1,6 +1,6 @@
 {% extends "admin/base_site.html" %}
 {% load i18n admin_urls static %}
-{% block title %}{% trans "Revert Confirmation" %}{% endblock %}
+{% block title %}{% trans "Main Navigation Change Confirmation" %}{% endblock %}
 
 {% block extrahead %}
     {{ block.super }}
@@ -27,7 +27,7 @@
     {% endfor %}
 {% endif %}
 </ul>
-    <br>
+<br>
 <form action="" method="POST">
     {% csrf_token %}
     <input  class="button confirm-link js-versioning-keep-sideframe"
