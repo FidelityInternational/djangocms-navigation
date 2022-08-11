@@ -1588,15 +1588,15 @@ class GetMainNavigationTestCase(CMSTestCase):
         When multiple MenuContent objects are related to a Menu marked as the main navigation are found, all the
         MenuContent objects should be returned
         """
-        older = factories.MenuContentWithVersionFactory(language="en", menu__main_navigation=True)
-        newer = factories.MenuContentWithVersionFactory(language="en", menu__main_navigation=True)
+        older_menucontent = factories.MenuContentWithVersionFactory(language="en", menu__main_navigation=True)
+        newer_menucontent = factories.MenuContentWithVersionFactory(language="en", menu__main_navigation=True)
         all_menucontents = MenuContent._base_manager.all()
 
         result = self.menu.get_main_navigation(menucontents=all_menucontents)
 
         self.assertEqual(result.count(), 2)
-        self.assertIn(newer, result)
-        self.assertIn(older, result)
+        self.assertIn(newer_menucontent, result)
+        self.assertIn(older_menucontent, result)
 
 
 @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=True)
