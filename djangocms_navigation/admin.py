@@ -100,13 +100,17 @@ class MenuContentAdmin(ExtendedVersionAdminMixin, admin.ModelAdmin):
         return list_actions
 
     def get_list_actions(self):
-        return [
+        actions = [
             self._get_preview_link,
             self._get_edit_link,
             self._get_manage_versions_link,
             self._get_references_link,
-            self._get_main_navigation_link,
         ]
+
+        if getattr(settings, "DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED", False):
+            actions.append(self._get_main_navigation_link)
+
+        return actions
 
     def get_list_display(self, request):
         menu_content_list_display = ["title"]
@@ -545,6 +549,7 @@ class MenuItemAdmin(TreeAdmin):
             menu_queryset.update(main_navigation=False)
             menu.main_navigation = True
             menu.save()
+            purge_menu_cache(site_id=menu.site_id)
             self.message_user(
                 request, _(f"You have set the navigation {menu.identifier} as the main navigation.")
             )
@@ -553,7 +558,7 @@ class MenuItemAdmin(TreeAdmin):
         # If this isn't a POST method, it is the first interaction, therefore render confirmation
         extra_context = {}
         if menu_queryset:
-            extra_context = {"existing_menus": menu_queryset.values_list("identifier", flat=True)}
+            extra_context = {"existing_menus": menu_queryset.values_list("identifier", flat=True).distinct()}
         context = dict(
             object_id=menu_content_id,
             set_main_url=reverse(

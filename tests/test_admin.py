@@ -256,6 +256,27 @@ class MenuContentAdminViewTestCase(CMSTestCase):
             ['title', 'get_main_navigation', 'get_menuitem_link', 'get_preview_link']
         )
 
+    @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=False)
+    def test_get_list_actions_main_navigation_disabled(self):
+        """
+        When DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED is False, the actions should not contain the main navigation
+        link
+        """
+        menu_content_admin = MenuContentAdmin(MenuContent, admin.AdminSite())
+        actions = menu_content_admin.get_list_actions()
+
+        self.assertNotIn(menu_content_admin._get_main_navigation_link, actions)
+
+    @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=True)
+    def test_get_list_actions_main_navigation_enabled(self):
+        """
+        When DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED is True, the actions should contain the main navigation link
+        """
+        menu_content_admin = MenuContentAdmin(MenuContent, admin.AdminSite())
+        actions = menu_content_admin.get_list_actions()
+
+        self.assertIn(menu_content_admin._get_main_navigation_link, actions)
+
 
 class MenuItemModelAdminTestCase(TestCase):
     def setUp(self):
@@ -1363,7 +1384,8 @@ class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
 
 class MenuItemMainNavigationViewTestCase(CMSTestCase):
     @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=True)
-    def test_make_main_navigation_view_with_existing_main_navigation(self):
+    @patch("djangocms_navigation.admin.purge_menu_cache")
+    def test_make_main_navigation_view_with_existing_main_navigation(self, purge_menu_cache):
         """
         With a main navigation already set, change the provided to main, and unset the old main.
         """
@@ -1382,8 +1404,11 @@ class MenuItemMainNavigationViewTestCase(CMSTestCase):
         )
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(main_navigation_url)
+
         expected_identifier = new_menu_content.menu.identifier
 
+        # the call the purge_menu_cache is patched so that we can assert it was not called before confirming the change
+        purge_menu_cache.assert_not_called()
         # Verify that we have rendered the confirmation screen
         self.assertContains(
             response,
@@ -1408,6 +1433,8 @@ class MenuItemMainNavigationViewTestCase(CMSTestCase):
             f'<li class="info">You have set the navigation {expected_identifier} as the main navigation.</li>'
         )
 
+        # the call the purge_menu_cache is patched so that we can assert that it was called after confirming change
+        purge_menu_cache.assert_called_once_with(site_id=new_menu_content.menu.site.id)
         # Refresh from db, since these instances won't have updated.
         original_menu.refresh_from_db()
         new_menu_content.refresh_from_db()
