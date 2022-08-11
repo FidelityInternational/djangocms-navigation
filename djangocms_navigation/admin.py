@@ -520,8 +520,11 @@ class MenuItemAdmin(TreeAdmin):
         return super().changelist_view(request, extra_context)
 
     def set_main_navigation_view(self, request, menu_content_id):
-        """Sets the selected navigation as the main navigation, if possible,
-        and redirects to the changelist.
+        """Sets the selected navigation as the main navigation, and unsets existing, 404 if invalid menu_content
+        or setting not enabled
+        :param: request: Request Object
+        :param: menu_content_id: Integer PK for menucontent
+        :return: redirect or 404
         """
         # Raise a 404 if the main_navigation functionality is disabled.
         if not getattr(settings, "DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED", False):
