@@ -19,6 +19,7 @@ from djangocms_versioning.constants import (
 from djangocms_navigation.cms_menus import CMSMenu
 from djangocms_navigation.models import MenuContent
 from djangocms_navigation.test_utils import factories
+from djangocms_navigation.test_utils.helpers import get_nav_from_response, make_main_navigation
 
 from .utils import add_toolbar_to_request, disable_versioning_for_navigation
 
@@ -1630,22 +1631,6 @@ class MainNavigationIntegrationTestCase(CMSTestCase):
         )
         self.second_menucontent_child = factories.ChildMenuItemFactory(parent=self.second_menucontent.root)
 
-    def _get_nav_from_response(self, response):
-        """
-        Takes a response object and returns soup object of the navigation menu
-        """
-        return BeautifulSoup(str(response.content), features="lxml").find("ul", class_="nav")
-
-    def _make_main_navigation(self, menucontent):
-        """
-        Helper that takes a menucontent object, gets the related Menu grouper object, and marks it as the main
-        navigation menu. This is a change that would be made in the admin by a user, but we make the change directly to
-        the object for the purpose of the tests.
-        """
-        menu = menucontent.menu
-        menu.main_navigation = True
-        menu.save()
-
     def test_no_main_navigation(self):
         """
         When no main navigation exists, the first created MenuContent object and its child item are displayed
@@ -1657,7 +1642,7 @@ class MainNavigationIntegrationTestCase(CMSTestCase):
 
         for response in [edit_response, preview_response, live_response]:
             with self.subTest(response):
-                nav_tree = self._get_nav_from_response(response)
+                nav_tree = get_nav_from_response(response)
                 child_item = nav_tree.find("a")
 
                 self.assertEqual(child_item["href"], self.first_menucontent_child.content.get_absolute_url())
@@ -1668,7 +1653,7 @@ class MainNavigationIntegrationTestCase(CMSTestCase):
         """
         When the main navigation is changed this is now displayed in all responses
         """
-        self._make_main_navigation(self.second_menucontent)
+        make_main_navigation(self.second_menucontent)
 
         with self.login_user_context(self.get_superuser()):
             edit_response = self.client.get(self.edit_url)
@@ -1677,7 +1662,7 @@ class MainNavigationIntegrationTestCase(CMSTestCase):
 
         for response in [edit_response, preview_response, live_response]:
             with self.subTest(response):
-                nav_tree = self._get_nav_from_response(response)
+                nav_tree = get_nav_from_response(response)
                 child_item = nav_tree.find("a")
 
                 self.assertEqual(child_item["href"], self.second_menucontent_child.content.get_absolute_url())
@@ -1690,8 +1675,8 @@ class MainNavigationIntegrationTestCase(CMSTestCase):
         This matches original behaviour before main_navigation was added, but is intended as a fallback, as there should
         not be more than one object marked as the main navigation.
         """
-        self._make_main_navigation(self.first_menucontent)
-        self._make_main_navigation(self.second_menucontent)
+        make_main_navigation(self.first_menucontent)
+        make_main_navigation(self.second_menucontent)
 
         with self.login_user_context(self.get_superuser()):
             edit_response = self.client.get(self.edit_url)
@@ -1700,7 +1685,7 @@ class MainNavigationIntegrationTestCase(CMSTestCase):
 
         for response in [edit_response, preview_response, live_response]:
             with self.subTest(response):
-                nav_tree = self._get_nav_from_response(response)
+                nav_tree = get_nav_from_response(response)
                 child_item = nav_tree.find("a")
 
                 self.assertEqual(child_item["href"], self.first_menucontent_child.content.get_absolute_url())
@@ -1713,7 +1698,7 @@ class MainNavigationIntegrationTestCase(CMSTestCase):
         When the DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED setting is False, the original MenuContent object and its
         child item is displayed despite the second object being marked as the main navigation
         """
-        self._make_main_navigation(self.second_menucontent)
+        make_main_navigation(self.second_menucontent)
 
         with self.login_user_context(self.get_superuser()):
             edit_response = self.client.get(self.edit_url)
@@ -1722,7 +1707,7 @@ class MainNavigationIntegrationTestCase(CMSTestCase):
 
         for response in [edit_response, preview_response, live_response]:
             with self.subTest(response):
-                nav_tree = self._get_nav_from_response(response)
+                nav_tree = get_nav_from_response(response)
                 child_item = nav_tree.find("a")
 
                 self.assertEqual(child_item["href"], self.first_menucontent_child.content.get_absolute_url())
