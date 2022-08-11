@@ -58,9 +58,10 @@ class CMSMenu(Menu):
 
     def get_main_navigation(self, menucontents):
         """
-        Takes a queryset of MenuContent objects, filters to include only those flagged as main navigation, and returns a
-        queryset containing only the most recently modified object.
-        If there is no object marked as the main navigation, returns the queryset of MenuContent objects unchanged.
+        Takes a queryset of MenuContent objects, filters to include only those where the related Menu object has been
+        flagged as main navigation, and returns the queryset.
+        If this queryset is empty, because no Menu has been marked as the main navigation, the original queryset is
+        returned unchanged.
         """
         # main_navigation = menucontents.filter(menu__main_navigation=True).order_by("-versions__modified").first()
         main_navigation = menucontents.filter(menu__main_navigation=True)
