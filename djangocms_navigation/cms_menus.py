@@ -62,8 +62,9 @@ class CMSMenu(Menu):
         flagged as main navigation, and returns the queryset.
         If this queryset is empty, because no Menu has been marked as the main navigation, the original queryset is
         returned unchanged.
+
+        :param menucontents: A QuerySet of MenuContent instances
         """
-        # main_navigation = menucontents.filter(menu__main_navigation=True).order_by("-versions__modified").first()
         main_navigation = menucontents.filter(menu__main_navigation=True)
         if not main_navigation:
             return menucontents
