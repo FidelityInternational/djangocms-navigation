@@ -1,6 +1,6 @@
 from django.template import Template
 from django.template.context import Context
-from django.test import RequestFactory, override_settings
+from django.test import override_settings, RequestFactory
 
 from cms.test_utils.testcases import CMSTestCase
 from cms.test_utils.util.mock import AttributeObject
@@ -19,7 +19,10 @@ from djangocms_versioning.constants import (
 from djangocms_navigation.cms_menus import CMSMenu
 from djangocms_navigation.models import MenuContent
 from djangocms_navigation.test_utils import factories
-from djangocms_navigation.test_utils.helpers import get_nav_from_response, make_main_navigation
+from djangocms_navigation.test_utils.helpers import (
+    get_nav_from_response,
+    make_main_navigation,
+)
 
 from .utils import add_toolbar_to_request, disable_versioning_for_navigation
 
