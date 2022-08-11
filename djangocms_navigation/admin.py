@@ -550,7 +550,7 @@ class MenuItemAdmin(TreeAdmin):
             )
             return redirect(changelist_url)
 
-        # If this isn't a POST method, it is the first interaction, therefore redirect to confirmation
+        # If this isn't a POST method, it is the first interaction, therefore render confirmation
         extra_context = {}
         if menu_queryset:
             extra_context = {"existing_menus": menu_queryset.values_list("identifier", flat=True)}
