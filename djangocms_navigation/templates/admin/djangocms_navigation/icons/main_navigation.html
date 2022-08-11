@@ -8,7 +8,7 @@
 {% endif %}
         cms-navigation-action-btn
         cms-versioning-action-btn
-        {% if keepsideframe|default_if_none:True %}js-versioning-keep-sideframe {% else %}js-versioning-close-sideframe {% endif %}"
+        {% if keepsideframe|default_if_none:True %}js-versioning-keep-sideframe {% else %}js-versioning-close-sideframe {% endif %}
         {% if get|default_if_none:True %} cms-form-get-method {% endif %}"
 {% if not disabled %}
         href="{{ url }}"
