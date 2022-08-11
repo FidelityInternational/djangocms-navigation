@@ -1,6 +1,6 @@
 from django.template import Template
 from django.template.context import Context
-from django.test import override_settings, RequestFactory
+from django.test import RequestFactory, override_settings
 
 from cms.test_utils.testcases import CMSTestCase
 from cms.test_utils.util.mock import AttributeObject
