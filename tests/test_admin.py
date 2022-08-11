@@ -1408,7 +1408,7 @@ class MenuItemMainNavigationViewTestCase(CMSTestCase):
             f'<li class="info">You have set the navigation {expected_identifier} as the main navigation.</li>'
         )
 
-        # Refresh from db, since these instances won't have ipdates
+        # Refresh from db, since these instances won't have updated.
         original_menu.refresh_from_db()
         new_menu_content.refresh_from_db()
 
