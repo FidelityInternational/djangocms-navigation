@@ -9,7 +9,7 @@ from django.contrib.admin.utils import get_deleted_objects, quote
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
-from django.http import HttpResponseBadRequest, HttpResponseRedirect
+from django.http import Http404, HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
@@ -112,7 +112,7 @@ class MenuContentAdmin(ExtendedVersionAdminMixin, admin.ModelAdmin):
         menu_content_list_display = ["title"]
         versioning_enabled = is_versioning_enabled(self.model)
 
-        if getattr(settings, "MAIN_NAVIGATION_ENABLED", False):
+        if getattr(settings, "DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED", False):
             menu_content_list_display.extend(["get_main_navigation"])
 
         if versioning_enabled:
@@ -523,6 +523,10 @@ class MenuItemAdmin(TreeAdmin):
         """Sets the selected navigation as the main navigation, if possible,
         and redirects to the changelist.
         """
+        # Raise a 404 if the main_navigation functionality is disabled.
+        if not getattr(settings, "DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED", False):
+            raise Http404
+
         changelist_url = get_admin_url(self.menu_content_model, "changelist")
         menu_content = get_object_or_404(
             self.menu_content_model._base_manager, id=menu_content_id
@@ -533,36 +537,36 @@ class MenuItemAdmin(TreeAdmin):
             main_navigation=True,
             menucontent__language=menu_content.language,
         )
-        if request.method != "POST":
-            # If this isn't a POST method, it is the first interaction, therefore redirect to confirmation
-            context = dict(
-                object_id=menu_content_id,
-                set_main_url=reverse(
-                    "admin:{app}_{model}_main_navigation".format(
-                        app=self.model._meta.app_label,
-                        model=self.menu_content_model._meta.model_name,
-                    ),
-                    args=(menu_content_id,),
-                ),
-                back_url=changelist_url,
-                extra_context=menu_queryset.values_list("identifier", flat=True),
-                menucontent=menu.identifier,
-            )
-            return render(
-                request, "admin/djangocms_navigation/main_navigation_confirmation.html", context
-            )
         if request.method == "POST":
-            for obj in menu_queryset:
-                if obj.main_navigation:
-                    obj.main_navigation = False
-                    obj.save()
+            # If this is a POST method, then they have confirmed, change the main_navigation
+            menu_queryset.update(main_navigation=False)
             menu.main_navigation = True
             menu.save()
             self.message_user(
                 request, _(f"You have set the navigation {menu.identifier} as the main navigation.")
             )
+            return redirect(changelist_url)
 
-        return redirect(changelist_url)
+        # If this isn't a POST method, it is the first interaction, therefore redirect to confirmation
+        extra_context = {}
+        if menu_queryset:
+            extra_context = {"existing_menus": menu_queryset.values_list("identifier", flat=True)}
+        context = dict(
+            object_id=menu_content_id,
+            set_main_url=reverse(
+                "admin:{app}_{model}_main_navigation".format(
+                    app=self.model._meta.app_label,
+                    model=self.menu_content_model._meta.model_name,
+                ),
+                args=(menu_content_id,),
+            ),
+            back_url=changelist_url,
+            extra_context=extra_context,
+            menucontent=menu.identifier,
+        )
+        return render(
+            request, "admin/djangocms_navigation/main_navigation_confirmation.html", context
+        )
 
     def _get_to_be_deleted_objects(self, menu_item, request):
         def _get_related_objects(menu_item):

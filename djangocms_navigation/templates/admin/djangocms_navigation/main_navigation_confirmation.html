@@ -16,16 +16,16 @@
 <h3>{{ object_name }}</h3>
     <h4>{% blocktrans %}Are you sure you would like to set the menu: <u>{{ menucontent }}</u> as the main navigation?{% endblocktrans %}</h4>
 <div>
-{% if extra_context %}
-    <h4>By doing this, the existing main navigation below will no longer be the main navigation.</h4>
-{% endif %}
+{% if extra_context.existing_menus %}
+    <h4>By doing this, the existing navigation below will no longer be the main navigation.</h4>
 <br>
 <ul>
-    {% for menucontent_name in extra_context %}
+    {% for identifier in extra_context.existing_menus %}
         <li>
-        <p>{{menucontent_name}}</p>
+        <p>{{identifier}}</p>
         </li>
     {% endfor %}
+{% endif %}
 </ul>
     <br>
 <form action="" method="POST">
