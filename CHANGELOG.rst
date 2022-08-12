@@ -4,6 +4,9 @@ Changelog
 
 Unreleased
 ==========
+
+1.4.0 (2022-08-12)
+==================
 * feat: Main navigation, to allow the use of more than one navigation for a given site/language
 while preserving existing functionality.
 
