@@ -22,6 +22,7 @@ class AbstractMenu(models.Model):
     site = models.ForeignKey(Site, related_name="%(app_label)s_%(class)s_site",
                              on_delete=models.PROTECT)
     identifier = models.CharField(verbose_name=_("identifier"), max_length=100)
+    main_navigation = models.BooleanField(verbose_name=_("Main Navigation"), default=False)
 
     class Meta:
         abstract = True

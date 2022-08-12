@@ -241,6 +241,42 @@ class MenuContentAdminViewTestCase(CMSTestCase):
             menu_content_admin.get_list_display(request), ["title", "get_menuitem_link", "get_preview_link"]
         )
 
+    @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=True)
+    @patch('djangocms_navigation.admin.using_version_lock', False)
+    @disable_versioning_for_navigation()
+    def test_list_display_with_main_navigation(self):
+        request = self.get_request("/")
+        request.user = self.get_superuser()
+
+        menu_content_admin = MenuContentAdmin(MenuContent, admin.AdminSite())
+
+        self.assertEqual(len(menu_content_admin.get_list_display(request)), 4)
+        self.assertEqual(
+            menu_content_admin.get_list_display(request),
+            ['title', 'get_main_navigation', 'get_menuitem_link', 'get_preview_link']
+        )
+
+    @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=False)
+    def test_get_list_actions_main_navigation_disabled(self):
+        """
+        When DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED is False, the actions should not contain the main navigation
+        link
+        """
+        menu_content_admin = MenuContentAdmin(MenuContent, admin.AdminSite())
+        actions = menu_content_admin.get_list_actions()
+
+        self.assertNotIn(menu_content_admin._get_main_navigation_link, actions)
+
+    @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=True)
+    def test_get_list_actions_main_navigation_enabled(self):
+        """
+        When DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED is True, the actions should contain the main navigation link
+        """
+        menu_content_admin = MenuContentAdmin(MenuContent, admin.AdminSite())
+        actions = menu_content_admin.get_list_actions()
+
+        self.assertIn(menu_content_admin._get_main_navigation_link, actions)
+
 
 class MenuItemModelAdminTestCase(TestCase):
     def setUp(self):
@@ -1344,6 +1380,146 @@ class MenuItemAdminMoveNodeViewTestCase(CMSTestCase):
         child.refresh_from_db()
         child_of_child.refresh_from_db()
         self.assertFalse(child_of_child.is_sibling_of(child))
+
+
+class MenuItemMainNavigationViewTestCase(CMSTestCase):
+    @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=True)
+    @patch("djangocms_navigation.admin.purge_menu_cache")
+    def test_make_main_navigation_view_with_existing_main_navigation(self, purge_menu_cache):
+        """
+        With a main navigation already set, change the provided to main, and unset the old main.
+        """
+        # Create a menucontent, with a menu that is already the main navigation
+        original_menu_content = factories.MenuContentWithVersionFactory(language="en")
+        original_menu = original_menu_content.menu
+        original_menu.main_navigation = True
+        original_menu.save()
+        # Create another, without main_navigation set
+        new_menu_content = factories.MenuContentWithVersionFactory(language="en")
+        main_navigation_url = reverse(
+            "admin:{app}_{model}_main_navigation".format(
+                app=new_menu_content._meta.app_label, model=new_menu_content._meta.model_name,
+            ),
+            args=[new_menu_content.pk],
+        )
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(main_navigation_url)
+
+        expected_identifier = new_menu_content.menu.identifier
+
+        # the call the purge_menu_cache is patched so that we can assert it was not called before confirming the change
+        purge_menu_cache.assert_not_called()
+        # Verify that we have rendered the confirmation screen
+        self.assertContains(
+            response,
+            (
+                f"<h4>Are you sure you would like to set the menu: <u>{expected_identifier}</u>"
+                " as the main navigation?</h4>"
+            )
+        )
+        self.assertContains(
+            response,
+            "<h4>By doing this, the existing navigation below will no longer be the main navigation.</h4>"
+        )
+        self.assertContains(
+            response, f"<p>{original_menu.identifier}</p>"
+        )
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.post(main_navigation_url, follow=True)
+
+        self.assertContains(
+            response,
+            f'<li class="info">You have set the navigation {expected_identifier} as the main navigation.</li>'
+        )
+
+        # the call the purge_menu_cache is patched so that we can assert that it was called after confirming change
+        purge_menu_cache.assert_called_once_with(site_id=new_menu_content.menu.site.id)
+        # Refresh from db, since these instances won't have updated.
+        original_menu.refresh_from_db()
+        new_menu_content.refresh_from_db()
+
+        self.assertEqual(original_menu.main_navigation, False)
+        self.assertEqual(new_menu_content.menu.main_navigation, True)
+
+    @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=True)
+    def test_make_main_navigation_view_without_existing_main_navigation(self):
+        """
+        With no other main navigation, set the provided menucontent to the main navigation.
+        """
+        # Create a menucontent
+        new_menu_content = factories.MenuContentWithVersionFactory(language="en")
+        main_navigation_url = reverse(
+            "admin:{app}_{model}_main_navigation".format(
+                app=new_menu_content._meta.app_label, model=new_menu_content._meta.model_name,
+            ),
+            args=[new_menu_content.pk],
+        )
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(main_navigation_url)
+        expected_identifier = new_menu_content.menu.identifier
+
+        # Verify that we have rendered the confirmation screen
+        self.assertContains(
+            response,
+            (
+                f"<h4>Are you sure you would like to set the menu: <u>{expected_identifier}</u>"
+                " as the main navigation?</h4>"
+            )
+        )
+        # No need to warn users if there is no other main navigation
+        self.assertNotContains(
+            response,
+            "<h4>By doing this, the existing main navigation below will no longer be the main navigation.</h4>"
+        )
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.post(main_navigation_url, follow=True)
+
+        self.assertContains(
+            response,
+            f'<li class="info">You have set the navigation {expected_identifier} as the main navigation.</li>'
+        )
+
+        # Refresh from db as this instance won't have updated.
+        new_menu_content.refresh_from_db()
+        self.assertEqual(new_menu_content.menu.main_navigation, True)
+
+    @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=False)
+    def test_make_navigation_view_throws_error_when_disabled(self):
+        """
+        With DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED set False, raise a 404 when the view is accessed.
+        """
+        menu_content = factories.MenuContentWithVersionFactory(language="en")
+        main_navigation_url = reverse(
+            "admin:{app}_{model}_main_navigation".format(
+                app=menu_content._meta.app_label, model=menu_content._meta.model_name,
+            ),
+            args=[menu_content.pk],
+        )
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(main_navigation_url)
+
+        self.assertEqual(response.status_code, 404)
+
+    @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=True)
+    def test_make_navigation_view_throws_error_invalid_menucontent(self):
+        """
+        With an invalid MenuContent ID, raise 404.
+        """
+        # Generate a main_navigation url with an invalid MenuContent ID
+        main_navigation_url = reverse(
+            "admin:{app}_{model}_main_navigation".format(
+                app=MenuContent._meta.app_label, model=MenuContent._meta.model_name,
+            ),
+            args=[111],
+        )
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(main_navigation_url)
+
+        self.assertEqual(response.status_code, 404)
 
 
 class MenuItemPermissionTestCase(CMSTestCase):

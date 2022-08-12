@@ -1,6 +1,6 @@
 from django.template import Template
 from django.template.context import Context
-from django.test import RequestFactory
+from django.test import RequestFactory, override_settings
 
 from cms.test_utils.testcases import CMSTestCase
 from cms.test_utils.util.mock import AttributeObject
@@ -17,7 +17,12 @@ from djangocms_versioning.constants import (
 )
 
 from djangocms_navigation.cms_menus import CMSMenu
+from djangocms_navigation.models import MenuContent
 from djangocms_navigation.test_utils import factories
+from djangocms_navigation.test_utils.helpers import (
+    get_nav_from_response,
+    make_main_navigation,
+)
 
 from .utils import add_toolbar_to_request, disable_versioning_for_navigation
 
@@ -252,6 +257,53 @@ class CMSMenuTestCase(CMSTestCase):
         self.assertListEqual(
             list(roots), [menucontent_1.root, menucontent_2.root, menucontent_3.root]
         )
+
+    @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=True)
+    def test_get_roots_with_with_main_navigation_enabled(self):
+        """Check that when DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED is True that the queryset of MenuContent objects
+        is limited to only objects where the associated Menu has been marked as the main navigation
+        """
+        not_main_navigation = factories.MenuContentWithVersionFactory(
+            menu__main_navigation=False,
+            version__state=PUBLISHED,
+            language=self.language,
+        )
+        main_navigation = factories.MenuContentWithVersionFactory(
+            menu__main_navigation=True,
+            version__state=PUBLISHED,
+            language=self.language,
+        )
+        menu = CMSMenu(self.renderer)
+
+        roots = list(menu.get_roots(self.request))
+
+        self.assertEqual(len(roots), 1)
+        self.assertIn(main_navigation.root, roots)
+        self.assertNotIn(not_main_navigation.root, roots)
+
+    @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=False)
+    def test_get_roots_with_with_main_navigation_disabled(self):
+        """Check that when DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED is False that the queryset of MenuItem objects
+        returned contains roots of all MenuContent objects
+        """
+        not_main_navigation = factories.MenuContentWithVersionFactory(
+            menu__main_navigation=False,
+            version__state=PUBLISHED,
+            language=self.language,
+        )
+        main_navigation = factories.MenuContentWithVersionFactory(
+            menu__main_navigation=True,
+            version__state=PUBLISHED,
+            language=self.language,
+        )
+        menu = CMSMenu(self.renderer)
+
+        roots = list(menu.get_roots(self.request))
+
+        self.assertEqual(len(roots), 2)
+        self.assertIn(main_navigation.root, roots)
+        self.assertIn(not_main_navigation.root, roots)
+        self.assertListEqual(roots, [not_main_navigation.root, main_navigation.root])
 
     def test_draft_menu_on_draft_page(self):
         """
@@ -1495,3 +1547,172 @@ class MultisiteNavigationTests(CMSTestCase):
         ]
 
         self.assertTreeQuality(context_it['children'], mock_it_tree, 'title')
+
+
+class GetMainNavigationTestCase(CMSTestCase):
+
+    def setUp(self):
+        self.request = RequestFactory().get("/")
+        self.user = factories.UserFactory()
+        self.request.user = self.user
+        self.renderer = menu_pool.get_renderer(self.request)
+        self.menu = CMSMenu(self.renderer)
+
+    def test_main_navigation_found(self):
+        """
+        When passed a queryset of multiple MenuContent objects, and one is related to a Menu that is marked as the main
+        navigation, the returned queryset should only contain the MenuContent related to the main navigation
+        """
+        not_main_navigation = factories.MenuContentFactory(language="en", menu__main_navigation=False)
+        main_navigation = factories.MenuContentFactory(language="en", menu__main_navigation=True)
+        all_menucontents = MenuContent._base_manager.all()
+
+        result = self.menu.get_main_navigation(menucontents=all_menucontents)
+
+        self.assertEqual(result.count(), 1)
+        self.assertIn(main_navigation, result)
+        self.assertNotIn(not_main_navigation, result)
+
+    def test_main_navigation_not_found(self):
+        """
+        When none of the MenuContent objects are related to a Menu marked as the main navigation, the queryset is
+        returned unchanged
+        """
+        factories.MenuContentFactory.create_batch(2, language="en", menu__main_navigation=False)
+        all_menucontents = MenuContent._base_manager.all()
+
+        result = self.menu.get_main_navigation(menucontents=all_menucontents)
+
+        self.assertEqual(result, all_menucontents)
+        self.assertEqual(all_menucontents.count(), result.count())
+
+    def test_multiple_main_navigation(self):
+        """
+        When multiple MenuContent objects are related to a Menu marked as the main navigation are found, all the
+        MenuContent objects should be returned
+        """
+        older_menucontent = factories.MenuContentWithVersionFactory(language="en", menu__main_navigation=True)
+        newer_menucontent = factories.MenuContentWithVersionFactory(language="en", menu__main_navigation=True)
+        all_menucontents = MenuContent._base_manager.all()
+
+        result = self.menu.get_main_navigation(menucontents=all_menucontents)
+
+        self.assertEqual(result.count(), 2)
+        self.assertIn(newer_menucontent, result)
+        self.assertIn(older_menucontent, result)
+
+
+@override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=True)
+class MainNavigationIntegrationTestCase(CMSTestCase):
+    """
+    Integration tests to check which navigation menu is displayed when having multiple Menu and MenuContent objects and
+    going through the steps to mark one as the main navigation
+    """
+    def setUp(self):
+        # create a page and urls we can use to make a request with the test client
+        self.pagecontent = factories.PageContentWithVersionFactory(
+            language="en",
+            version__created_by=self.get_superuser(),
+            version__state=PUBLISHED,
+        )
+        self.live_url = self.pagecontent.get_absolute_url()
+        self.edit_url = get_object_edit_url(self.pagecontent, language="en")
+        self.preview_url = get_object_preview_url(self.pagecontent, language="en")
+        # create two menus, neither marked as the main navigation
+        self.first_menucontent = factories.MenuContentWithVersionFactory(
+            language="en",
+            version__state=PUBLISHED,
+            menu__main_navigation=False,
+            menu__site_id=1,
+        )
+        self.first_menucontent_child = factories.ChildMenuItemFactory(parent=self.first_menucontent.root)
+        self.second_menucontent = factories.MenuContentWithVersionFactory(
+            language="en",
+            version__state=PUBLISHED,
+            menu__main_navigation=False,
+            menu__site_id=1,
+        )
+        self.second_menucontent_child = factories.ChildMenuItemFactory(parent=self.second_menucontent.root)
+
+    def test_no_main_navigation(self):
+        """
+        When no main navigation exists, the first created MenuContent object and its child item are displayed
+        """
+        with self.login_user_context(self.get_superuser()):
+            edit_response = self.client.get(self.edit_url)
+            preview_response = self.client.get(self.preview_url)
+            live_response = self.client.get(self.live_url)
+
+        for response in [edit_response, preview_response, live_response]:
+            with self.subTest(response):
+                nav_tree = get_nav_from_response(response)
+                child_item = nav_tree.find("a")
+
+                self.assertEqual(child_item["href"], self.first_menucontent_child.content.get_absolute_url())
+                self.assertIn(self.first_menucontent_child.title, nav_tree.getText())
+                self.assertNotIn(self.second_menucontent_child.title, nav_tree.getText())
+
+    def test_main_navigation_changed(self):
+        """
+        When the main navigation is changed this is now displayed in all responses
+        """
+        make_main_navigation(self.second_menucontent)
+
+        with self.login_user_context(self.get_superuser()):
+            edit_response = self.client.get(self.edit_url)
+            preview_response = self.client.get(self.preview_url)
+            live_response = self.client.get(self.live_url)
+
+        for response in [edit_response, preview_response, live_response]:
+            with self.subTest(response):
+                nav_tree = get_nav_from_response(response)
+                child_item = nav_tree.find("a")
+
+                self.assertEqual(child_item["href"], self.second_menucontent_child.content.get_absolute_url())
+                self.assertIn(self.second_menucontent_child.title, nav_tree.getText())
+                self.assertNotIn(self.first_menucontent_child.title, nav_tree.getText())
+
+    def test_both_main_navigation(self):
+        """
+        When both are set as main navigation, the first created MenuContent object and its child is displayed.
+        This matches original behaviour before main_navigation was added, but is intended as a fallback, as there should
+        not be more than one object marked as the main navigation.
+        """
+        make_main_navigation(self.first_menucontent)
+        make_main_navigation(self.second_menucontent)
+
+        with self.login_user_context(self.get_superuser()):
+            edit_response = self.client.get(self.edit_url)
+            preview_response = self.client.get(self.preview_url)
+            live_response = self.client.get(self.live_url)
+
+        for response in [edit_response, preview_response, live_response]:
+            with self.subTest(response):
+                nav_tree = get_nav_from_response(response)
+                child_item = nav_tree.find("a")
+
+                self.assertEqual(child_item["href"], self.first_menucontent_child.content.get_absolute_url())
+                self.assertIn(self.first_menucontent_child.title, nav_tree.getText())
+                self.assertNotIn(self.second_menucontent_child.title, nav_tree.getText())
+
+    @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=False)
+    def test_main_navigation_not_enabled(self):
+        """
+        When the DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED setting is False, the original MenuContent object and its
+        child item is displayed despite the second object being marked as the main navigation
+        """
+        make_main_navigation(self.second_menucontent)
+
+        with self.login_user_context(self.get_superuser()):
+            edit_response = self.client.get(self.edit_url)
+            preview_response = self.client.get(self.preview_url)
+            live_response = self.client.get(self.live_url)
+
+        for response in [edit_response, preview_response, live_response]:
+            with self.subTest(response):
+                nav_tree = get_nav_from_response(response)
+                child_item = nav_tree.find("a")
+
+                self.assertEqual(child_item["href"], self.first_menucontent_child.content.get_absolute_url())
+                self.assertIn(self.first_menucontent_child.title, nav_tree.getText())
+                self.assertNotIn(self.second_menucontent_child.title, nav_tree.getText())

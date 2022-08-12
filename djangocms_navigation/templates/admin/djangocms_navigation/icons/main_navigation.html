@@ -1,0 +1,19 @@
+{% spaceless %}
+{% load i18n static %}
+<a
+        title="Make Main Navigation"
+        class="btn
+{% if disabled %}
+        inactive
+{% endif %}
+        cms-navigation-action-btn
+        cms-versioning-action-btn
+        {% if keepsideframe|default_if_none:True %}js-versioning-keep-sideframe {% else %}js-versioning-close-sideframe {% endif %}
+        {% if get|default_if_none:True %} cms-form-get-method {% endif %}"
+{% if not disabled %}
+        href="{{ url }}"
+{% endif %}
+>
+    <img src="{% static 'djangocms_navigation/svg/home.svg' %}">
+</a>
+{% endspaceless %}

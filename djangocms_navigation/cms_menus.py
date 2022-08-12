@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db.models import Q
 
 from cms.cms_menus import CMSMenu as OriginalCMSMenu
@@ -48,8 +49,26 @@ class CMSMenu(Menu):
             if hasattr(request, "toolbar") and request.toolbar.edit_mode_active:
                 inner_filter["versions__state__in"] += [DRAFT]
             menucontents = versionable.distinct_groupers(**inner_filter)
+
+            if getattr(settings, "DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED", False):
+                menucontents = self.get_main_navigation(menucontents=menucontents)
+
             queryset = queryset.filter(menucontent__in=menucontents)
         return queryset
+
+    def get_main_navigation(self, menucontents):
+        """
+        Takes a queryset of MenuContent objects, filters to include only those where the related Menu object has been
+        flagged as main navigation, and returns the queryset.
+        If this queryset is empty, because no Menu has been marked as the main navigation, the original queryset is
+        returned unchanged.
+
+        :param menucontents: A QuerySet of MenuContent instances
+        """
+        main_navigation = menucontents.filter(menu__main_navigation=True)
+        if not main_navigation:
+            return menucontents
+        return main_navigation
 
     def get_menu_nodes(self, roots):
         root_paths = roots.values_list("path", flat=True)
