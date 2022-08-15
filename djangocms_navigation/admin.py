@@ -29,6 +29,7 @@ from treebeard.admin import TreeAdmin
 from .conf import TREE_MAX_RESULT_PER_PAGE_COUNT
 from .filters import LanguageFilter
 from .forms import MenuContentForm, MenuItemForm
+from .helpers import is_preview_url
 from .models import Menu, MenuContent, MenuItem
 from .utils import is_versioning_enabled, purge_menu_cache, reverse_admin_name
 from .views import (
@@ -330,10 +331,7 @@ class MenuItemAdmin(TreeAdmin):
             ),
             re_path(
                 r"^(?P<menu_content_id>\d+)/preview/$",
-                self.admin_site.admin_view(MenuContentPreviewView.as_view(
-                    menu_content_model=self.menu_content_model,
-                    menu_item_model=self.model,
-                )),
+                self.admin_site.admin_view(self.changelist_view),
                 name="{}_{}_preview".format(*info),
             ),
             re_path(
@@ -351,6 +349,10 @@ class MenuItemAdmin(TreeAdmin):
 
     def get_list_display(self, request):
         list_display = ["__str__", "get_object_url", "soft_root", 'hide_node']
+
+        if is_preview_url(request):
+            return list_display
+
         list_display.extend([self._list_actions(request)])
         return list_display
 
@@ -502,7 +504,18 @@ class MenuItemAdmin(TreeAdmin):
         else:
             return False
 
+    def get_changelist_template(self, request):
+        """Returns the correct template for the request. The preview template is a stripped back readonly version of the
+        standard change list template.
+        :param: request: Request Object
+        :return: a string to the correct template
+        """
+        if is_preview_url(request=request):
+            return "admin/djangocms_navigation/menuitem/preview.html"
+        return "admin/djangocms_navigation/menuitem/change_list.html"
+
     def changelist_view(self, request, menu_content_id=None, extra_context=None):
+        self.change_list_template = self.get_changelist_template(request=request)
         extra_context = extra_context or {}
 
         if menu_content_id:
@@ -517,7 +530,11 @@ class MenuItemAdmin(TreeAdmin):
                 except ConditionFailed as error:
                     messages.error(request, str(error))
                     return HttpResponseRedirect(version_list_url(menu_content))
-            extra_context["title"] = "Edit Menu: {}".format(menu_content.__str__())
+
+            extra_context["title"] = "{} Menu: {}".format(
+                "Preview" if is_preview_url(request) else "Edit",
+                menu_content.__str__()
+            )
             extra_context["menu_content"] = menu_content
             extra_context["versioning_enabled_for_nav"] = self._versioning_enabled
 

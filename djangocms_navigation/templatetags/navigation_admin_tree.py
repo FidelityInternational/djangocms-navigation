@@ -12,6 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from treebeard.templatetags import admin_tree, needs_checkboxes
 from treebeard.templatetags.admin_tree import check_empty_dict, results
 
+from djangocms_navigation.helpers import is_preview_url
 
 register = template.Library()
 
@@ -66,11 +67,17 @@ def result_tree(context, cl, request):
         'tooltip': _('Toggle expand/collapse all'),
         'class_attrib': mark_safe(' class="expand-all"')
     })
+
+    # if this is the preview view, we still want the collapsible navigation to be usable, but the drag drop feature
+    # should be disabled as this the preview view is readonly
+    disable_drag_drop = is_preview_url(request=request)
+
     return {
         'filtered': not check_empty_dict(request.GET),
         'result_hidden_fields': list(result_hidden_fields(cl)),
         'result_headers': headers,
         'results': list(results(cl)),
+        'disable_drag_drop': disable_drag_drop,
     }
 
 
