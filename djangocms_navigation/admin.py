@@ -32,11 +32,7 @@ from .forms import MenuContentForm, MenuItemForm
 from .helpers import is_preview_url
 from .models import Menu, MenuContent, MenuItem
 from .utils import is_versioning_enabled, purge_menu_cache, reverse_admin_name
-from .views import (
-    ContentObjectSelect2View,
-    MenuContentPreviewView,
-    MessageStorageView,
-)
+from .views import ContentObjectSelect2View, MessageStorageView
 
 
 try:

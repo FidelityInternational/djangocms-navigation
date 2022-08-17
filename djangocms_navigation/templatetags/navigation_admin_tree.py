@@ -14,6 +14,7 @@ from treebeard.templatetags.admin_tree import check_empty_dict, results
 
 from djangocms_navigation.helpers import is_preview_url
 
+
 register = template.Library()
 
 """
