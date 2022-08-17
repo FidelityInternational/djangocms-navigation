@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.test import RequestFactory
 
 from cms.test_utils.testcases import CMSTestCase
 from cms.test_utils.util.fuzzy_int import FuzzyInt

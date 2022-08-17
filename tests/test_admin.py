@@ -10,7 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
 from django.contrib.sites.models import Site
 from django.shortcuts import reverse
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory
 from django.test.utils import override_settings
 from django.utils.translation import gettext_lazy as _
 
@@ -332,6 +332,22 @@ class MenuItemModelAdminTestCase(CMSTestCase):
             list_display,
             ['__str__', 'get_object_url', 'soft_root', 'hide_node', "list_actions"]
         )
+
+    def test_get_changelist_template(self):
+        """
+        Check the template is the standard change list template
+        """
+        request = self.get_request("/admin/djangocms_navigation/menuitem/1/")
+        result = self.model_admin.get_changelist_template(request=request)
+        self.assertEqual(result, "admin/djangocms_navigation/menuitem/change_list.html")
+
+    def test_get_changelist_template_preview(self):
+        """
+        Check the template is the preview template
+        """
+        request = self.get_request("/admin/djangocms_navigation/menuitem/1/preview/")
+        result = self.model_admin.get_changelist_template(request=request)
+        self.assertEqual(result, "admin/djangocms_navigation/menuitem/preview.html")
 
 
 class MenuItemAdminVersionLocked(CMSTestCase, UsefulAssertsMixin):
