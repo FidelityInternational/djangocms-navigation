@@ -714,7 +714,11 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
     def test_menuitem_changelist_should_have_get_url_column(self):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
-        mock_request = RequestFactory()
+        mock_request = RequestFactory().get(
+            reverse(
+                "admin:djangocms_navigation_menuitem_list", args=(version.content.id,)
+            )
+        )
         ma = MenuItemAdmin(MenuItem, admin.AdminSite())
         add_url = reverse(
             "admin:djangocms_navigation_menuitem_add", args=(version.content.id,)

@@ -2,10 +2,11 @@ from django.conf import settings
 
 from cms.test_utils.testcases import CMSTestCase
 from cms.test_utils.util.fuzzy_int import FuzzyInt
+from django.test import RequestFactory
 
 from djangocms_versioning.constants import PUBLISHED
 
-from djangocms_navigation.helpers import get_navigation_node_for_content_object
+from djangocms_navigation.helpers import get_navigation_node_for_content_object, is_preview_url
 from djangocms_navigation.test_utils import factories
 from djangocms_navigation.test_utils.polls.models import Poll, PollContent
 
@@ -166,3 +167,23 @@ class TestNavigationPerformance(CMSTestCase):
         child3.soft_root = True
         with self.assertNumQueries(FuzzyInt(3, max_queries)):
             self.client.get(page_url)
+
+
+class TestIsPreviewUrl(CMSTestCase):
+
+    def setUp(self):
+        self.request_factory = RequestFactory()
+
+    def test_is_preview(self):
+        """
+        Given a request for a url containing '/preview/' True should be returned
+        """
+        request = self.request_factory.get("/admin/djangocms_navigation/menuitem/1/preview/")
+        self.assertTrue(is_preview_url(request))
+
+    def test_is_not_preview(self):
+        """
+        Given a request for a url that does not contain '/preview/' False should be returned
+        """
+        request = self.request_factory.get("/admin/djangocms_navigation/menuitem/1/")
+        self.assertFalse(is_preview_url(request))
