@@ -278,7 +278,7 @@ class MenuContentAdminViewTestCase(CMSTestCase):
         self.assertIn(menu_content_admin._get_main_navigation_link, actions)
 
 
-class MenuItemModelAdminTestCase(TestCase):
+class MenuItemModelAdminTestCase(CMSTestCase):
     def setUp(self):
         self.site = admin.AdminSite()
         self.site.register(MenuItem, MenuItemAdmin)
@@ -299,6 +299,38 @@ class MenuItemModelAdminTestCase(TestCase):
 
         self.assertQuerysetEqual(
             queryset, [menu_contents[0].root.pk, child_item.pk], lambda o: o.pk
+        )
+
+    def test_get_list_display_for_preview_url(self):
+        """
+        The list actions should not be included in the list display for a preview url
+        """
+        request = self.get_request("/admin/djangocms_navigation/menuitem/1/preview/")
+        request.user = self.get_superuser()
+
+        self.assertEqual(len(self.model_admin.get_list_display(request)), 4)
+        self.assertEqual(
+            self.model_admin.get_list_display(request),
+            ['__str__', 'get_object_url', 'soft_root', 'hide_node']
+        )
+
+    def test_get_list_display(self):
+        """
+        The list actions should be included when not a preview url
+        """
+        request = self.get_request("/admin/djangocms_navigation/menuitem/1/")
+        request.user = self.get_superuser()
+
+        # patch the _list_actions call to return something we can assert against
+        with patch.object(self.model_admin, "_list_actions") as mock_list_actions:
+            mock_list_actions.return_value = "list_actions"
+            list_display = self.model_admin.get_list_display(request)
+
+        mock_list_actions.assert_called_once_with(request)
+        self.assertEqual(len(list_display), 5)
+        self.assertEqual(
+            list_display,
+            ['__str__', 'get_object_url', 'soft_root', 'hide_node', "list_actions"]
         )
 
 

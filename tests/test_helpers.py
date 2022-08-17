@@ -174,19 +174,16 @@ class TestNavigationPerformance(CMSTestCase):
 
 class TestIsPreviewUrl(CMSTestCase):
 
-    def setUp(self):
-        self.request_factory = RequestFactory()
-
     def test_is_preview(self):
         """
         Given a request for a url containing '/preview/' True should be returned
         """
-        request = self.request_factory.get("/admin/djangocms_navigation/menuitem/1/preview/")
+        request = self.get_request("/admin/djangocms_navigation/menuitem/1/preview/")
         self.assertTrue(is_preview_url(request))
 
     def test_is_not_preview(self):
         """
         Given a request for a url that does not contain '/preview/' False should be returned
         """
-        request = self.request_factory.get("/admin/djangocms_navigation/menuitem/1/")
+        request = self.get_request("/admin/djangocms_navigation/menuitem/1/")
         self.assertFalse(is_preview_url(request))
