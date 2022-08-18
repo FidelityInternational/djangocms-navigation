@@ -861,6 +861,71 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
         )
 
 
+class MenuItemAdminPreviewTestCase(CMSTestCase):
+
+    def setUp(self):
+        self.client.force_login(self.get_superuser())
+        self.menu_content = factories.MenuContentWithVersionFactory()
+        factories.ChildMenuItemFactory.create_batch(5, parent=self.menu_content.root)
+        self.preview_url = reverse(
+            "admin:djangocms_navigation_menuitem_preview", args=(self.menu_content.id,)
+        )
+
+    def test_menuitem_preview_response(self):
+        """
+        Check that the response only has the expected actions and buttons
+        """
+        response = self.client.get(self.preview_url)
+
+        soup = BeautifulSoup(str(response.content), features="lxml")
+        content_element = soup.find(id="content")
+        title = content_element.find("h1").text
+        buttons = content_element.find(class_="object-tools").find("li").find("a")
+        changelist_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(self.menu_content.id,)
+        )
+        add_url = reverse(
+            "admin:djangocms_navigation_menuitem_add", args=(self.menu_content.id,)
+        )
+        disable_drag_drop = content_element.find(id="disable-drag-drop")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Add menu item")
+        self.assertNotContains(response, add_url)
+        self.assertNotContains(response, "Versions")
+        self.assertNotContains(response, "Actions")
+        self.assertEqual(title, f"Preview Menu: {self.menu_content.title}")
+        self.assertEqual(len(buttons), 1)
+        self.assertEqual(buttons["href"], changelist_url)
+        self.assertEqual(disable_drag_drop["value"], "1")
+
+    def test_menuitem_preview_check_for_expand_all(self):
+        """
+        Check that the expand / collapse all controls are present.
+        """
+        response = self.client.get(self.preview_url)
+
+        soup = BeautifulSoup(str(response.content), features="lxml")
+        element = soup.find("th", class_="expand-all")
+        link = element.find("a")
+
+        self.assertIsNotNone(element)
+        self.assertEqual(_('Toggle expand/collapse all'), link['title'])
+        self.assertIn('+', link.string)
+
+    def test_menuitem_preview_title_in_context(self):
+        """
+        Check that the correct title is in the response context
+        """
+        model_admin = MenuItemAdmin(MenuItem, admin.AdminSite())
+        request = self.get_request("/admin/djangocms_navigation/menuitem/1/preview/")
+        request.user = self.get_superuser()
+        menu_content = factories.MenuContentWithVersionFactory()
+
+        response = model_admin.changelist_view(request=request, menu_content_id=menu_content.pk)
+        self.assertEqual(response.context_data["title"], f"Preview Menu: {menu_content.title}")
+
+
 class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
     def setUp(self):
         self.client.force_login(self.get_superuser())
