@@ -861,7 +861,7 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
         )
 
 
-class MenuItemAdminPreviewTestCase(CMSTestCase):
+class MenuItemAdminPreviewViewTestCase(CMSTestCase):
 
     def setUp(self):
         self.client.force_login(self.get_superuser())
@@ -871,9 +871,45 @@ class MenuItemAdminPreviewTestCase(CMSTestCase):
             "admin:djangocms_navigation_menuitem_preview", args=(self.menu_content.id,)
         )
 
-    def test_menuitem_preview_response(self):
+    def test_add_item_link_not_present(self):
         """
-        Check that the response only has the expected actions and buttons
+        Check the button to add an item is not present
+        """
+        response = self.client.get(self.preview_url)
+        add_url = reverse(
+            "admin:djangocms_navigation_menuitem_add", args=(self.menu_content.id,)
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Add menu item")
+        self.assertNotContains(response, add_url)
+
+    def test_versions_link_not_present(self):
+        """
+        Check the button to view versions is not present
+        """
+        response = self.client.get(self.preview_url)
+        version_url = version_list_url(self.menu_content)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Versions")
+        self.assertNotContains(response, version_url)
+
+    def test_actions_not_present(self):
+        """
+        Check that the Actions column is not present
+        """
+        response = self.client.get(self.preview_url)
+        soup = BeautifulSoup(str(response.content), features="lxml")
+        actions = soup.find(class_="column-list_actions")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Actions")
+        self.assertIsNone(actions)
+
+    def test_menuitem_preview_response_content(self):
+        """
+        Check that the response content only has the expected actions and buttons
         """
         response = self.client.get(self.preview_url)
 
@@ -884,16 +920,9 @@ class MenuItemAdminPreviewTestCase(CMSTestCase):
         changelist_url = reverse(
             "admin:djangocms_navigation_menuitem_list", args=(self.menu_content.id,)
         )
-        add_url = reverse(
-            "admin:djangocms_navigation_menuitem_add", args=(self.menu_content.id,)
-        )
         disable_drag_drop = content_element.find(id="disable-drag-drop")
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, "Add menu item")
-        self.assertNotContains(response, add_url)
-        self.assertNotContains(response, "Versions")
-        self.assertNotContains(response, "Actions")
         self.assertEqual(title, f"Preview Menu: {self.menu_content.title}")
         self.assertEqual(len(buttons), 1)
         self.assertEqual(buttons["href"], changelist_url)
