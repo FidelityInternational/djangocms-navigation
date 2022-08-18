@@ -288,9 +288,9 @@ class MenuItemAdmin(TreeAdmin):
                 name="{}_{}_list".format(*info),
             ),
             re_path(
-                r"^(?P<menu_content_id>\d+)/$",
+                r"^(?P<menu_content_id>\d+)/preview/$",
                 self.admin_site.admin_view(self.preview_view),
-                name="{}_{}_list".format(*info),
+                name="{}_{}_preview".format(*info),
             ),
             re_path(
                 r"^(?P<menu_content_id>\d+)/add/$",
@@ -324,11 +324,6 @@ class MenuItemAdmin(TreeAdmin):
                 name="{}_select2_content_object".format(
                     self.model._meta.app_label
                 )
-            ),
-            re_path(
-                r"^(?P<menu_content_id>\d+)/preview/$",
-                self.admin_site.admin_view(self.changelist_view),
-                name="{}_{}_preview".format(*info),
             ),
             re_path(
                 r"^(?P<menu_content_id>\d+)/messages/$",
@@ -474,31 +469,20 @@ class MenuItemAdmin(TreeAdmin):
 
         return super().add_view(request, form_url=form_url, extra_context=extra_context)
 
-    def preview_view(self, request, menu_content_id=None, form_url="", extra_context=None):
+    def preview_view(self, request, menu_content_id, extra_context=None):
+        """
+        Renders a preview of the MenuContent and MenuItem objects in 'readonly' without actions.
+        """
+        self.change_list_template = self.get_changelist_template(request=request)
         extra_context = extra_context or {}
-        if menu_content_id:
-            request.menu_content_id = menu_content_id
-            if self._versioning_enabled:
-                menu_content = get_object_or_404(
-                    self.menu_content_model._base_manager, id=menu_content_id
-                )
-                version = Version.objects.get_for_content(menu_content)
-                try:
-                    version.check_view(request.user)
-                except ConditionFailed as error:
-                    messages.error(request, str(error))
-                    return HttpResponseRedirect(version_list_url(menu_content))
-                # purge menu cache
-                purge_menu_cache(site_id=menu_content.menu.site_id)
 
-            extra_context["list_url"] = reverse(
-                "admin:{}_menuitem_list".format(self.model._meta.app_label),
-                kwargs={"menu_content_id": menu_content_id},
-            )
-        if request.GET.get("content_type_id"):
-            return True
-        else:
-            return False
+        request.menu_content_id = menu_content_id
+        menu_content = get_object_or_404(
+            self.menu_content_model._base_manager, id=menu_content_id
+        )
+        extra_context["title"] = "Preview Menu: {}".format(menu_content.__str__())
+        extra_context["menu_content"] = menu_content
+        return super().changelist_view(request, extra_context)
 
     def get_changelist_template(self, request):
         """Returns the correct template for the request. The preview template is a stripped back readonly version of the
@@ -526,11 +510,7 @@ class MenuItemAdmin(TreeAdmin):
                 except ConditionFailed as error:
                     messages.error(request, str(error))
                     return HttpResponseRedirect(version_list_url(menu_content))
-
-            extra_context["title"] = "{} Menu: {}".format(
-                "Preview" if is_preview_url(request) else "Edit",
-                menu_content.__str__()
-            )
+            extra_context["title"] = "Edit Menu: {}".format(menu_content.__str__())
             extra_context["menu_content"] = menu_content
             extra_context["versioning_enabled_for_nav"] = self._versioning_enabled
 

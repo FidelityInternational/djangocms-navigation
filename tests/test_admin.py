@@ -913,17 +913,18 @@ class MenuItemAdminPreviewTestCase(CMSTestCase):
         self.assertEqual(_('Toggle expand/collapse all'), link['title'])
         self.assertIn('+', link.string)
 
-    def test_menuitem_preview_title_in_context(self):
+    def test_menuitem_preview_context(self):
         """
-        Check that the correct title is in the response context
+        Check that the context contains the correct title and the menucontent object
         """
         model_admin = MenuItemAdmin(MenuItem, admin.AdminSite())
         request = self.get_request("/admin/djangocms_navigation/menuitem/1/preview/")
         request.user = self.get_superuser()
         menu_content = factories.MenuContentWithVersionFactory()
 
-        response = model_admin.changelist_view(request=request, menu_content_id=menu_content.pk)
+        response = model_admin.preview_view(request=request, menu_content_id=menu_content.pk)
         self.assertEqual(response.context_data["title"], f"Preview Menu: {menu_content.title}")
+        self.assertEqual(response.context_data["menu_content"], menu_content)
 
 
 class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
