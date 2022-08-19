@@ -486,7 +486,7 @@ class MenuItemAdmin(TreeAdmin):
 
     def get_changelist_template(self, request):
         """Returns the correct template for the request. The preview template is a stripped back readonly version of the
-        standard change list template.
+        standard change list template. This method should be overridden if a custom template should be used.
         :param: request: Request Object
         :return: a string to the correct template
         """
