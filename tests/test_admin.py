@@ -920,12 +920,21 @@ class MenuItemAdminPreviewViewTestCase(CMSTestCase):
         changelist_url = reverse(
             "admin:djangocms_navigation_menuitem_list", args=(self.menu_content.id,)
         )
-        disable_drag_drop = content_element.find(id="disable-drag-drop")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(title, f"Preview Menu: {self.menu_content.title}")
         self.assertEqual(len(buttons), 1)
         self.assertEqual(buttons["href"], changelist_url)
+
+    def test_drag_drop_is_disabled(self):
+        """
+        Check that the drag/drop is disabled
+        """
+        response = self.client.get(self.preview_url)
+
+        soup = BeautifulSoup(str(response.content), features="lxml")
+        disable_drag_drop = soup.find(id="disable-drag-drop")
+
         self.assertEqual(disable_drag_drop["value"], "1")
 
     def test_menuitem_preview_check_for_expand_all(self):
