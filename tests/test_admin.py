@@ -871,6 +871,15 @@ class MenuItemAdminPreviewViewTestCase(CMSTestCase):
             "admin:djangocms_navigation_menuitem_preview", args=(self.menu_content.id,)
         )
 
+    def test_invalid_menucontent_id_raises_404(self):
+        """
+        Check that 404 response is returned if the menu_content_id is invalid
+        """
+        url = reverse("admin:djangocms_navigation_menuitem_preview", args=(999,))
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
     def test_add_item_link_not_present(self):
         """
         Check the button to add an item is not present
