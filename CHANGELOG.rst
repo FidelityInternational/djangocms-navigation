@@ -4,10 +4,13 @@ Changelog
 
 Unreleased
 ==========
+
+1.5.0 (2022-08-22)
+==================
 * feat: Improved MenuItemAdmin preview_view to allow the user to view the full navigation tree
 and use expand/collapse commands for all nodes in the tree.
 * feat: Button to switch to edit mode when viewing a navigation menu in preview.
-* fix: Added CMS_CONFIRM_VERSION4 in test_settings to show intend of using v4
+* fix: Added CMS_CONFIRM_VERSION4 in test_settings to show intent of using v4
 
 1.4.0 (2022-08-12)
 ==================
