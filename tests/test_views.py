@@ -259,31 +259,82 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
         self.assertEqual(len(results), 2)
         self.assertEqual(results, expected)
 
+
+class ContentObjectSelect2ViewGetDataTestCase(CMSTestCase):
+
+    def setUp(self):
+        page_contenttype_id = ContentType.objects.get_for_model(Page).id
+        self.request = self.get_request()
+        self.request.GET = {"content_type_id": page_contenttype_id, "query": None}
+        self.view = ContentObjectSelect2View(request=self.request)
+
     @patch("django.db.models.QuerySet.distinct")
-    def test_get_data_distinct_not_called_when_no_query(self, mock_distinct):
+    def test_distinct_not_called_without_search_query(self, mock_distinct):
         """
         Mock distinct to assert that it is not called if there is no search query in the request when get_data is called
         """
-        request = self.get_request()
-        page_contenttype_id = ContentType.objects.get_for_model(Page).id
-        request.GET = {"content_type_id": page_contenttype_id, "query": None}
-        view = ContentObjectSelect2View(request=request)
-        PageContentFactory.create_batch(10, language="en")
-
-        view.get_data()
+        self.view.get_data()
 
         mock_distinct.assert_not_called()
 
     @patch("django.db.models.QuerySet.distinct")
-    def test_get_data_distinct_called_with_query(self, mock_distinct):
+    def test_distinct_called_with_search_query(self, mock_distinct):
         """
         Mock distinct to assert that it is called if there is a search query in the request when get_data is called
         """
-        request = self.get_request()
-        page_contenttype_id = ContentType.objects.get_for_model(Page).id
-        view = ContentObjectSelect2View(request=request)
-        request.GET = {"content_type_id": page_contenttype_id, "query": "example"}
+        # change the request to add a search term
+        self.request.GET["query"] = "test query"
 
-        view.get_data()
+        self.view.get_data()
 
         mock_distinct.assert_called_once()
+
+    def test_results_unfiltered_without_search_fields(self):
+        """
+        Check that if no search fields have been declared to filter against, the queryset is returned unfiltered
+        """
+        poll_content_contenttype_id = ContentType.objects.get_for_model(PollContent).id
+        poll = Poll.objects.create(name="Test poll")
+        poll1 = PollContent.objects.create(poll=poll, language="en", text="poll1")
+        poll2 = PollContent.objects.create(poll=poll, language="en", text="poll2")
+        self.request.GET = {"content_type_id": poll_content_contenttype_id, "query": "poll1"}
+
+        with patch("djangocms_navigation.views.supported_models") as mock:
+            mock.return_value = {PollContent: []}
+            results = self.view.get_data()
+
+        self.assertEqual(results.count(), 2)
+        self.assertIn(poll1, results)
+        self.assertIn(poll2, results)
+
+    def test_results_filtered_by_search_fields(self):
+        """
+        Check that if the search fields has been declared to filter against, the queryset is returned filtered
+        """
+        poll_content_contenttype_id = ContentType.objects.get_for_model(PollContent).id
+        poll = Poll.objects.create(name="Test poll")
+        poll1 = PollContent.objects.create(poll=poll, language="en", text="poll1")
+        poll2 = PollContent.objects.create(poll=poll, language="en", text="poll2")
+        self.request.GET = {"content_type_id": poll_content_contenttype_id, "query": "poll1"}
+
+        with patch("djangocms_navigation.views.supported_models") as mock:
+            mock.return_value = {PollContent: ["text"]}
+            results = self.view.get_data()
+
+        self.assertEqual(results.count(), 1)
+        self.assertIn(poll1, results)
+        self.assertNotIn(poll2, results)
+
+    def test_page_queryset_is_filtered_by_content_title(self):
+        """
+        Check that the returned Page QuerySet is filtered by the PageContent title
+        """
+        expected = PageContentFactory(title="Example PageContent")
+        PageContentFactory.create_batch(10)
+        self.request.GET["query"] = expected.title
+
+        results = self.view.get_data()
+
+        self.assertEqual(Page._base_manager.count(), 11)
+        self.assertEqual(results.count(), 1)
+        self.assertIn(expected.page, results)
