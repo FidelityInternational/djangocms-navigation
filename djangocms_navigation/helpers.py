@@ -39,3 +39,11 @@ def proxy_model(obj, content_model):
     obj_ = deepcopy(obj)
     obj_.__class__ = versionable.version_model_proxy
     return obj_
+
+
+def is_preview_url(request):
+    """Checks if the request is for a preview url
+    :param: request: Request Object
+    :return: True or False
+    """
+    return "/preview/" in request.path

@@ -1,0 +1,10 @@
+{% extends "admin/djangocms_navigation/menuitem/change_list.html" %}
+{% load admin_urls i18n %}
+
+{% block object-tools-items %}
+<li>
+    <a href="{% url opts|admin_urlname:'list' menu_content.pk %}" class="cms-btn-group">
+        {% trans "Edit" %}
+    </a>
+</li>
+{% endblock %}

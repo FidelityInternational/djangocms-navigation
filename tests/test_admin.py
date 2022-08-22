@@ -10,7 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
 from django.contrib.sites.models import Site
 from django.shortcuts import reverse
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory
 from django.test.utils import override_settings
 from django.utils.translation import gettext_lazy as _
 
@@ -278,7 +278,7 @@ class MenuContentAdminViewTestCase(CMSTestCase):
         self.assertIn(menu_content_admin._get_main_navigation_link, actions)
 
 
-class MenuItemModelAdminTestCase(TestCase):
+class MenuItemModelAdminTestCase(CMSTestCase):
     def setUp(self):
         self.site = admin.AdminSite()
         self.site.register(MenuItem, MenuItemAdmin)
@@ -300,6 +300,58 @@ class MenuItemModelAdminTestCase(TestCase):
         self.assertQuerysetEqual(
             queryset, [menu_contents[0].root.pk, child_item.pk], lambda o: o.pk
         )
+
+    def test_get_list_display_for_preview_url(self):
+        """
+        The list actions should not be included in the list display for a preview url
+        """
+        request = self.get_request("/admin/djangocms_navigation/menuitem/1/preview/")
+        request.user = self.get_superuser()
+
+        self.assertEqual(len(self.model_admin.get_list_display(request)), 4)
+        self.assertEqual(
+            self.model_admin.get_list_display(request),
+            ['__str__', 'get_object_url', 'soft_root', 'hide_node']
+        )
+
+    def test_get_list_display(self):
+        """
+        The list actions should be included when not a preview url
+        """
+        request = self.get_request("/admin/djangocms_navigation/menuitem/1/")
+        request.user = self.get_superuser()
+
+        # patch the _list_actions call to return something we can assert against
+        with patch.object(self.model_admin, "_list_actions") as mock_list_actions:
+            mock_list_actions.return_value = "list_actions"
+            list_display = self.model_admin.get_list_display(request)
+
+        mock_list_actions.assert_called_once_with(request)
+        self.assertEqual(len(list_display), 5)
+        self.assertEqual(
+            list_display,
+            ['__str__', 'get_object_url', 'soft_root', 'hide_node', "list_actions"]
+        )
+
+    def test_get_changelist_template(self):
+        """
+        Check the template is the standard change list template when the request is for the changelist endpoint
+        """
+        request = self.get_request("/admin/djangocms_navigation/menuitem/1/")
+
+        result = self.model_admin.get_changelist_template(request=request)
+
+        self.assertEqual(result, "admin/djangocms_navigation/menuitem/change_list.html")
+
+    def test_get_changelist_template_preview(self):
+        """
+        Check the preview template is used when the request is for the preview endpoint
+        """
+        request = self.get_request("/admin/djangocms_navigation/menuitem/1/preview/")
+
+        result = self.model_admin.get_changelist_template(request=request)
+
+        self.assertEqual(result, "admin/djangocms_navigation/menuitem/preview.html")
 
 
 class MenuItemAdminVersionLocked(CMSTestCase, UsefulAssertsMixin):
@@ -714,7 +766,11 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
     def test_menuitem_changelist_should_have_get_url_column(self):
         menu = factories.MenuFactory()
         version = factories.MenuVersionFactory(content__menu=menu, state=PUBLISHED)
-        mock_request = RequestFactory()
+        mock_request = RequestFactory().get(
+            reverse(
+                "admin:djangocms_navigation_menuitem_list", args=(version.content.id,)
+            )
+        )
         ma = MenuItemAdmin(MenuItem, admin.AdminSite())
         add_url = reverse(
             "admin:djangocms_navigation_menuitem_add", args=(version.content.id,)
@@ -807,6 +863,122 @@ class MenuItemAdminAddViewTestCase(CMSTestCase, UsefulAssertsMixin):
                 "admin:djangocms_navigation_menuitem_add", args=(menu_content.id,)
             )
         )
+
+
+class MenuItemAdminPreviewViewTestCase(CMSTestCase):
+
+    def setUp(self):
+        self.client.force_login(self.get_superuser())
+        self.menu_content = factories.MenuContentWithVersionFactory()
+        factories.ChildMenuItemFactory.create_batch(5, parent=self.menu_content.root)
+        self.preview_url = reverse(
+            "admin:djangocms_navigation_menuitem_preview", args=(self.menu_content.id,)
+        )
+
+    def test_invalid_menucontent_id_raises_404(self):
+        """
+        Check that 404 response is returned if the menu_content_id is invalid
+        """
+        url = reverse("admin:djangocms_navigation_menuitem_preview", args=(999,))
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_add_item_link_not_present(self):
+        """
+        Check the button to add an item is not present
+        """
+        response = self.client.get(self.preview_url)
+        add_url = reverse(
+            "admin:djangocms_navigation_menuitem_add", args=(self.menu_content.id,)
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Add menu item")
+        self.assertNotContains(response, add_url)
+
+    def test_versions_link_not_present(self):
+        """
+        Check the button to view versions is not present
+        """
+        response = self.client.get(self.preview_url)
+        version_url = version_list_url(self.menu_content)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Versions")
+        self.assertNotContains(response, version_url)
+
+    def test_actions_not_present(self):
+        """
+        Check that the Actions column is not present
+        """
+        response = self.client.get(self.preview_url)
+
+        soup = BeautifulSoup(str(response.content), features="lxml")
+        actions = soup.find(class_="column-list_actions")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Actions")
+        self.assertIsNone(actions)
+
+    def test_menuitem_preview_response_content(self):
+        """
+        Check that the response content only has the expected actions and buttons
+        """
+        response = self.client.get(self.preview_url)
+
+        soup = BeautifulSoup(str(response.content), features="lxml")
+        content_element = soup.find(id="content")
+        title = content_element.find("h1").text
+        buttons = content_element.find(class_="object-tools").find("li").find("a")
+        changelist_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(self.menu_content.id,)
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(title, f"Preview Menu: {self.menu_content.title}")
+        self.assertEqual(len(buttons), 1)
+        self.assertEqual(buttons["href"], changelist_url)
+
+    def test_drag_drop_is_disabled(self):
+        """
+        Check that the drag/drop is disabled
+        """
+        response = self.client.get(self.preview_url)
+
+        soup = BeautifulSoup(str(response.content), features="lxml")
+        disable_drag_drop = soup.find(id="disable-drag-drop")
+
+        self.assertEqual(disable_drag_drop["value"], "1")
+
+    def test_menuitem_preview_check_for_expand_all(self):
+        """
+        Check that the expand / collapse all controls are present.
+        """
+        response = self.client.get(self.preview_url)
+
+        soup = BeautifulSoup(str(response.content), features="lxml")
+        element = soup.find("th", class_="expand-all")
+        link = element.find("a")
+
+        self.assertIsNotNone(element)
+        self.assertEqual(_('Toggle expand/collapse all'), link['title'])
+        self.assertIn('+', link.string)
+
+    def test_menuitem_preview_context(self):
+        """
+        Check that the context contains the correct title and the menucontent object
+        """
+        model_admin = MenuItemAdmin(MenuItem, admin.AdminSite())
+        request = self.get_request("/admin/djangocms_navigation/menuitem/1/preview/")
+        request.user = self.get_superuser()
+        menu_content = factories.MenuContentWithVersionFactory()
+
+        response = model_admin.preview_view(request=request, menu_content_id=menu_content.pk)
+
+        self.assertEqual(response.context_data["title"], f"Preview Menu: {menu_content.title}")
+        self.assertEqual(response.context_data["menu_content"], menu_content)
 
 
 class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):

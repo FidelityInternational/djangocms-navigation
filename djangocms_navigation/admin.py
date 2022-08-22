@@ -29,13 +29,10 @@ from treebeard.admin import TreeAdmin
 from .conf import TREE_MAX_RESULT_PER_PAGE_COUNT
 from .filters import LanguageFilter
 from .forms import MenuContentForm, MenuItemForm
+from .helpers import is_preview_url
 from .models import Menu, MenuContent, MenuItem
 from .utils import is_versioning_enabled, purge_menu_cache, reverse_admin_name
-from .views import (
-    ContentObjectSelect2View,
-    MenuContentPreviewView,
-    MessageStorageView,
-)
+from .views import ContentObjectSelect2View, MessageStorageView
 
 
 try:
@@ -291,9 +288,9 @@ class MenuItemAdmin(TreeAdmin):
                 name="{}_{}_list".format(*info),
             ),
             re_path(
-                r"^(?P<menu_content_id>\d+)/$",
+                r"^(?P<menu_content_id>\d+)/preview/$",
                 self.admin_site.admin_view(self.preview_view),
-                name="{}_{}_list".format(*info),
+                name="{}_{}_preview".format(*info),
             ),
             re_path(
                 r"^(?P<menu_content_id>\d+)/add/$",
@@ -329,14 +326,6 @@ class MenuItemAdmin(TreeAdmin):
                 )
             ),
             re_path(
-                r"^(?P<menu_content_id>\d+)/preview/$",
-                self.admin_site.admin_view(MenuContentPreviewView.as_view(
-                    menu_content_model=self.menu_content_model,
-                    menu_item_model=self.model,
-                )),
-                name="{}_{}_preview".format(*info),
-            ),
-            re_path(
                 r"^(?P<menu_content_id>\d+)/messages/$",
                 self.admin_site.admin_view(MessageStorageView.as_view()),
                 name="{}_{}_message_storage".format(*info),
@@ -351,6 +340,10 @@ class MenuItemAdmin(TreeAdmin):
 
     def get_list_display(self, request):
         list_display = ["__str__", "get_object_url", "soft_root", 'hide_node']
+
+        if is_preview_url(request):
+            return list_display
+
         list_display.extend([self._list_actions(request)])
         return list_display
 
@@ -476,33 +469,33 @@ class MenuItemAdmin(TreeAdmin):
 
         return super().add_view(request, form_url=form_url, extra_context=extra_context)
 
-    def preview_view(self, request, menu_content_id=None, form_url="", extra_context=None):
+    def preview_view(self, request, menu_content_id, extra_context=None):
+        """
+        Renders a preview of the MenuContent and MenuItem objects in 'readonly' without actions.
+        """
+        self.change_list_template = self.get_changelist_template(request=request)
         extra_context = extra_context or {}
-        if menu_content_id:
-            request.menu_content_id = menu_content_id
-            if self._versioning_enabled:
-                menu_content = get_object_or_404(
-                    self.menu_content_model._base_manager, id=menu_content_id
-                )
-                version = Version.objects.get_for_content(menu_content)
-                try:
-                    version.check_view(request.user)
-                except ConditionFailed as error:
-                    messages.error(request, str(error))
-                    return HttpResponseRedirect(version_list_url(menu_content))
-                # purge menu cache
-                purge_menu_cache(site_id=menu_content.menu.site_id)
 
-            extra_context["list_url"] = reverse(
-                "admin:{}_menuitem_list".format(self.model._meta.app_label),
-                kwargs={"menu_content_id": menu_content_id},
-            )
-        if request.GET.get("content_type_id"):
-            return True
-        else:
-            return False
+        request.menu_content_id = menu_content_id
+        menu_content = get_object_or_404(
+            self.menu_content_model._base_manager, id=menu_content_id
+        )
+        extra_context["title"] = f"Preview Menu: {str(menu_content)}"
+        extra_context["menu_content"] = menu_content
+        return super().changelist_view(request, extra_context)
+
+    def get_changelist_template(self, request):
+        """Returns the correct template for the request. The preview template is a stripped back readonly version of the
+        standard change list template. This method should be overridden if a custom template should be used.
+        :param: request: Request Object
+        :return: a string to the correct template
+        """
+        if is_preview_url(request=request):
+            return "admin/djangocms_navigation/menuitem/preview.html"
+        return "admin/djangocms_navigation/menuitem/change_list.html"
 
     def changelist_view(self, request, menu_content_id=None, extra_context=None):
+        self.change_list_template = self.get_changelist_template(request=request)
         extra_context = extra_context or {}
 
         if menu_content_id:

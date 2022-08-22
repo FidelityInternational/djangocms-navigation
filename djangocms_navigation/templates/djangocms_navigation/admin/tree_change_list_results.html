@@ -38,6 +38,7 @@ Clone of treebeard tree_change_list_results page, with additional check to allow
             </tbody>
         </table>
         <input type="hidden" id="has-filters" value="{{ filtered|yesno:"1,0" }}"/>
+        <input type="hidden" id="disable-drag-drop" value="{{ disable_drag_drop|yesno:"1,0" }}"/>
         <script>
             var MOVE_NODE_ENDPOINT = 'move/';
             var FETCH_MESSAGES_ENDPOINT = 'messages/';

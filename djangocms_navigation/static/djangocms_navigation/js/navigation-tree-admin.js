@@ -132,199 +132,203 @@ Original code found in treebeard-admin.js
 
         $body = $('body');
 
-        // Activate all rows for drag & drop
-        // then bind mouse down event
-        $('td.drag-handler span').addClass('active').bind('mousedown', function (evt) {
-            $ghost = $('<div id="ghost"></div>');
-            $drag_line = $('<div id="drag_line"><span></span></div>');
-            $ghost.appendTo($body);
-            $drag_line.appendTo($body);
+        // Drag/drop only can be disabled. This ensures collapsible links are still activated.
+        // This is disabled when viewing a preview of a menu.
+        if ($('#disable-drag-drop').val() !== "1") {
+            // Activate all rows for drag & drop
+            // then bind mouse down event
+            $('td.drag-handler span').addClass('active').bind('mousedown', function (evt) {
+                $ghost = $('<div id="ghost"></div>');
+                $drag_line = $('<div id="drag_line"><span></span></div>');
+                $ghost.appendTo($body);
+                $drag_line.appendTo($body);
 
-            var stop_drag = function () {
-                $ghost.remove();
-                $drag_line.remove();
-                $body.enableSelection().unbind('mousemove').unbind('mouseup');
-                node.elem.removeAttribute('style');
-            };
+                var stop_drag = function () {
+                    $ghost.remove();
+                    $drag_line.remove();
+                    $body.enableSelection().unbind('mousemove').unbind('mouseup');
+                    node.elem.removeAttribute('style');
+                };
 
-            // Create a clone create the illusion that we're moving the node
-            var node = new Node($(this).closest('tr')[0]);
-            cloned_node = node.clone();
-            node.$elem.css({
-                'background': ACTIVE_NODE_BG_COLOR
-            });
-
-            $targetRow = null;
-            as_child = false;
-
-            // Now make the new clone move with the mouse
-            $body.disableSelection().bind('mousemove',function (evt2) {
-                $ghost.html(cloned_node).css({  // from FeinCMS :P
-                    'opacity': .8,
-                    'position': 'absolute',
-                    'top': evt2.pageY,
-                    'left': evt2.pageX - 30,
-                    'width': 600
+                // Create a clone create the illusion that we're moving the node
+                var node = new Node($(this).closest('tr')[0]);
+                cloned_node = node.clone();
+                node.$elem.css({
+                    'background': ACTIVE_NODE_BG_COLOR
                 });
-                // Iterate through all rows and see where am I moving so I can place
-                // the drag line accordingly
-                rowHeight = node.$elem.height();
-                $('tr', node.$elem.parent()).each(function (index, element) {
-                    $row = $(element);
-                    rtop = $row.offset().top;
-                    // The tooltop will display whether I'm droping the element as
-                    // child or sibling
-                    $tooltip = $drag_line.find('span');
-                    $tooltip.css({
-                        'left': node.$elem.width() - $tooltip.width(),
-                        'height': rowHeight,
+
+                $targetRow = null;
+                as_child = false;
+
+                // Now make the new clone move with the mouse
+                $body.disableSelection().bind('mousemove',function (evt2) {
+                    $ghost.html(cloned_node).css({  // from FeinCMS :P
+                        'opacity': .8,
+                        'position': 'absolute',
+                        'top': evt2.pageY,
+                        'left': evt2.pageX - 30,
+                        'width': 600
                     });
-                    node_top = node.$elem.offset().top;
-                    // Check if you are dragging over the same node
-                    if (evt2.pageY >= node_top && evt2.pageY <= node_top + rowHeight) {
-                        $targetRow = null;
-                        $tooltip.text(gettext('Abort'));
-                        $drag_line.css({
-                            'top': node_top,
+                    // Iterate through all rows and see where am I moving so I can place
+                    // the drag line accordingly
+                    rowHeight = node.$elem.height();
+                    $('tr', node.$elem.parent()).each(function (index, element) {
+                        $row = $(element);
+                        rtop = $row.offset().top;
+                        // The tooltop will display whether I'm droping the element as
+                        // child or sibling
+                        $tooltip = $drag_line.find('span');
+                        $tooltip.css({
+                            'left': node.$elem.width() - $tooltip.width(),
                             'height': rowHeight,
-                            'borderWidth': 0,
-                            'opacity': 0.8,
-                            'backgroundColor': ABORT_COLOR
                         });
-                    } else
-                    // Check if mouse is over this row
-                    if (evt2.pageY >= rtop && evt2.pageY <= rtop + rowHeight / 2) {
-                        // The mouse is positioned on the top half of a $row
-                        $targetRow = $row;
-                        as_child = false;
-                        $drag_line.css({
-                            'left': node.$elem.offset().left,
-                            'width': node.$elem.width(),
-                            'top': rtop,
-                            'borderWidth': '5px',
-                            'height': 0,
-                            'opacity': 1
-                        });
-                        $tooltip.text(gettext('As Sibling'));
-                    } else if (evt2.pageY >= rtop + rowHeight / 2 && evt2.pageY <= rtop + rowHeight) {
-                        // The mouse is positioned on the bottom half of a row
-                        $targetRow = $row;
-                        target_node = new Node($targetRow[0]);
-                        if (target_node.is_collapsed()) {
-                            target_node.expand();
+                        node_top = node.$elem.offset().top;
+                        // Check if you are dragging over the same node
+                        if (evt2.pageY >= node_top && evt2.pageY <= node_top + rowHeight) {
+                            $targetRow = null;
+                            $tooltip.text(gettext('Abort'));
+                            $drag_line.css({
+                                'top': node_top,
+                                'height': rowHeight,
+                                'borderWidth': 0,
+                                'opacity': 0.8,
+                                'backgroundColor': ABORT_COLOR
+                            });
+                        } else
+                        // Check if mouse is over this row
+                        if (evt2.pageY >= rtop && evt2.pageY <= rtop + rowHeight / 2) {
+                            // The mouse is positioned on the top half of a $row
+                            $targetRow = $row;
+                            as_child = false;
+                            $drag_line.css({
+                                'left': node.$elem.offset().left,
+                                'width': node.$elem.width(),
+                                'top': rtop,
+                                'borderWidth': '5px',
+                                'height': 0,
+                                'opacity': 1
+                            });
+                            $tooltip.text(gettext('As Sibling'));
+                        } else if (evt2.pageY >= rtop + rowHeight / 2 && evt2.pageY <= rtop + rowHeight) {
+                            // The mouse is positioned on the bottom half of a row
+                            $targetRow = $row;
+                            target_node = new Node($targetRow[0]);
+                            if (target_node.is_collapsed()) {
+                                target_node.expand();
+                            }
+                            as_child = true;
+                            $drag_line.css({
+                                'top': rtop,
+                                'left': node.$elem.offset().left,
+                                'height': rowHeight,
+                                'opacity': 0.4,
+                                'width': node.$elem.width(),
+                                'borderWidth': 0,
+                                'backgroundColor': DRAG_LINE_COLOR
+                            });
+                            $tooltip.text(gettext('As child'));
                         }
-                        as_child = true;
-                        $drag_line.css({
-                            'top': rtop,
-                            'left': node.$elem.offset().left,
-                            'height': rowHeight,
-                            'opacity': 0.4,
-                            'width': node.$elem.width(),
-                            'borderWidth': 0,
-                            'backgroundColor': DRAG_LINE_COLOR
-                        });
-                        $tooltip.text(gettext('As child'));
+                    });
+                }).bind('mouseup',function () {
+                    if ($targetRow !== null) {
+                        target_node = new Node($targetRow[0]);
+                        if (target_node.node_id !== node.node_id) {
+
+                            // Call $.ajax so we can handle the error
+                            // On Drop, make an XHR call to perform the node move
+                            $.ajax({
+                                url: window.MOVE_NODE_ENDPOINT,
+                                type: 'POST',
+                                data: {
+                                    node_id: node.node_id,
+                                    parent_id: target_node.parent_id,
+                                    sibling_id: target_node.node_id,
+                                    as_child: as_child ? 1 : 0
+                                },
+                                success: function (data, status, req) {
+
+                                    let level = parseFloat(target_node.$elem.attr('level')) + parseFloat(as_child ? 1 : 0);
+                                    // If assigned as a child, set the parent id to the target node id:
+                                    let parent_id = as_child ? target_node.node_id : target_node.parent_id;
+
+                                    // Insert and Update node attrs for parent & level (for indentation)
+                                    node.$elem
+                                        .attr('parent', parent_id)
+                                        .attr('level', level);
+                                    node.$elem.find('span.spacer').attr('style', `--s-width:${level-1}`)
+
+                                    if(as_child) {
+                                        node.$elem.insertAfter(target_node.$elem);
+                                    } else {
+                                        node.$elem.insertBefore(target_node.$elem);
+                                    }
+
+                                },
+                                error: function (req, status, error) {
+                                    // Leave node as is, let complete handler display error message(s).
+
+                                },
+                                complete: function (req, status) {
+
+                                    // Fetch and display any messages:
+                                    let csrfToken = document.cookie.match(/csrftoken=([^;]*);?/)[1];
+                                    fetch(window.FETCH_MESSAGES_ENDPOINT, {
+                                        method: 'GET',
+                                        credentials: 'same-origin',
+                                        headers: {
+                                            'X-CSRFToken': csrfToken,
+                                            'Content-Type': 'application/json;charset=utf-8',
+                                        },
+                                        redirect: 'error',
+                                    })
+                                    .then(response => response.json())
+                                    .then(payload => {
+
+                                        // Check if Django messagelist already visible on page,
+                                        // if not create element to append message(s) too:
+                                        let msglist = document.getElementsByClassName('messagelist')[0];
+                                        if(msglist === undefined){
+                                            msglist = document.createElement('ul');
+                                            msglist.className = 'messagelist';
+                                            // Insert messagelist before main content div:
+                                            document.getElementById('content').before(msglist);
+                                        }
+
+                                        payload.messages.forEach(message => {
+                                            let msg = document.createElement('li');
+                                            msg.className = message.level;
+                                            msg.innerHTML = message.message;
+                                            msg.style.opacity = 1;
+
+                                            msglist.append(msg);
+
+                                            setTimeout(() => {
+                                                let fader = setInterval(() => {
+                                                    msg.style.opacity -= 0.05;
+                                                    if(msg.style.opacity < 0) {
+                                                        msg.style.display = "none";
+                                                        clearInterval(fader);
+                                                    }
+                                                }, 20);
+                                            }, 5000);
+                                        })
+                                    })
+                                    .catch(err => {
+                                        console.log(`Error: Unfortunately there was an error: ${err}`)
+                                    });
+                                }
+                            });
+                        }
+                    }
+                    stop_drag();
+                }).bind('keyup', function (kbevt) {
+                    // Cancel drag on escape
+                    if (kbevt.keyCode === 27) {
+                        stop_drag();
                     }
                 });
-            }).bind('mouseup',function () {
-                if ($targetRow !== null) {
-                    target_node = new Node($targetRow[0]);
-                    if (target_node.node_id !== node.node_id) {
-
-                        // Call $.ajax so we can handle the error
-                        // On Drop, make an XHR call to perform the node move
-                        $.ajax({
-                            url: window.MOVE_NODE_ENDPOINT,
-                            type: 'POST',
-                            data: {
-                                node_id: node.node_id,
-                                parent_id: target_node.parent_id,
-                                sibling_id: target_node.node_id,
-                                as_child: as_child ? 1 : 0
-                            },
-                            success: function (data, status, req) {
-
-                                let level = parseFloat(target_node.$elem.attr('level')) + parseFloat(as_child ? 1 : 0);
-                                // If assigned as a child, set the parent id to the target node id:
-                                let parent_id = as_child ? target_node.node_id : target_node.parent_id;
-                                                                        
-                                // Insert and Update node attrs for parent & level (for indentation)
-                                node.$elem
-                                    .attr('parent', parent_id)
-                                    .attr('level', level);
-                                node.$elem.find('span.spacer').attr('style', `--s-width:${level-1}`)
-
-                                if(as_child) {
-                                    node.$elem.insertAfter(target_node.$elem);
-                                } else {
-                                    node.$elem.insertBefore(target_node.$elem);
-                                }
-
-                            },
-                            error: function (req, status, error) {
-                                // Leave node as is, let complete handler display error message(s).
-
-                            },
-                            complete: function (req, status) {
-                                
-                                // Fetch and display any messages:
-                                let csrfToken = document.cookie.match(/csrftoken=([^;]*);?/)[1];
-                                fetch(window.FETCH_MESSAGES_ENDPOINT, {
-                                    method: 'GET',
-                                    credentials: 'same-origin',
-                                    headers: {
-                                        'X-CSRFToken': csrfToken,
-                                        'Content-Type': 'application/json;charset=utf-8',
-                                    },
-                                    redirect: 'error',
-                                })
-                                .then(response => response.json())
-                                .then(payload => {
-                                    
-                                    // Check if Django messagelist already visible on page,
-                                    // if not create element to append message(s) too:
-                                    let msglist = document.getElementsByClassName('messagelist')[0];
-                                    if(msglist === undefined){
-                                        msglist = document.createElement('ul');
-                                        msglist.className = 'messagelist';    
-                                        // Insert messagelist before main content div:
-                                        document.getElementById('content').before(msglist);
-                                    }
-                                    
-                                    payload.messages.forEach(message => {
-                                        let msg = document.createElement('li');
-                                        msg.className = message.level;
-                                        msg.innerHTML = message.message;
-                                        msg.style.opacity = 1;
-
-                                        msglist.append(msg);
-
-                                        setTimeout(() => {
-                                            let fader = setInterval(() => {
-                                                msg.style.opacity -= 0.05;
-                                                if(msg.style.opacity < 0) {
-                                                    msg.style.display = "none";
-                                                    clearInterval(fader);
-                                                }
-                                            }, 20);
-                                        }, 5000);
-                                    })
-                                })
-                                .catch(err => {
-                                    console.log(`Error: Unfortunately there was an error: ${err}`)
-                                });
-                            }
-                        });
-                    }
-                }
-                stop_drag();
-            }).bind('keyup', function (kbevt) {
-                // Cancel drag on escape
-                if (kbevt.keyCode === 27) {
-                    stop_drag();
-                }
             });
-        });
+        }
 
         $('a.collapse').click(function () {
             var node = new Node($(this).closest('tr')[0]); // send the DOM node, not jQ
