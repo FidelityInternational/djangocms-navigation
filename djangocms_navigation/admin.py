@@ -480,7 +480,7 @@ class MenuItemAdmin(TreeAdmin):
         menu_content = get_object_or_404(
             self.menu_content_model._base_manager, id=menu_content_id
         )
-        extra_context["title"] = "Preview Menu: {}".format(menu_content.__str__())
+        extra_context["title"] = f"Preview Menu: {str(menu_content)}"
         extra_context["menu_content"] = menu_content
         return super().changelist_view(request, extra_context)
 

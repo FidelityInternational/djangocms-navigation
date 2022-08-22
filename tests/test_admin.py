@@ -335,7 +335,7 @@ class MenuItemModelAdminTestCase(CMSTestCase):
 
     def test_get_changelist_template(self):
         """
-        Check the template is the standard change list template
+        Check the template is the standard change list template when the request is for the changelist endpoint
         """
         request = self.get_request("/admin/djangocms_navigation/menuitem/1/")
         result = self.model_admin.get_changelist_template(request=request)
@@ -343,7 +343,7 @@ class MenuItemModelAdminTestCase(CMSTestCase):
 
     def test_get_changelist_template_preview(self):
         """
-        Check the preview template is used when hitting the preview endpoint.
+        Check the preview template is used when the request is for the preview endpoint
         """
         request = self.get_request("/admin/djangocms_navigation/menuitem/1/preview/")
         result = self.model_admin.get_changelist_template(request=request)
@@ -909,6 +909,7 @@ class MenuItemAdminPreviewViewTestCase(CMSTestCase):
         Check that the Actions column is not present
         """
         response = self.client.get(self.preview_url)
+
         soup = BeautifulSoup(str(response.content), features="lxml")
         actions = soup.find(class_="column-list_actions")
 
