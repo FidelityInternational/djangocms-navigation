@@ -3,20 +3,20 @@ from unittest.mock import patch
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 
-from cms.models import Page, User, PageContent
+from cms.models import Page, PageContent, User
 from cms.test_utils.testcases import CMSTestCase
 from cms.utils.urlutils import admin_reverse
-from django.db.models import QuerySet
-from django.test import override_settings
+
+from djangocms_versioning.constants import PUBLISHED
 
 from djangocms_navigation.constants import SELECT2_CONTENT_OBJECT_URL_NAME
 from djangocms_navigation.test_utils.factories import (
     MenuContentFactory,
-    PageContentFactory, PageContentWithVersionFactory,
+    PageContentFactory,
+    PageContentWithVersionFactory,
 )
 from djangocms_navigation.test_utils.polls.models import Poll, PollContent
 from djangocms_navigation.views import ContentObjectSelect2View
-from djangocms_versioning.constants import PUBLISHED
 
 
 class PreviewViewPermissionTestCases(CMSTestCase):
@@ -222,7 +222,6 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
         expected_json = {"results": [{"text": "example", "id": 1}]}
         self.assertEqual(response.json(), expected_json)
 
-    @override_settings(DJANGOCMS_NAVIGATION_VERSIONING_ENABLED=True)
     def test_with_multiple_versions_distinct_results_returned(self):
         """
         Check that when there are multiple Pages, and each have multiple versions of PageContent, that the returned
