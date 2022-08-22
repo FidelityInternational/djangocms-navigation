@@ -338,7 +338,9 @@ class MenuItemModelAdminTestCase(CMSTestCase):
         Check the template is the standard change list template when the request is for the changelist endpoint
         """
         request = self.get_request("/admin/djangocms_navigation/menuitem/1/")
+
         result = self.model_admin.get_changelist_template(request=request)
+
         self.assertEqual(result, "admin/djangocms_navigation/menuitem/change_list.html")
 
     def test_get_changelist_template_preview(self):
@@ -346,7 +348,9 @@ class MenuItemModelAdminTestCase(CMSTestCase):
         Check the preview template is used when the request is for the preview endpoint
         """
         request = self.get_request("/admin/djangocms_navigation/menuitem/1/preview/")
+
         result = self.model_admin.get_changelist_template(request=request)
+
         self.assertEqual(result, "admin/djangocms_navigation/menuitem/preview.html")
 
 
@@ -878,6 +882,7 @@ class MenuItemAdminPreviewViewTestCase(CMSTestCase):
         url = reverse("admin:djangocms_navigation_menuitem_preview", args=(999,))
 
         response = self.client.get(url)
+
         self.assertEqual(response.status_code, 404)
 
     def test_add_item_link_not_present(self):
@@ -971,6 +976,7 @@ class MenuItemAdminPreviewViewTestCase(CMSTestCase):
         menu_content = factories.MenuContentWithVersionFactory()
 
         response = model_admin.preview_view(request=request, menu_content_id=menu_content.pk)
+
         self.assertEqual(response.context_data["title"], f"Preview Menu: {menu_content.title}")
         self.assertEqual(response.context_data["menu_content"], menu_content)
 
