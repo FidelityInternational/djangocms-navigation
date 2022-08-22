@@ -64,26 +64,23 @@ class ContentObjectSelect2View(View):
         if pk:
             queryset = queryset.filter(pk=pk)
 
-        if query:
+        if not query:
+            return queryset
 
-            # TODO: filter by language and publish state
-            # For Page model filter query by pagecontent title
-            if model == Page:
-                queryset = queryset.filter(pagecontent_set__title__icontains=query)
-            else:
-                # Non page model should work using filter against field in queryset
-                options = {}
-                search_fields = supported_models(self.menu_content_model).get(model)
-                if search_fields:
-                    for field in search_fields:
-                        options[field] = query
-                    queryset = queryset.filter(**options)
-            # if we have a search query we call distinct as for a Page this results in an SQL join due to the filter
-            # being across the reverse FK relation to pagecontent_set. This may also be the case for other content types
-            # so the distinct() call is included whenever we have a search query.
-            queryset = queryset.distinct()
+        # TODO: filter by language and publish state
+        # For Page model filter query by pagecontent title
+        if model == Page:
+            return queryset.filter(pagecontent_set__title__icontains=query).distinct()
 
-        return queryset
+        # Non page model should work using filter against field in queryset
+        search_fields = supported_models(self.menu_content_model).get(model)
+        # if no fields to filter against were declared return the queryset unchanged
+        if not search_fields:
+            return queryset
+
+        options = {field: query for field in search_fields}
+        # the filter could be across tables so distinct should be used
+        return queryset.filter(**options).distinct()
 
 
 class MessageStorageView(View):
