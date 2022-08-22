@@ -343,7 +343,7 @@ class MenuItemModelAdminTestCase(CMSTestCase):
 
     def test_get_changelist_template_preview(self):
         """
-        Check the template is the preview template
+        Check the preview template is used when hitting the preview endpoint.
         """
         request = self.get_request("/admin/djangocms_navigation/menuitem/1/preview/")
         result = self.model_admin.get_changelist_template(request=request)
