@@ -78,6 +78,10 @@ class ContentObjectSelect2View(View):
                     for field in search_fields:
                         options[field] = query
                     queryset = queryset.filter(**options)
+            # if we have a search query we call distinct as for a Page this results in an SQL join due to the filter
+            # being across the reverse FK relation to pagecontent_set. This may also be the case for other content types
+            # so the distinct() call is included whenever we have a search query.
+            queryset = queryset.distinct()
 
         return queryset
 

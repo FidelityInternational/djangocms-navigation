@@ -1,16 +1,22 @@
+from unittest.mock import patch
+
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 
-from cms.models import Page, User
+from cms.models import Page, User, PageContent
 from cms.test_utils.testcases import CMSTestCase
 from cms.utils.urlutils import admin_reverse
+from django.db.models import QuerySet
+from django.test import override_settings
 
 from djangocms_navigation.constants import SELECT2_CONTENT_OBJECT_URL_NAME
 from djangocms_navigation.test_utils.factories import (
     MenuContentFactory,
-    PageContentFactory,
+    PageContentFactory, PageContentWithVersionFactory,
 )
 from djangocms_navigation.test_utils.polls.models import Poll, PollContent
+from djangocms_navigation.views import ContentObjectSelect2View
+from djangocms_versioning.constants import PUBLISHED
 
 
 class PreviewViewPermissionTestCases(CMSTestCase):
@@ -127,6 +133,7 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
         self.assertEqual(response.status_code, 200)
         expected_list = [{"text": "test", "id": 1}, {"text": "test2", "id": 2}]
         self.assertEqual(response.json()["results"], expected_list)
+        self.assertEqual(len(response.json()["results"]), 2)
 
     def test_select2_view_search_text_page(self):
         """ Both pages should appear in results for test query"""
@@ -214,3 +221,70 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
         self.assertEqual(response.status_code, 200)
         expected_json = {"results": [{"text": "example", "id": 1}]}
         self.assertEqual(response.json(), expected_json)
+
+    @override_settings(DJANGOCMS_NAVIGATION_VERSIONING_ENABLED=True)
+    def test_with_multiple_versions_distinct_results_returned(self):
+        """
+        Check that when there are multiple Pages, and each have multiple versions of PageContent, that the returned
+        Page objects are distinct and do not contain duplicate titles/ids
+        """
+        page_contenttype_id = ContentType.objects.get_for_model(Page).id
+        first_page = PageContentWithVersionFactory(
+            title="test", menu_title="test", page_title="test", language="en", version__state=PUBLISHED
+        )  # flake8: noqa
+        # create a draft version of the page
+        first_page_new_version = first_page.versions.get().copy(self.superuser)
+        first_page_new_version.save()
+        second_page = PageContentWithVersionFactory(
+            title="test2", menu_title="test2", page_title="test2", language="en"
+        )  # flake8: noqa
+        # create a draft version and publish it
+        second_page_new_version = second_page.versions.get().copy(self.superuser)
+        second_page_new_version.save()
+        second_page_new_version.publish(self.superuser)
+
+        with self.login_user_context(self.superuser):
+            response = self.client.get(
+                self.select2_endpoint,
+                data={"content_type_id": page_contenttype_id, "query": "test"},
+            )
+            results = response.json()["results"]
+            expected = [
+                {"text": str(first_page.page), "id": first_page.page.pk},
+                {"text": str(second_page.page), "id": second_page.page.pk}
+            ]
+
+        self.assertEqual(Page._base_manager.count(), 2)
+        self.assertEqual(PageContent._base_manager.count(), 4)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results, expected)
+
+    @patch("django.db.models.QuerySet.distinct")
+    def test_get_data_distinct_not_called_when_no_query(self, mock_distinct):
+        """
+        Mock distinct to assert that it is not called if there is no search query in the request when get_data is called
+        """
+        request = self.get_request()
+        page_contenttype_id = ContentType.objects.get_for_model(Page).id
+        request.GET = {"content_type_id": page_contenttype_id, "query": None}
+        view = ContentObjectSelect2View(request=request)
+        PageContentFactory.create_batch(10, language="en")
+
+        view.get_data()
+
+        mock_distinct.assert_not_called()
+
+    @patch("django.db.models.QuerySet.distinct")
+    def test_get_data_distinct_called_with_query(self, mock_distinct):
+        """
+        Mock distinct to assert that it is called if there is a search query in the request when get_data is called
+        """
+        request = self.get_request()
+        page_contenttype_id = ContentType.objects.get_for_model(Page).id
+        view = ContentObjectSelect2View(request=request)
+        request.GET = {"content_type_id": page_contenttype_id, "query": "example"}
+
+        view.get_data()
+
+        mock_distinct.assert_called_once()
