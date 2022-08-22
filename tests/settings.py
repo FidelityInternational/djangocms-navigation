@@ -11,6 +11,7 @@ HELPER_SETTINGS = {
         "djangocms_moderation",
         "djangocms_references",
     ],
+    "CMS_CONFIRM_VERSION4": True,
     "DJANGOCMS_VERSIONING_ENABLE_MENU_REGISTRATION": False,
     "MIGRATION_MODULES": {
         "sites": None,
