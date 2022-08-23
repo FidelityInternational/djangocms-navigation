@@ -5,6 +5,7 @@ from django.http import HttpResponseBadRequest, JsonResponse
 from django.views.generic import View
 
 from cms.models import Page
+from cms.utils import get_language_from_request
 
 from djangocms_navigation.utils import is_model_supported, supported_models
 
@@ -67,10 +68,13 @@ class ContentObjectSelect2View(View):
         if not query:
             return queryset
 
-        # TODO: filter by language and publish state
+        # TODO: filter by publish state
         # For Page model filter query by pagecontent title
         if model == Page:
-            return queryset.filter(pagecontent_set__title__icontains=query).distinct()
+            language = get_language_from_request(self.request)
+            return queryset.filter(
+                pagecontent_set__title__icontains=query, pagecontent_set__language=language
+            ).distinct()
 
         # Non page model should work using filter against field in queryset
         search_fields = supported_models(self.menu_content_model).get(model)

@@ -232,13 +232,13 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
         page_contenttype_id = ContentType.objects.get_for_model(Page).id
         first_page = PageContentWithVersionFactory(
             title="test", menu_title="test", page_title="test", language="en", version__state=PUBLISHED
-        )  # flake8: noqa
+        )
         # create a draft version of the page
         first_page_new_version = first_page.versions.get().copy(self.superuser)
         first_page_new_version.save()
         second_page = PageContentWithVersionFactory(
             title="test2", menu_title="test2", page_title="test2", language="en"
-        )  # flake8: noqa
+        )
         # create a draft version and publish it
         second_page_new_version = second_page.versions.get().copy(self.superuser)
         second_page_new_version.save()
@@ -270,7 +270,7 @@ class ContentObjectSelect2ViewGetDataTestCase(CMSTestCase):
         The request object can be modified as required for the unit test.
         """
         self.page_contenttype_id = ContentType.objects.get_for_model(Page).id
-        self.request = self.get_request()
+        self.request = self.get_request(language="en")
         self.view = ContentObjectSelect2View(request=self.request)
 
     @patch("django.db.models.QuerySet.distinct")
@@ -335,7 +335,7 @@ class ContentObjectSelect2ViewGetDataTestCase(CMSTestCase):
         """
         Check that the returned Page QuerySet is filtered by the PageContent title
         """
-        expected = PageContentFactory(title="Example PageContent")
+        expected = PageContentFactory(title="Example PageContent", language="en")
         PageContentFactory.create_batch(10)
         self.request.GET = {"content_type_id": self.page_contenttype_id, "query": expected.title}
 
@@ -344,3 +344,24 @@ class ContentObjectSelect2ViewGetDataTestCase(CMSTestCase):
         self.assertEqual(Page._base_manager.count(), 11)
         self.assertEqual(results.count(), 1)
         self.assertIn(expected.page, results)
+
+    def test_page_queryset_filters_pages_by_current_language(self):
+        """
+        Check that only the page for the language of the request is returned
+        """
+        self.en = PageContentFactory(title="english test", language="en")
+        self.fr = PageContentFactory(title="french test", language="fr")
+        self.de = PageContentFactory(title="german test", language="de")
+        self.it = PageContentFactory(title="italian test", language="it")
+
+        for language in ["en", "fr", "de", "it"]:
+            with self.subTest(msg=language):
+                request = self.get_request(language=language)
+                request.GET = {"content_type_id": self.page_contenttype_id, "query": "test"}
+                view = ContentObjectSelect2View(request=request)
+                results = view.get_data()
+
+                expected = getattr(self, language)
+                self.assertEqual(Page._base_manager.count(), 4)
+                self.assertEqual(results.count(), 1)
+                self.assertIn(expected.page, results)
