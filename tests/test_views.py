@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
+from django.test import override_settings
 
 from cms.models import Page, PageContent, User
 from cms.test_utils.testcases import CMSTestCase
@@ -222,6 +223,7 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
         expected_json = {"results": [{"text": "example", "id": 1}]}
         self.assertEqual(response.json(), expected_json)
 
+    @override_settings(DJANGOCMS_NAVIGATION_VERSIONING_ENABLED=True)
     def test_with_multiple_versions_distinct_results_returned(self):
         """
         Check that when there are multiple Pages, and each have multiple versions of PageContent, that the returned
@@ -248,31 +250,36 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
                 data={"content_type_id": page_contenttype_id, "query": "test"},
             )
             results = response.json()["results"]
-            expected = [
-                {"text": str(first_page.page), "id": first_page.page.pk},
-                {"text": str(second_page.page), "id": second_page.page.pk}
-            ]
 
         self.assertEqual(Page._base_manager.count(), 2)
         self.assertEqual(PageContent._base_manager.count(), 4)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(results), 2)
+        expected = [
+            {"text": str(first_page.page), "id": first_page.page.pk},
+            {"text": str(second_page.page), "id": second_page.page.pk}
+        ]
         self.assertEqual(results, expected)
 
 
 class ContentObjectSelect2ViewGetDataTestCase(CMSTestCase):
 
     def setUp(self):
-        page_contenttype_id = ContentType.objects.get_for_model(Page).id
+        """
+        Setup a view object with a request without a search query that can be used in unit tests.
+        The request object can be modified as required for the unit test.
+        """
+        self.page_contenttype_id = ContentType.objects.get_for_model(Page).id
         self.request = self.get_request()
-        self.request.GET = {"content_type_id": page_contenttype_id, "query": None}
         self.view = ContentObjectSelect2View(request=self.request)
 
     @patch("django.db.models.QuerySet.distinct")
     def test_distinct_not_called_without_search_query(self, mock_distinct):
         """
-        Mock distinct to assert that it is not called if there is no search query in the request when get_data is called
+        Mock distinct to assert that it is not called if there is no search query in the request
         """
+        self.request.GET = {"content_type_id": self.page_contenttype_id, "query": None}
+
         self.view.get_data()
 
         mock_distinct.assert_not_called()
@@ -280,10 +287,9 @@ class ContentObjectSelect2ViewGetDataTestCase(CMSTestCase):
     @patch("django.db.models.QuerySet.distinct")
     def test_distinct_called_with_search_query(self, mock_distinct):
         """
-        Mock distinct to assert that it is called if there is a search query in the request when get_data is called
+        Mock distinct to assert that it is called if there is a search query in the request
         """
-        # change the request to add a search term
-        self.request.GET["query"] = "test query"
+        self.request.GET = {"content_type_id": self.page_contenttype_id, "query": "test query"}
 
         self.view.get_data()
 
@@ -331,7 +337,7 @@ class ContentObjectSelect2ViewGetDataTestCase(CMSTestCase):
         """
         expected = PageContentFactory(title="Example PageContent")
         PageContentFactory.create_batch(10)
-        self.request.GET["query"] = expected.title
+        self.request.GET = {"content_type_id": self.page_contenttype_id, "query": expected.title}
 
         results = self.view.get_data()
 
