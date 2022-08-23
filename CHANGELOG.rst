@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* fix: Remove duplicate objects when adding MenuItem nodes
 
 1.5.0 (2022-08-22)
 ==================
