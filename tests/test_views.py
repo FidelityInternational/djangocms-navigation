@@ -263,29 +263,54 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
         ]
         self.assertEqual(results, expected)
 
-    def test_with_pagecontent_in_multiple_languages_english_returned(self):
+    def test_with_pages_in_multiple_languages(self):
+        """
+        Check that when page content exists in multiple languages, only pages for the current language are returned
+        """
         page_contenttype_id = ContentType.objects.get_for_model(Page).id
-        english = PageContentFactory(
-            title="test", menu_title="test", page_title="test", language="en",
-        )
-        # create a non-english page
-        PageContentFactory(
+        french = PageContentFactory(
             title="test", menu_title="test", page_title="test", language="fr",
         )
+        PageContentFactory.create_batch(10, title="test", menu_title="test", page_title="test", language="en")
 
         with self.login_user_context(self.superuser):
+            url = self.select2_endpoint.replace("/en/", "/fr/")
             response = self.client.get(
-                self.select2_endpoint,
+                url,
                 data={"content_type_id": page_contenttype_id, "query": "test"},
             )
             results = response.json()["results"]
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(PageContent._base_manager.count(), 11)
         self.assertEqual(len(results), 1)
         expected = [
-            {"text": "test", "id": english.page.pk},
+            {"text": "test", "id": french.page.pk},
         ]
         self.assertEqual(results, expected)
+
+    def test_with_pages_for_multiple_sites(self):
+        """
+        Check that with pages for multiple sites, only pages for the requested site are returned
+        """
+        page_contenttype_id = ContentType.objects.get_for_model(Page).id
+        site1 = Site.objects.create(name="site1.com", domain="site1.com")
+        site2 = Site.objects.create(name="site2.com", domain="site2.com")
+        PageContentFactory.create_batch(10, title="test", page__node__site=site1, language="en")
+        expected = PageContentFactory(title="test", menu_title="site2 page", page__node__site=site2, language="en")
+
+        with self.login_user_context(self.superuser):
+            response = self.client.get(
+                self.select2_endpoint,
+                data={
+                    "content_type_id": page_contenttype_id,
+                    "site": site2.id
+                },
+            )
+            results = response.json()["results"]
+
+        self.assertEqual(PageContent._base_manager.count(), 11)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results, [{"id": expected.page.id, "text": "site2 page"}])
 
 
 class ContentObjectSelect2ViewGetDataTestCase(CMSTestCase):
