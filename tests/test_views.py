@@ -258,8 +258,32 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(results), 2)
         expected = [
-            {"text": str(first_page.page), "id": first_page.page.pk},
-            {"text": str(second_page.page), "id": second_page.page.pk}
+            {"text": "test", "id": first_page.page.pk},
+            {"text": "test2", "id": second_page.page.pk}
+        ]
+        self.assertEqual(results, expected)
+
+    def test_with_pagecontent_in_multiple_languages_english_returned(self):
+        page_contenttype_id = ContentType.objects.get_for_model(Page).id
+        english = PageContentFactory(
+            title="test", menu_title="test", page_title="test", language="en",
+        )
+        # create a non-english page
+        PageContentFactory(
+            title="test", menu_title="test", page_title="test", language="fr",
+        )
+
+        with self.login_user_context(self.superuser):
+            response = self.client.get(
+                self.select2_endpoint,
+                data={"content_type_id": page_contenttype_id, "query": "test"},
+            )
+            results = response.json()["results"]
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(results), 1)
+        expected = [
+            {"text": "test", "id": english.page.pk},
         ]
         self.assertEqual(results, expected)
 
