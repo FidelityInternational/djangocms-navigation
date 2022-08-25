@@ -434,7 +434,7 @@ class ContentObjectSelect2ViewGetDataTestCase(CMSTestCase):
     @patch("djangocms_navigation.views.get_current_site")
     def test_page_queryset_filtered_by_site(self, mock_get_current_site):
         """
-        Check that when pages belong to different sites, only sites for
+        Check that when pages belong to different sites, the returned queryset only includes pages for the current site
         """
         site1 = Site.objects.create(domain="site1.com", name="site1")
         site2 = Site.objects.create(domain="site2.com", name="site2")
@@ -447,11 +447,10 @@ class ContentObjectSelect2ViewGetDataTestCase(CMSTestCase):
                 mock_get_current_site.return_value = site
                 results = self.view.get_data()
 
-                expected = results.values_list("node__site__domain", flat=True).distinct()
+                expected_domain = results.values_list("node__site__domain", flat=True).distinct()
                 self.assertEqual(Page._base_manager.count(), 20)
                 self.assertEqual(results.count(), 10)
-                self.assertEqual(expected.count(), 1)
-                self.assertEqual(expected.first(), site.domain)
+                self.assertEqual(expected_domain.first(), site.domain)
 
     def test_when_no_site_param_get_current_site_called(self):
         """
