@@ -4,8 +4,11 @@ Changelog
 
 Unreleased
 ==========
+
+1.5.1 (2022-08-22)
+==================
 * fix: Remove duplicate objects when adding MenuItem nodes
-* feat: When adding a MenuItem the Page objects are filtered for the current site and language
+* fix: When adding a MenuItem the Page objects are filtered for the current site and language
 
 1.5.0 (2022-08-22)
 ==================
