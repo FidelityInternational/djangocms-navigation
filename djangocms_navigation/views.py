@@ -5,6 +5,7 @@ from django.http import HttpResponseBadRequest, JsonResponse
 from django.views.generic import View
 
 from cms.models import Page
+from cms.utils import get_current_site, get_language_from_request
 
 from djangocms_navigation.utils import is_model_supported, supported_models
 
@@ -38,9 +39,10 @@ class ContentObjectSelect2View(View):
     def get_data(self):
         content_type_id = self.request.GET.get("content_type_id", None)
         query = self.request.GET.get("query", None)
-        site = self.request.GET.get("site")
+        site = self.request.GET.get("site", get_current_site())
         content_object = ContentType.objects.get_for_id(content_type_id)
         model = content_object.model_class()
+        language = get_language_from_request(self.request)
 
         try:
             # If versioning is enabled then get versioning queryset for model
@@ -55,31 +57,27 @@ class ContentObjectSelect2View(View):
         except (TypeError, ValueError):
             pk = None
 
-        if site:
-            if hasattr(model.objects, "on_site"):
-                queryset = queryset.on_site(site)
-            elif hasattr(model, "site"):
-                queryset = queryset.filter(site=site)
+        if hasattr(queryset, "on_site"):
+            queryset = queryset.on_site(site)
+        elif hasattr(model, "site"):
+            queryset = queryset.filter(site=site)
 
         if pk:
             queryset = queryset.filter(pk=pk)
 
-        if query:
+        # TODO: filter by publish state?
+        if model == Page:
+            # limit the queryset to objects for the correct site and language
+            queryset = queryset.filter(pagecontent_set__language=language, node__site=site).distinct()
 
-            # TODO: filter by language and publish state
-            # For Page model filter query by pagecontent title
-            if model == Page:
-                queryset = queryset.filter(pagecontent_set__title__icontains=query)
-            else:
-                # Non page model should work using filter against field in queryset
-                options = {}
-                search_fields = supported_models(self.menu_content_model).get(model)
-                if search_fields:
-                    for field in search_fields:
-                        options[field] = query
-                    queryset = queryset.filter(**options)
+        if not query:
+            return queryset
 
-        return queryset
+        # Filter against field(s) defined on the CMSAppConfig.navigation_models attribute
+        search_fields = supported_models(self.menu_content_model).get(model)
+        options = {field: query for field in search_fields}
+        # the filter could be across tables so distinct should be used
+        return queryset.filter(**options).distinct()
 
 
 class MessageStorageView(View):

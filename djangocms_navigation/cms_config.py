@@ -93,7 +93,7 @@ class NavigationCMSAppConfig(CMSAppConfig):
     )
     navigation_models = {
         # model_class : field(s) to search in menu item form UI
-        Page: ["title"]
+        Page: ["pagecontent_set__title__icontains"]
     }
     djangocms_references_enabled = True
     reference_fields = [
