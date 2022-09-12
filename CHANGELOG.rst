@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* feat: When adding a MenuItem the Page objects are filtered by PageUrl slug and path
 
 1.5.1 (2022-08-26)
 ==================
