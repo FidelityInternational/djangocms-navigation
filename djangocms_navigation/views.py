@@ -1,6 +1,7 @@
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
+from django.db.models import Q
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.views.generic import View
 
@@ -75,9 +76,11 @@ class ContentObjectSelect2View(View):
 
         # Filter against field(s) defined on the CMSAppConfig.navigation_models attribute
         search_fields = supported_models(self.menu_content_model).get(model)
-        options = {field: query for field in search_fields}
+        query_dict = {field: query for field in search_fields}
+        # build the filter query using the OR operator to search against all defined fields
+        query = Q(**query_dict, _connector=Q.OR)
         # the filter could be across tables so distinct should be used
-        return queryset.filter(**options).distinct()
+        return queryset.filter(query).distinct()
 
 
 class MessageStorageView(View):

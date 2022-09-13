@@ -10,6 +10,7 @@ from cms.utils import get_current_site
 from cms.utils.urlutils import admin_reverse
 
 from djangocms_versioning.constants import PUBLISHED
+from faker import Faker
 
 from djangocms_navigation.constants import SELECT2_CONTENT_OBJECT_URL_NAME
 from djangocms_navigation.models import MenuContent
@@ -20,6 +21,9 @@ from djangocms_navigation.test_utils.factories import (
 )
 from djangocms_navigation.test_utils.polls.models import Poll, PollContent
 from djangocms_navigation.views import ContentObjectSelect2View
+
+
+fake = Faker()
 
 
 class PreviewViewPermissionTestCases(CMSTestCase):
@@ -312,9 +316,63 @@ class ContentObjectAutoFillTestCases(CMSTestCase):
         self.assertEqual(len(results), 1)
         self.assertEqual(results, [{"id": expected.page.id, "text": "site2 page"}])
 
+    def test_searching_for_page_slug(self):
+        """
+        Check that when the search query is a PageUrl path, the correct page is returned
+        """
+        page_contenttype_id = ContentType.objects.get_for_model(Page).id
+        PageContentFactory.create_batch(10, language="en")
+        expected = PageContentFactory(title="Test search by slug", menu_title="Test search by slug", language="en")
+        slug = expected.page.get_slug("en")
+        # early smoke test to stop us getting a false positive by finding the page by its title rather than slug
+        self.assertNotEqual(expected.title.lower(), slug)
+
+        with self.login_user_context(self.superuser):
+            response = self.client.get(
+                self.select2_endpoint,
+                data={
+                    "content_type_id": page_contenttype_id,
+                    "query": slug,
+                },
+            )
+            results = response.json()["results"]
+
+        self.assertEqual(PageContent._base_manager.count(), 11)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results, [{"id": expected.page.id, "text": "Test search by slug"}])
+
+    def test_searching_for_page_path(self):
+        """
+        Check that when the search query is a PageUrl path, the correct page is returned
+        """
+        page_contenttype_id = ContentType.objects.get_for_model(Page).id
+        PageContentFactory.create_batch(10, language="en")
+        expected = PageContentFactory(menu_title="Test search by overwritten url", language="en")
+        # update page urls to use a randomly generated path to represent setting an overwritten url
+        path = fake.uri_path()
+        expected.page.urls.update(path=path)
+        # early smoke test to stop us getting a false positive by finding the page by its slug rather than path
+        self.assertNotEqual(expected.page.get_slug("en"), path)
+
+        with self.login_user_context(self.superuser):
+            response = self.client.get(
+                self.select2_endpoint,
+                data={
+                    "content_type_id": page_contenttype_id,
+                    "query": path,
+                },
+            )
+            results = response.json()["results"]
+
+        self.assertEqual(PageContent._base_manager.count(), 11)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results, [{"id": expected.page.id, "text": "Test search by overwritten url"}])
+
 
 class ContentObjectSelect2ViewGetDataTestCase(CMSTestCase):
-
+    """
+    Unit tests for the get_data method of the ContentObjectSelect2View
+    """
     def setUp(self):
         """
         Setup a view object with a request without a search query that can be used in unit tests.
@@ -463,3 +521,44 @@ class ContentObjectSelect2ViewGetDataTestCase(CMSTestCase):
             self.view.get_data()
 
         mock_get_current_site.assert_called_once()
+
+    def test_page_queryset_is_filtered_by_url_slug(self):
+        """
+        Check that the returned Page QuerySet is filtered by the PageUrl slug
+        """
+        # create a batch of Page objects with PageContent
+        PageContentFactory.create_batch(100, language="en")
+        # get a random page
+        expected = Page.objects.order_by("?").first()
+        # overwrite page urls slug to a randomly generated slug
+        slug = fake.slug()
+        expected.urls.update(slug=slug)
+        # use the slug to search for the expected page
+        self.request.GET = {"content_type_id": self.page_contenttype_id, "query": slug}
+
+        results = self.view.get_data()
+
+        self.assertEqual(Page._base_manager.count(), 100)
+        self.assertEqual(results.count(), 1)
+        self.assertIn(expected, results)
+
+    def test_page_queryset_is_filtered_by_url_path(self):
+        """
+        Check that the returned Page QuerySet is filtered by the PageUrl path
+        """
+        # create a batch of Page objects with PageContent
+        PageContentFactory.create_batch(100, language="en")
+        # get a random page
+        expected = Page.objects.order_by("?").first()
+        # overwrite page urls path to a randomly generated path
+        path = fake.uri_path()
+        expected.urls.update(path=path)
+        # use the path to search for the expected page
+        self.request.GET = {"content_type_id": self.page_contenttype_id, "query": path}
+
+        results = self.view.get_data()
+
+        self.assertNotEqual(expected.get_slug("en"), path)
+        self.assertEqual(Page._base_manager.count(), 100)
+        self.assertEqual(results.count(), 1)
+        self.assertIn(expected, results)

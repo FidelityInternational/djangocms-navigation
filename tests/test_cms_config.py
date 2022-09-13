@@ -75,7 +75,11 @@ class NavigationIntegrationTestCase(TestCase):
             TestModel2: [],
             TestModel3: [],
             TestModel4: [],
-            Page: ["pagecontent_set__title__icontains"],
+            Page: [
+                "pagecontent_set__title__icontains",
+                "urls__slug__icontains",
+                "urls__path__icontains",
+            ],
             PollContent: ["text"],
         }
         self.assertDictEqual(registered_models, expected_models)
