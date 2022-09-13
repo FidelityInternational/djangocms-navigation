@@ -477,7 +477,7 @@ class CMSMenuWithPagesTestCase(CMSTestCase):
 
     def test_published_page_in_menu_links_in_edit_mode(self):
         """
-        The edit mode should show preview links for any menu items attached to a page
+        The edit mode should show edit links for any menu items attached to a page
         """
         menu_item_pagecontent = factories.PageContentWithVersionFactory(
             language=self.language,
@@ -489,14 +489,14 @@ class CMSMenuWithPagesTestCase(CMSTestCase):
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(self.edit_endpoint)
 
-        expected_preview_endpoint = get_object_preview_url(menu_item_pagecontent, language=self.language)
-        not_expected_edit_endpoint = get_object_edit_url(menu_item_pagecontent, language=self.language)
+        not_expected_preview_endpoint = get_object_preview_url(menu_item_pagecontent, language=self.language)
+        expected_edit_endpoint = get_object_edit_url(menu_item_pagecontent, language=self.language)
         not_expected_live_endpoint = menu_item_pagecontent.get_absolute_url(language=self.language)
         actual_link = self._get_first_navigation_node_link_from_response(response)
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(expected_preview_endpoint, actual_link)
-        self.assertNotIn(not_expected_edit_endpoint, actual_link)
+        self.assertIn(expected_edit_endpoint, actual_link)
+        self.assertNotIn(not_expected_preview_endpoint, actual_link)
         self.assertNotIn(not_expected_live_endpoint, actual_link)
 
     def test_published_page_in_menu_links_in_preview_mode(self):

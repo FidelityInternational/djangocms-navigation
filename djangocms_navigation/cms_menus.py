@@ -3,7 +3,7 @@ from django.db.models import Q
 
 from cms.cms_menus import CMSMenu as OriginalCMSMenu
 from cms.models import Page
-from cms.toolbar.utils import get_object_preview_url
+from cms.toolbar.utils import get_object_edit_url, get_object_preview_url
 from cms.utils import get_current_site, get_language_from_request
 from menus.base import Menu, Modifier, NavigationNode
 from menus.menu_pool import menu_pool
@@ -85,7 +85,10 @@ class CMSMenu(Menu):
             latest_page_content = get_latest_page_content_for_page_grouper(obj, language)
             # if there is no DRAFT or PUBLISHED version we should use it
             if latest_page_content:
-                return get_object_preview_url(latest_page_content, language=language)
+                if request.toolbar.edit_mode_active:
+                    return get_object_edit_url(latest_page_content, language=language)
+                else:
+                    return get_object_preview_url(latest_page_content, language=language)
             # Otherwise, there is no DRAFT or PUBLISHED version, we shouldn't show a link for
             # ARCHIVED or UNPUBLISHED
             return ""
