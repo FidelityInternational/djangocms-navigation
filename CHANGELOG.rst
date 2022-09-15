@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* fix: increase minimist version to fix vulnerability
 
 1.6.1 (2022-09-15)
 ==================
