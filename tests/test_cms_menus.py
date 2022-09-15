@@ -1649,7 +1649,7 @@ class GetMainNavigationTestCase(CMSTestCase):
 
     def test_no_main_navigation_for_current_site(self):
         """
-        Test that with multiple sites, and the current site has no main navigation, and another site
+        With the current site having no main navigation, and another site having a main navigation, we return the navigation from the current site.
         """
         site_1 = Site.objects.create(domain="site-1.com", name="Site 1")
         site_2 = Site.objects.create(domain="site-2.com", name="Site 2")
