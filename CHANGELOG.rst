@@ -5,6 +5,7 @@ Changelog
 Unreleased
 ==========
 * fix: filter main navigation menu queryset by the current site
+* fix: increase minimist version to fix vulnerability
 
 1.4.0 (2022-08-12)
 ==================
