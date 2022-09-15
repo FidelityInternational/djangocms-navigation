@@ -37,8 +37,9 @@ class CMSMenu(Menu):
 
     def get_roots(self, request):
         language = get_language_from_request(request)
+        site = get_current_site()
         queryset = self.menu_item_model.get_root_nodes().filter(
-            menucontent__menu__site=get_current_site()
+            menucontent__menu__site=site
         )
         versionable = get_versionable_for_content(self.menu_content_model)
         if versionable:
@@ -51,12 +52,12 @@ class CMSMenu(Menu):
             menucontents = versionable.distinct_groupers(**inner_filter)
 
             if getattr(settings, "DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED", False):
-                menucontents = self.get_main_navigation(menucontents=menucontents)
+                menucontents = self.get_main_navigation(menucontents=menucontents, site=site)
 
             queryset = queryset.filter(menucontent__in=menucontents)
         return queryset
 
-    def get_main_navigation(self, menucontents):
+    def get_main_navigation(self, menucontents, site):
         """
         Takes a queryset of MenuContent objects, filters to include only those where the related Menu object has been
         flagged as main navigation, and returns the queryset.
@@ -65,7 +66,7 @@ class CMSMenu(Menu):
 
         :param menucontents: A QuerySet of MenuContent instances
         """
-        main_navigation = menucontents.filter(menu__main_navigation=True)
+        main_navigation = menucontents.filter(menu__main_navigation=True, menu__site=site)
         if not main_navigation:
             return menucontents
         return main_navigation
