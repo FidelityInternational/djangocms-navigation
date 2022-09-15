@@ -4,6 +4,9 @@ Changelog
 
 Unreleased
 ==========
+
+1.4.1 (2022-09-15)
+==================
 * fix: filter main navigation menu queryset by the current site
 * fix: increase minimist version to fix vulnerability
 
