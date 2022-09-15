@@ -5,7 +5,7 @@ Changelog
 Unreleased
 ==========
 
-1.6.1 (2022-09-14)
+1.6.1 (2022-09-15)
 ==================
 * fix: filter main navigation menu queryset by the current site
 
