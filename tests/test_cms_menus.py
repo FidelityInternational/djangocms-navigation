@@ -1,3 +1,4 @@
+from django.contrib.sites.models import Site
 from django.template import Template
 from django.template.context import Context
 from django.test import RequestFactory, override_settings
@@ -6,6 +7,7 @@ from cms.test_utils.testcases import CMSTestCase
 from cms.test_utils.util.mock import AttributeObject
 from cms.toolbar.toolbar import CMSToolbar
 from cms.toolbar.utils import get_object_edit_url, get_object_preview_url
+from cms.utils import get_current_site
 from menus.menu_pool import menu_pool
 
 from bs4 import BeautifulSoup
@@ -1557,6 +1559,7 @@ class GetMainNavigationTestCase(CMSTestCase):
         self.request.user = self.user
         self.renderer = menu_pool.get_renderer(self.request)
         self.menu = CMSMenu(self.renderer)
+        self.site = get_current_site()
 
     def test_main_navigation_found(self):
         """
@@ -1567,7 +1570,7 @@ class GetMainNavigationTestCase(CMSTestCase):
         main_navigation = factories.MenuContentFactory(language="en", menu__main_navigation=True)
         all_menucontents = MenuContent._base_manager.all()
 
-        result = self.menu.get_main_navigation(menucontents=all_menucontents)
+        result = self.menu.get_main_navigation(menucontents=all_menucontents, site=self.site)
 
         self.assertEqual(result.count(), 1)
         self.assertIn(main_navigation, result)
@@ -1581,7 +1584,7 @@ class GetMainNavigationTestCase(CMSTestCase):
         factories.MenuContentFactory.create_batch(2, language="en", menu__main_navigation=False)
         all_menucontents = MenuContent._base_manager.all()
 
-        result = self.menu.get_main_navigation(menucontents=all_menucontents)
+        result = self.menu.get_main_navigation(menucontents=all_menucontents, site=self.site)
 
         self.assertEqual(result, all_menucontents)
         self.assertEqual(all_menucontents.count(), result.count())
@@ -1595,11 +1598,76 @@ class GetMainNavigationTestCase(CMSTestCase):
         newer_menucontent = factories.MenuContentWithVersionFactory(language="en", menu__main_navigation=True)
         all_menucontents = MenuContent._base_manager.all()
 
-        result = self.menu.get_main_navigation(menucontents=all_menucontents)
+        result = self.menu.get_main_navigation(menucontents=all_menucontents, site=self.site)
 
         self.assertEqual(result.count(), 2)
         self.assertIn(newer_menucontent, result)
         self.assertIn(older_menucontent, result)
+
+    def test_multiple_sites_main_navigation(self):
+        """
+        Test that with multiple sites, and both marked as main navigation, the menu for the correct site is returned
+        """
+        site_1 = Site.objects.create(domain="site-1.com", name="Site 1")
+        site_2 = Site.objects.create(domain="site-2.com", name="Site 2")
+
+        site_1_menu = factories.MenuContentWithVersionFactory(
+            language="en", menu__main_navigation=True, menu__site=site_1,
+        )
+        site_2_menu = factories.MenuContentWithVersionFactory(
+            language="en", menu__main_navigation=True, menu__site=site_2,
+        )
+        all_menucontents = MenuContent._base_manager.all()
+
+        result = self.menu.get_main_navigation(menucontents=all_menucontents, site=site_1)
+
+        self.assertEqual(result.count(), 1)
+        self.assertIn(site_1_menu, result)
+        self.assertNotIn(site_2_menu, result)
+
+    def test_multiple_sites_not_main_navigation(self):
+        """
+        Test that with multiple sites, and neither marked as main navigation, the queryset is returned unchanged, which
+        retains previous behavior before main navigation was added
+        """
+        site_1 = Site.objects.create(domain="site-1.com", name="Site 1")
+        site_2 = Site.objects.create(domain="site-2.com", name="Site 2")
+
+        site_1_menu = factories.MenuContentWithVersionFactory(
+            language="en", menu__main_navigation=False, menu__site=site_1,
+        )
+        site_2_menu = factories.MenuContentWithVersionFactory(
+            language="en", menu__main_navigation=False, menu__site=site_2,
+        )
+        all_menucontents = MenuContent._base_manager.all()
+
+        result = self.menu.get_main_navigation(menucontents=all_menucontents, site=site_1)
+
+        self.assertEqual(result.count(), 2)
+        self.assertIn(site_1_menu, result)
+        self.assertIn(site_2_menu, result)
+
+    def test_no_main_navigation_for_current_site(self):
+        """
+        With the current site having no main navigation, and another site having a main navigation, return a QuerySet
+        containing both navigations
+        """
+        site_1 = Site.objects.create(domain="site-1.com", name="Site 1")
+        site_2 = Site.objects.create(domain="site-2.com", name="Site 2")
+
+        site_1_menu = factories.MenuContentWithVersionFactory(
+            language="en", menu__main_navigation=False, menu__site=site_1,
+        )
+        site_2_menu = factories.MenuContentWithVersionFactory(
+            language="en", menu__main_navigation=True, menu__site=site_2,
+        )
+        all_menucontents = MenuContent._base_manager.all()
+
+        result = self.menu.get_main_navigation(menucontents=all_menucontents, site=site_1)
+
+        self.assertEqual(result.count(), 2)
+        self.assertIn(site_1_menu, result)
+        self.assertIn(site_2_menu, result)
 
 
 @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=True)
@@ -1694,6 +1762,58 @@ class MainNavigationIntegrationTestCase(CMSTestCase):
                 self.assertEqual(child_item["href"], self.first_menucontent_child.content.get_absolute_url())
                 self.assertIn(self.first_menucontent_child.title, nav_tree.getText())
                 self.assertNotIn(self.second_menucontent_child.title, nav_tree.getText())
+
+    @override_settings(SITE_ID=2)
+    def test_both_main_navigation_multiple_sites(self):
+        """
+        When there are multiple sites, the menu for the current site is displayed, regardless of whether it is the main
+        navigation.
+        The first subtest is when the site2 menu content is not marked as the main navigation.
+        The second subtest is when the site2 menu content is marked the main navigation.
+        In both cases, the site2 menu content should be displayed.
+        """
+        # mark the menus for site 1 as main navigation
+        make_main_navigation(self.first_menucontent)
+        make_main_navigation(self.second_menucontent)
+
+        # create a new site, with a new menu, child and page to test against
+        site_2 = Site.objects.create(domain="site2.com", name="Site 2")
+        site_2_menucontent = factories.MenuContentWithVersionFactory(
+            language="en",
+            version__state=PUBLISHED,
+            menu__main_navigation=False,
+            menu__site=site_2,
+        )
+        site_2_menucontent_child = factories.ChildMenuItemFactory(parent=site_2_menucontent.root)
+        site_2_pagecontent = factories.PageContentWithVersionFactory(
+            language="en",
+            version__created_by=self.get_superuser(),
+            version__state=PUBLISHED,
+            page__node__site=site_2,
+        )
+
+        # test for when the menu is marked main navigation, and when it isnt
+        for is_main_navigation in [False, True]:
+            with self.subTest(msg=f"When main navigation is {is_main_navigation}"):
+
+                if make_main_navigation:
+                    make_main_navigation(site_2_menucontent)
+
+                with self.login_user_context(self.get_superuser()):
+                    edit_response = self.client.get(get_object_edit_url(site_2_pagecontent))
+                    preview_response = self.client.get(get_object_preview_url(site_2_pagecontent))
+                    live_response = self.client.get(site_2_pagecontent.get_absolute_url())
+
+                for response in [edit_response, preview_response, live_response]:
+                    with self.subTest(response):
+                        nav_tree = get_nav_from_response(response)
+                        child_item = nav_tree.find("a")
+
+                        self.assertEqual(get_current_site(), site_2)
+                        self.assertEqual(child_item["href"], site_2_menucontent_child.content.get_absolute_url())
+                        self.assertIn(site_2_menucontent_child.title, nav_tree.getText())
+                        self.assertNotIn(self.first_menucontent_child.title, nav_tree.getText())
+                        self.assertNotIn(self.second_menucontent_child.title, nav_tree.getText())
 
     @override_settings(DJANGOCMS_NAVIGATION_MAIN_NAVIGATION_ENABLED=False)
     def test_main_navigation_not_enabled(self):

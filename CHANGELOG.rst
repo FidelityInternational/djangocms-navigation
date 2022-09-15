@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* fix: filter main navigation menu queryset by the current site
 
 1.6.0 (2022-09-13)
 ==================
