@@ -1182,6 +1182,22 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
         self.assertEqual(_('Toggle expand/collapse all'), link['title'])
         self.assertIn('+', link.string)
 
+    def test_menuitem_move_message(self):
+        """
+        Check that confirmation message displayed when moving a menu item is present on the page via a data attribute on
+        the tbody element
+        """
+        menu_content = factories.MenuContentWithVersionFactory()
+
+        list_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
+        )
+        response = self.client.get(list_url)
+
+        soup = BeautifulSoup(str(response.content), features="lxml")
+        element = soup.find("tbody")
+        self.assertEqual(element.attrs["data-move-message"], "Are you sure you want to move menu item")
+
 
 @override_settings(
     CMS_PERMISSION=True,

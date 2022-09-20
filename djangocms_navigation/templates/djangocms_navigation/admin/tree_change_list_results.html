@@ -20,7 +20,7 @@ Clone of treebeard tree_change_list_results page, with additional check to allow
                     {% if header.sortable %}</a>{% endif %}</th>{% endfor %}
             </tr>
             </thead>
-            <tbody>
+            <tbody data-move-message="{{ move_node_message }}">
             {% for node_id, parent_id, node_level, children_num, result in results %}
                 <tr id="node-{{ node_id }}-id" class="{% cycle 'row1' 'row2' %}"
                     level="{{ node_level }}" children-num="{{ children_num }}"

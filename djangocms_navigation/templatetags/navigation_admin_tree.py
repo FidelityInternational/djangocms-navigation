@@ -73,12 +73,17 @@ def result_tree(context, cl, request):
     # should be disabled as this the preview view is readonly
     disable_drag_drop = is_preview_url(request=request)
 
+    # Message defined here so that it is translatable. The title of the menu item is appended to the message in the JS
+    move_node_message = _("Are you sure you want to move menu item")
+
     return {
         'filtered': not check_empty_dict(request.GET),
         'result_hidden_fields': list(result_hidden_fields(cl)),
         'result_headers': headers,
         'results': list(results(cl)),
         'disable_drag_drop': disable_drag_drop,
+        'move_node_message': move_node_message
+
     }
 
 
