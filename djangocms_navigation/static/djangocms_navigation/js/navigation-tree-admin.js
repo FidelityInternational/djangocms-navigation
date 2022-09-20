@@ -230,7 +230,10 @@ Original code found in treebeard-admin.js
                         }
                     });
                 }).bind('mouseup',function () {
-                    if ($targetRow !== null) {
+                    // prompt user to confirm the move
+                    let name = node.node_name()
+                    let confirmMove = confirm(`Are you sure you want to move menu item ${name}?`)
+                    if ($targetRow !== null && confirmMove === true) {
                         target_node = new Node($targetRow[0]);
                         if (target_node.node_id !== node.node_id) {
 
