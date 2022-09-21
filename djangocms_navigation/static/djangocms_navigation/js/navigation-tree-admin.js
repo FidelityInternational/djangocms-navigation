@@ -230,7 +230,10 @@ Original code found in treebeard-admin.js
                         }
                     });
                 }).bind('mouseup',function () {
-                    if ($targetRow !== null) {
+                    // prompt user to confirm the move
+                    let moveMessage = `${node.elem.parentElement.dataset["moveMessage"]} ${node.node_name()}?`
+                    let confirmMove = confirm(moveMessage)
+                    if ($targetRow !== null && confirmMove === true) {
                         target_node = new Node($targetRow[0]);
                         if (target_node.node_id !== node.node_id) {
 
