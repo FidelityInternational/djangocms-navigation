@@ -4,6 +4,9 @@ Changelog
 
 Unreleased
 ==========
+
+1.7.0 (2022-09-21)
+==================
 * feat: display confirmation dialog when moving a menu item node
 
 1.6.2 (2022-09-15)
