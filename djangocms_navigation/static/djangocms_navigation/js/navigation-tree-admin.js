@@ -63,7 +63,7 @@ Original code found in treebeard-admin.js
                     }
                 }).show();
             },
-            // collapse_all() and expand_all() show/hide the node + child nodes AND modifies classes: 
+            // collapse_all() and expand_all() show/hide the node + child nodes AND modifies classes:
             // (In practice these functions are only used with the root node)
             collapse_all: function () {
                 this.$elem.find('a.collapse').removeClass('expanded').addClass('collapsed');
@@ -85,9 +85,20 @@ Original code found in treebeard-admin.js
                     this.expand();
                     // Update classes just for this node:
                     this.$elem.find('a.collapse').removeClass('collapsed').addClass('expanded');
+                    let key = "expanded-" + this.node_id
+                    sessionStorage.setItem(key, this.elem.id)
                 } else {
                     this.collapse();
                     this.$elem.find('a.collapse').removeClass('expanded').addClass('collapsed');
+                    let key = "expanded-" + this.node_id
+                    sessionStorage.removeItem(key)
+                    if (this.has_children()) {
+                        $.each(this.children(), function () {
+                            let child_key = "expanded-" + this.getAttribute("node")
+                            sessionStorage.removeItem(child_key)
+                        })
+
+                    }
                 }
             },
             clone: function () {
@@ -97,6 +108,17 @@ Original code found in treebeard-admin.js
     };
 
     $(document).ready(function () {
+
+        console.log(sessionStorage)
+
+        $.each(sessionStorage, function (key, value) {
+            if (key.startsWith("expanded-")) {
+                var node = $.find('#' + value)[0]
+                node = new Node(node)
+                node.toggle()
+                // need to remove class from children
+            }
+        })
 
         // begin csrf token code
         // Taken from http://docs.djangoproject.com/en/dev/ref/contrib/csrf/#ajax
@@ -334,7 +356,9 @@ Original code found in treebeard-admin.js
         }
 
         $('a.collapse').click(function () {
+            console.log($(this).closest('tr')[0])
             var node = new Node($(this).closest('tr')[0]); // send the DOM node, not jQ
+            console.log(node)
             node.toggle();
             return false;
         });
@@ -344,7 +368,7 @@ Original code found in treebeard-admin.js
             // Get root node:
             let root_node = new Node($.find('tr[level=1]')[0]);
 
-            // Toggle expand / collapse all: 
+            // Toggle expand / collapse all:
             if (!this.hasAttribute('class') || $(this).hasClass('collapsed-all') ) {
                 root_node.expand_all();
                 $(this).addClass('expanded-all').removeClass('collapsed-all').text('-');
@@ -353,7 +377,7 @@ Original code found in treebeard-admin.js
                 $(this).addClass('collapsed-all').removeClass('expanded-all').text('+');
             }
         });
-        
+
         var hash = window.location.hash;
 
         if (hash) {
