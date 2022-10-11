@@ -12,6 +12,8 @@ Original code found in treebeard-admin.js
     DRAG_LINE_COLOR = '#AA00AA';
     RECENTLY_FADE_DURATION = 2000;
 
+    const EXPANDED_SESSION_KEY = 'expanded-';
+
     // This is the basic Node class, which handles UI tree operations for each 'row'
     var Node = function (elem) {
         var $elem = $(elem);
@@ -19,12 +21,14 @@ Original code found in treebeard-admin.js
         var parent_id = $elem.attr('parent');
         var level = parseInt($elem.attr('level'));
         var children_num = parseInt($elem.attr('children-num'));
+        var menu_content_id = $("#result_list").data("menuContentId");
         return {
             elem: elem,
             $elem: $elem,
             node_id: node_id,
             parent_id: parent_id,
             level: level,
+            expanded_key: EXPANDED_SESSION_KEY + menu_content_id,
             has_children: function () {
                 return children_num > 0;
             },
@@ -71,6 +75,8 @@ Original code found in treebeard-admin.js
                     let node = new Node(this);
                     node.collapse_all();
                 }).hide();
+                // clear storage so that on reload go back to default view
+                sessionStorage.clear()
             },
             expand_all: function () {
                 this.$elem.find('a.collapse').removeClass('collapsed').addClass('expanded');
@@ -78,6 +84,8 @@ Original code found in treebeard-admin.js
                     let node = new Node(this);
                     node.expand_all();
                 }).show();
+                // clear storage so that on reload go back to default view
+                sessionStorage.clear()
             },
             // Toggle show/hides the node (and child nodes), but does not modify child classes - this is so the 'state' can be perserved.
             toggle: function () {
@@ -85,40 +93,50 @@ Original code found in treebeard-admin.js
                     this.expand();
                     // Update classes just for this node:
                     this.$elem.find('a.collapse').removeClass('collapsed').addClass('expanded');
-                    let key = "expanded-" + this.node_id
-                    sessionStorage.setItem(key, this.elem.id)
+                    this.add_to_session()
                 } else {
                     this.collapse();
                     this.$elem.find('a.collapse').removeClass('expanded').addClass('collapsed');
-                    let key = "expanded-" + this.node_id
-                    sessionStorage.removeItem(key)
-                    if (this.has_children()) {
-                        $.each(this.children(), function () {
-                            let child_key = "expanded-" + this.getAttribute("node")
-                            sessionStorage.removeItem(child_key)
-                        })
-
-                    }
+                    this.remove_from_session()
                 }
             },
             clone: function () {
                 return $elem.clone();
+            },
+            add_to_session: function () {
+                // get or create an array of element ids that are expanded
+                let expanded = JSON.parse(sessionStorage.getItem(this.expanded_key)) || []
+                expanded.push(this.elem.id)
+                sessionStorage.setItem(this.expanded_key, JSON.stringify(expanded))
+            },
+            remove_from_session: function () {
+                let expanded = JSON.parse(sessionStorage.getItem(this.expanded_key)) || []
+                // filter the array to remove this element id
+                expanded = expanded.filter(elementId =>  elementId !== this.elem.id)
+                // also remove any child elements
+                if (this.has_children()) {
+                    $.each(this.children(), function () {
+                        expanded = expanded.filter(elementId => elementId !== this.id)
+                    })
+                }
+                // update the session
+                sessionStorage.setItem(this.expanded_key, JSON.stringify(expanded))
             }
         }
     };
 
     $(document).ready(function () {
 
-        console.log(sessionStorage)
-
-        $.each(sessionStorage, function (key, value) {
-            if (key.startsWith("expanded-")) {
-                var node = $.find('#' + value)[0]
-                node = new Node(node)
-                node.toggle()
-                // need to remove class from children
-            }
-        })
+        // check the session for a stored state of expanded nodes
+        const menuContentId = $("#result_list").data("menuContentId");
+        let expanded = JSON.parse(sessionStorage.getItem(EXPANDED_SESSION_KEY + menuContentId))
+        if (expanded) {
+            expanded.forEach(function (elementId) {
+                var node = new Node($.find('#' + elementId)[0])
+                node.expand()
+                node.$elem.find('a.collapse').removeClass('collapsed').addClass('expanded');
+            })
+        }
 
         // begin csrf token code
         // Taken from http://docs.djangoproject.com/en/dev/ref/contrib/csrf/#ajax
@@ -356,9 +374,7 @@ Original code found in treebeard-admin.js
         }
 
         $('a.collapse').click(function () {
-            console.log($(this).closest('tr')[0])
             var node = new Node($(this).closest('tr')[0]); // send the DOM node, not jQ
-            console.log(node)
             node.toggle();
             return false;
         });

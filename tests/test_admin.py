@@ -1198,6 +1198,22 @@ class MenuItemAdminChangeListViewTestCase(CMSTestCase, UsefulAssertsMixin):
         element = soup.find("tbody")
         self.assertEqual(element.attrs["data-move-message"], "Are you sure you want to move menu item")
 
+    def test_menu_content_id_present(self):
+        """
+        Check that the rendered template includes the menu content id as a data attribute so that it can be accessed by
+        the client side js
+        """
+        menu_content = factories.MenuContentWithVersionFactory()
+        list_url = reverse(
+            "admin:djangocms_navigation_menuitem_list", args=(menu_content.id,)
+        )
+        response = self.client.get(list_url)
+
+        soup = BeautifulSoup(str(response.content), features="lxml")
+        result_list = soup.find(id="result_list")
+
+        self.assertEqual(result_list["data-menu-content-id"], str(menu_content.pk))
+
 
 @override_settings(
     CMS_PERMISSION=True,

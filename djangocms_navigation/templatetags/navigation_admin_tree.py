@@ -82,8 +82,8 @@ def result_tree(context, cl, request):
         'result_headers': headers,
         'results': list(results(cl)),
         'disable_drag_drop': disable_drag_drop,
-        'move_node_message': move_node_message
-
+        'move_node_message': move_node_message,
+        'menu_content_id': context["menu_content"].pk
     }
 
 

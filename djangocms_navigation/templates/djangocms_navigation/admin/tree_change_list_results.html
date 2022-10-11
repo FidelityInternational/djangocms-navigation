@@ -9,7 +9,7 @@ Clone of treebeard tree_change_list_results page, with additional check to allow
 {% endif %}
 {% if results %}
     <div class="results">
-        <table cellspacing="0" id="result_list">
+        <table cellspacing="0" id="result_list" data-menu-content-id="{{ menu_content_id }}">
             <thead>
             <tr>
                 {% for header in result_headers %}
