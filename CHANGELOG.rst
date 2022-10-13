@@ -4,6 +4,9 @@ Changelog
 
 Unreleased
 ==========
+
+1.8.0 (2022-10-13)
+==================
 * feat: store a list of expanded nodes in a page session object so after editing a menu the
 previous state is displayed
 
