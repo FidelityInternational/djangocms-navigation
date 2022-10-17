@@ -1249,6 +1249,9 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
                 delete_url_single, follow=True, data={"menu_content_id": menu_content.id}
             )
 
+        # check the context contains the expected structure of objects so that it is rendered correctly in the template
+        expected_deleted_objects = [f"Menu item: {child}"]
+        self.assertEqual(confirmation_response.context["deleted_objects"], expected_deleted_objects)
         # Confirmation screen populated with all to-be deleted items
         self.assertContains(
             confirmation_response,
@@ -1278,7 +1281,7 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
         menu_content = factories.MenuContentWithVersionFactory(version__created_by=self.user)
         child = factories.ChildMenuItemFactory(parent=menu_content.root)
         child_of_child = factories.ChildMenuItemFactory(parent=child)
-        factories.ChildMenuItemFactory(parent=child_of_child)
+        child_of_child_of_child = factories.ChildMenuItemFactory(parent=child_of_child)
         # Delete an editable node, with children
         delete_url_with_child = reverse(
             "admin:djangocms_navigation_menuitem_delete", args=(menu_content.id, child.id,),
@@ -1292,6 +1295,17 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
                 delete_url_with_child, follow=True, data={"menu_content_id": menu_content.id}
             )
 
+        # check the context contains the expected structure of objects so that it is rendered correctly in the template
+        expected_deleted_objects = [
+            f"Menu item: {child}",
+            [
+                f"Menu item: {child_of_child}",
+                [
+                    f"Menu item: {child_of_child_of_child}"
+                ]
+            ]
+        ]
+        self.assertEqual(confirmation_response.context_data["deleted_objects"], expected_deleted_objects)
         # Confirmation screen populated with all to be deleted items
         self.assertContains(
             confirmation_response,
@@ -1303,14 +1317,23 @@ class MenuItemAdminDeleteViewTestCase(CMSTestCase):
         )
         self.assertContains(
             confirmation_response,
-            '<ul>\t<li>Menu item: {}</li>'.format(
+            '<ul>\t<li>Menu item: {}\n\t'.format(
                 child
             )
         )
+        # two tabs indicate this item is nested under the previous node
         self.assertContains(
             confirmation_response,
-            '\t<li>Menu item: {}</li></ul>'.format(
+            '<ul>\n\t\t<li>Menu item: {}\n\t\t'.format(
                 child_of_child
+            )
+        )
+        # three tabs indicates this item is nested under the previous child node
+        # and then the previous <ul> elements are closed
+        self.assertContains(
+            confirmation_response,
+            '<ul>\n\t\t\t<li>Menu item: {}</li>\n\t\t</ul>\n\t\t</li>\n\t</ul>\n\t</li></ul>'.format(
+                child_of_child_of_child
             )
         )
 
