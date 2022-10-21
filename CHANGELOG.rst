@@ -4,6 +4,9 @@ Changelog
 
 Unreleased
 ==========
+
+1.8.1 (2022-10-21)
+==================
 * fix: safely checks for a MenuContent object in the context provided to the results tree templatetag, rather than
 assume there is always one, to guard against 500 errors
 
