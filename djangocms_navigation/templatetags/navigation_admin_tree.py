@@ -76,6 +76,13 @@ def result_tree(context, cl, request):
     # Message defined here so that it is translatable. The title of the menu item is appended to the message in the JS
     move_node_message = _("Are you sure you want to move menu item")
 
+    # The ID is used when storing the menu tree state in the client session object, but as this templatetag can be used
+    # outside of djangocms-navigation, check safely if a MenuContent object is in the current context object
+    try:
+        menu_content_id = context["menu_content"].pk
+    except KeyError:
+        menu_content_id = ""
+
     return {
         'filtered': not check_empty_dict(request.GET),
         'result_hidden_fields': list(result_hidden_fields(cl)),
@@ -83,7 +90,7 @@ def result_tree(context, cl, request):
         'results': list(results(cl)),
         'disable_drag_drop': disable_drag_drop,
         'move_node_message': move_node_message,
-        'menu_content_id': context["menu_content"].pk
+        'menu_content_id': menu_content_id,
     }
 
 
