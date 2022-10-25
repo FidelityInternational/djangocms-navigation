@@ -4,6 +4,9 @@ Changelog
 
 Unreleased
 ==========
+
+1.8.2 (2022-10-25)
+==================
 * fix: delete confirmation screen displays all nodes to be deleted, with each node nested
 correctly to match the standard django delete confirmation view
 
