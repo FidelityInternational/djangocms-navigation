@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.options import IS_POPUP_VAR
 from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
-from django.contrib.admin.utils import get_deleted_objects, quote
+from django.contrib.admin.utils import quote
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
@@ -569,21 +569,30 @@ class MenuItemAdmin(TreeAdmin):
             request, "admin/djangocms_navigation/main_navigation_confirmation.html", context
         )
 
-    def _get_to_be_deleted_objects(self, menu_item, request):
-        def _get_related_objects(menu_item):
-            # Since we are using treebeard, the default 'to_be_deleted' functionality from django
-            # does not work, therefore we must construct the list here and
-            # pass it to the delete confirmation.
-            yield menu_item
-            for child_item in menu_item.get_children():
-                yield child_item
+    def _get_to_be_deleted(self, nodes, node_list):
+        """
+        Recursively fetches the child nodes to be deleted in a structure that represents their nesting, so that the
+        returned node list is structured so that it is rendered in the template with items nested correctly e.g:
 
-        to_be_deleted = list(_get_related_objects(menu_item))
-        get_deleted_objects_additional_context = {"request": request}
-        (deleted_objects, model_count, perms_needed, protected) = get_deleted_objects(
-            to_be_deleted, admin_site=self.admin_site, **get_deleted_objects_additional_context
-        )
-        return deleted_objects
+        node_list = [
+            child_node,
+            [
+                child_of_child,
+                sibling_of_child_of_child,
+            ],
+            sibling_node,
+        ]
+        """
+        child_node_list = []
+        for node in nodes:
+            child_node_list.append(f"Menu item: {node}")
+            children = node.get_children()
+            self._get_to_be_deleted(children, child_node_list)
+
+        if child_node_list:
+            node_list.append(child_node_list)
+
+        return node_list
 
     def delete_view(self, request, object_id, menu_content_id=None, form_url="", extra_context=None):
 
@@ -620,7 +629,8 @@ class MenuItemAdmin(TreeAdmin):
                     return HttpResponseRedirect(version_list_url(menu_content))
 
                 extra_context["menu_name"] = menu_item
-                extra_context["deleted_objects"] = self._get_to_be_deleted_objects(menu_item, request)
+                to_be_deleted = [f"Menu item: {menu_item}"]
+                extra_context["deleted_objects"] = self._get_to_be_deleted(menu_item.get_children(), to_be_deleted)
 
         return super().delete_view(request, object_id, extra_context)
 
