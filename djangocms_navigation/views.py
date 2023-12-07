@@ -36,7 +36,9 @@ class ContentObjectSelect2View(View):
 
         # Removing unpublished pages from queryset
         if model == Page:
-            queryset_data = [page for page in queryset_data if page.get_title_obj().versions.first().state != 'unpublished']
+            queryset_data = [
+                page for page in queryset_data if page.get_title_obj().versions.first().state != 'unpublished'
+            ]
 
         data = {
             "results": [{"text": str(obj), "id": obj.pk} for obj in queryset_data]
