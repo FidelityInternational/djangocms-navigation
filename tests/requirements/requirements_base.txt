@@ -6,10 +6,10 @@ flake8
 isort
 lxml
 tox
-djangocms-versioning==1.2.2
-djangocms-alias==1.11.0
-djangocms-references==1.4.1
-djangocms-version-locking==1.2.0
-django-cms==4.0.1.dev2
-djangocms-text-ckeditor==4.0.1.dev1
-djangocms-moderation==2.1.5
+https://github.com/django-cms/django-cms/tarball/develop-4#egg=django-cms
+https://github.com/divio/djangocms-text-ckeditor/tarball/support/4.0.x#egg=djangocms-text-ckeditor
+https://github.com/django-cms/djangocms-versioning/tarball/master#egg=djangocms-versioning
+https://github.com/FidelityInternational/djangocms-version-locking/tarball/master#egg=djangocms-version-locking
+https://github.com/django-cms/djangocms-moderation/tarball/master#egg=djangocms-moderation
+https://github.com/FidelityInternational/djangocms-references/tarball/master#egg=djangocms-references
+https://github.com/django-cms/djangocms-alias/tarball/master#egg=djangocms-alias
