@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* feat: Removed unpublished pages from menu item admin select view for page drop down
 
 1.8.2 (2022-10-25)
 ==================
