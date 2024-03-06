@@ -9,6 +9,7 @@ from cms.models import Page
 from cms.utils import get_current_site, get_language_from_request
 
 from djangocms_navigation.utils import is_model_supported, supported_models
+from djangocms_versioning.constants import ARCHIVED, UNPUBLISHED
 
 
 class ContentObjectSelect2View(View):
@@ -38,8 +39,7 @@ class ContentObjectSelect2View(View):
         if model == Page:
             queryset_data = [
                 page for page in queryset_data
-                if getattr(page.get_title_obj().versions.first(), "state", None)
-                != 'unpublished'
+                if not getattr(page.get_title_obj().versions.first(), "state", None) in [ ARCHIVED, UNPUBLISHED ]
             ]
 
         data = {
