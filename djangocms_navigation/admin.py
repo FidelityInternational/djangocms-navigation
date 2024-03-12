@@ -141,7 +141,6 @@ class MenuContentAdmin(ExtendedVersionAdminMixin, admin.ModelAdmin):
             return render_to_string("djangocms_version_locking/admin/locked_icon.html")
         return ""
 
-
     def _get_references_link(self, obj, request):
         menu_content_type = ContentType.objects.get(
             app_label=self.model._meta.app_label, model=Menu._meta.model_name,
@@ -168,7 +167,6 @@ class MenuContentAdmin(ExtendedVersionAdminMixin, admin.ModelAdmin):
         :return: Boolean
         """
         return obj.menu.main_navigation
-
 
     def _get_main_navigation_link(self, obj, request, disabled=False):
         """
@@ -801,7 +799,6 @@ class MenuItemAdmin(TreeAdmin):
             obj_url = obj.content.get_absolute_url()
             return format_html("<a href='{0}'>{0}</a>", obj_url)
 
-
     @property
     def _versioning_enabled(self):
         """Helper property to check if versioning is enabled for navigation"""
@@ -809,5 +806,3 @@ class MenuItemAdmin(TreeAdmin):
         return apps.get_app_config(
             self.model._meta.app_label
         ).cms_config.djangocms_versioning_enabled
-
-
