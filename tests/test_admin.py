@@ -297,7 +297,7 @@ class MenuItemModelAdminTestCase(CMSTestCase):
 
         queryset = self.model_admin.get_queryset(request)
 
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             queryset, [menu_contents[0].root.pk, child_item.pk], lambda o: o.pk
         )
 

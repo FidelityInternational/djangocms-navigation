@@ -396,7 +396,7 @@ class MenuContentFormTestCase(CMSTestCase):
         queryset = form.fields["content_type"].queryset
 
         expected_content_type_pks = [ct.pk for ct in content_types.values()]
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             queryset, expected_content_type_pks, lambda o: o.pk, ordered=False
         )
 

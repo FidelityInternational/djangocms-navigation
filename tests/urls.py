@@ -1,5 +1,6 @@
 from django.conf import settings
-from django.conf.urls import include, re_path
+from django.urls import include
+from django.conf.urls import re_path
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
