@@ -8,6 +8,10 @@ Unreleased
 * Python 3.7 support removed
 * Django 4.2 support added
 
+1.8.3 (2024-03-06)
+==================
+* feat: Removed unpublished pages from menu item admin select view for page drop down
+
 1.8.2 (2022-10-25)
 ==================
 * fix: delete confirmation screen displays all nodes to be deleted, with each node nested
