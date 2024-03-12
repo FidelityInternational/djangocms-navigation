@@ -13,8 +13,7 @@ from django.http import Http404, HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
-from django.urls import path
-from django.urls import re_path, reverse, reverse_lazy
+from django.urls import path, re_path, reverse, reverse_lazy
 from django.utils.html import format_html, format_html_join
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _

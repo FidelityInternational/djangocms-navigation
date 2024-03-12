@@ -4,7 +4,7 @@ import djangocms_navigation
 
 
 INSTALL_REQUIREMENTS = [
-    "Django>=1.11,<3.3",
+    "Django>=3.2,<5.0",
     "django-treebeard>=4.3",
     "django-cms",
 ]
