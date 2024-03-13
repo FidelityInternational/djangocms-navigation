@@ -42,8 +42,9 @@ HELPER_SETTINGS = {
 def run():
     from app_helper import runner
     runner.cms("djangocms_navigation", extra_args=[])
-    from djangocms_navigation.compat import DJANGO_4_2
     from cms.test_utils.testcases import CMSTestCase
+
+    from djangocms_navigation.compat import DJANGO_4_2
     if not DJANGO_4_2:
         CMSTestCase.assertQuerySetEqual = CMSTestCase.assertQuerysetEqual
 
