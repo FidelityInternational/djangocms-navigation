@@ -71,7 +71,7 @@ class MenuItemChangelistTestCase(CMSTestCase):
             admin_field,  # sortable_by
         ]
         if DJANGO_4_2:
-            args.add(search_help_text)
+            args.append(search_help_text)
 
         return MenuItemChangeList(*args)
 
