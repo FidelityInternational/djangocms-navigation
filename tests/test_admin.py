@@ -53,7 +53,6 @@ class MenuItemChangelistTestCase(CMSTestCase):
         request.user = self.get_superuser()
         model_admin = self.site._registry[MenuItem]
         admin_field = "title"
-        search_help_text = model_admin.search_help_text
 
         args = [
             request,  # request
@@ -71,6 +70,7 @@ class MenuItemChangelistTestCase(CMSTestCase):
             admin_field,  # sortable_by
         ]
         if DJANGO_4_2:
+            search_help_text = model_admin.search_help_text
             args.append(search_help_text)
 
         return MenuItemChangeList(*args)
