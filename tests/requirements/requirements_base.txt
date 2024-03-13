@@ -1,6 +1,8 @@
 beautifulsoup4
 coverage
 django-app-helper
+django-classy-tags
+django-sekizai
 factory_boy
 flake8
 isort
