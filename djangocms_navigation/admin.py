@@ -448,7 +448,7 @@ class MenuItemAdmin(TreeAdmin):
             kwargs={"menu_content_id": menu_content_id, "object_id": object_id},
         )
         return super().change_view(
-            request, object_id, form_url="", extra_context=extra_context
+            request, str(object_id), form_url="", extra_context=extra_context
         )
 
     def add_view(self, request, menu_content_id=None, form_url="", extra_context=None):
