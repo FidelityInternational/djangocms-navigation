@@ -638,7 +638,7 @@ class MenuItemAdmin(TreeAdmin):
                 to_be_deleted = [f"Menu item: {menu_item}"]
                 extra_context["deleted_objects"] = self._get_to_be_deleted(menu_item.get_children(), to_be_deleted)
 
-        return super().delete_view(request, object_id, extra_context)
+        return super().delete_view(request, str(object_id), extra_context)
 
     def response_delete(self, request, obj_display, obj_id):
         """
