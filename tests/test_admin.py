@@ -35,10 +35,6 @@ from djangocms_navigation.test_utils import factories
 from .utils import UsefulAssertsMixin, disable_versioning_for_navigation
 
 
-if not DJANGO_4_2:
-    CMSTestCase.assertQuerySetEqual = CMSTestCase.assertQuerysetEqual
-
-
 class MenuItemChangelistTestCase(CMSTestCase):
     def setUp(self):
         self.user = self.get_superuser()
