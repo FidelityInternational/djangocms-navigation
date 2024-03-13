@@ -4,7 +4,6 @@ import json
 import sys
 from unittest.mock import patch
 
-import django
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
@@ -29,14 +28,15 @@ from djangocms_navigation.admin import (
     MenuItemAdmin,
     MenuItemChangeList,
 )
+from djangocms_navigation.compat import DJANGO_4_2
 from djangocms_navigation.models import Menu, MenuContent, MenuItem
 from djangocms_navigation.test_utils import factories
 
 from .utils import UsefulAssertsMixin, disable_versioning_for_navigation
 
 
-version = list(map(int, django.__version__.split('.')))
-GTE_DJ21 = version[0] >= 2 and version[1] >= 1
+if not DJANGO_4_2:
+    CMSTestCase.assertQuerySetEqual = CMSTestCase.assertQuerysetEqual
 
 
 class MenuItemChangelistTestCase(CMSTestCase):
@@ -53,6 +53,7 @@ class MenuItemChangelistTestCase(CMSTestCase):
         request.user = self.get_superuser()
         model_admin = self.site._registry[MenuItem]
         admin_field = "title"
+        search_help_text = model_admin.search_help_text
 
         args = [
             request,  # request
@@ -69,8 +70,8 @@ class MenuItemChangelistTestCase(CMSTestCase):
             model_admin,  # model_admin
             admin_field,  # sortable_by
         ]
-        if not GTE_DJ21:
-            args.pop()
+        if DJANGO_4_2:
+            args.add(search_help_text)
 
         return MenuItemChangeList(*args)
 
