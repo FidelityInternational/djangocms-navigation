@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* fix: Navigation nodes with a page attached display edit urls in edit mode
 
 1.8.3 (2024-03-06)
 ==================
