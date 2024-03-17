@@ -7,6 +7,15 @@
 <link rel="stylesheet" type="text/css" href="{% static 'djangocms_navigation/css/navigation_admin_overrides.css' %}"/>
 {% endblock %}
 
+{% block extrahead %}
+    {% if not treebeard_4_5 %}
+    <script src="{% url 'admin:jsi18n' %}"></script>
+    <script data-csrftoken="{{ csrf_token }}" src="{% static 'djangocms_navigation/js/navigation-tree-admin.js' %}"></script>
+    {% else %}
+    {{ block.super }}
+    {% endif %}
+{% endblock %}
+
 {% block object-tools-items %}
 <li>
     <a href="{% url opts|admin_urlname:'add' menu_content.pk %}" class="addlink">

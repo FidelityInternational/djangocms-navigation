@@ -16,6 +16,7 @@ from django.utils.translation import gettext_lazy as _
 from cms.api import add_plugin, create_page, create_title
 from cms.test_utils.testcases import CMSTestCase
 from cms.toolbar.utils import get_object_preview_url
+from cms.utils.compat import DJANGO_4_1
 
 from bs4 import BeautifulSoup
 from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
@@ -28,7 +29,6 @@ from djangocms_navigation.admin import (
     MenuItemAdmin,
     MenuItemChangeList,
 )
-from djangocms_navigation.compat import DJANGO_4_2
 from djangocms_navigation.models import Menu, MenuContent, MenuItem
 from djangocms_navigation.test_utils import factories
 
@@ -65,7 +65,7 @@ class MenuItemChangelistTestCase(CMSTestCase):
             model_admin,  # model_admin
             admin_field,  # sortable_by
         ]
-        if DJANGO_4_2:
+        if not DJANGO_4_1:
             search_help_text = model_admin.search_help_text
             args.append(search_help_text)
 

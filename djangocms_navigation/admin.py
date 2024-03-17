@@ -26,6 +26,7 @@ from djangocms_versioning.helpers import get_admin_url, version_list_url
 from djangocms_versioning.models import Version
 from treebeard.admin import TreeAdmin
 
+from .compat import TREEBEARD_4_5
 from .conf import TREE_MAX_RESULT_PER_PAGE_COUNT
 from .filters import LanguageFilter
 from .forms import MenuContentForm, MenuItemForm
@@ -518,6 +519,7 @@ class MenuItemAdmin(TreeAdmin):
                     return HttpResponseRedirect(version_list_url(menu_content))
             extra_context["title"] = "Edit Menu: {}".format(menu_content.__str__())
             extra_context["menu_content"] = menu_content
+            extra_context["treebeard_4_5"] = TREEBEARD_4_5
             extra_context["versioning_enabled_for_nav"] = self._versioning_enabled
 
         return super().changelist_view(request, extra_context)
