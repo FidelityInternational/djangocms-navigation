@@ -333,7 +333,7 @@ class MenuItemModelAdminTestCase(CMSTestCase):
         )
 
     @skipIf(TREEBEARD_4_5, "Test relevant only for treebeard>=4.6")
-    def test_get_changelist_template(self):
+    def test_get_changelist_template_for_old_treebeard(self):
         """
         Check the template is the standard change list template when the request is for the changelist endpoint
         """
@@ -344,7 +344,7 @@ class MenuItemModelAdminTestCase(CMSTestCase):
         self.assertEqual(result, "admin/djangocms_navigation/menuitem/tree_change_list.html")
 
     @skipUnless(TREEBEARD_4_5, "Test relevant only for treebeard<4.6")
-    def test_get_changelist_template(self):
+    def test_get_changelist_template_for_new_treebeard(self):
         """
         Check the template is the standard change list template when the request is for the changelist endpoint
         """
