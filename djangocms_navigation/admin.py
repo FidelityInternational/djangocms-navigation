@@ -499,7 +499,10 @@ class MenuItemAdmin(TreeAdmin):
         """
         if is_preview_url(request=request):
             return "admin/djangocms_navigation/menuitem/preview.html"
-        return "admin/djangocms_navigation/menuitem/change_list.html"
+        elif TREEBEARD_4_5:
+            return "admin/djangocms_navigation/menuitem/change_list.html"
+        else:
+            return "admin/djangocms_navigation/menuitem/tree_change_list.html"
 
     def changelist_view(self, request, menu_content_id=None, extra_context=None):
         self.change_list_template = self.get_changelist_template(request=request)
@@ -519,7 +522,6 @@ class MenuItemAdmin(TreeAdmin):
                     return HttpResponseRedirect(version_list_url(menu_content))
             extra_context["title"] = "Edit Menu: {}".format(menu_content.__str__())
             extra_context["menu_content"] = menu_content
-            extra_context["treebeard_4_5"] = TREEBEARD_4_5
             extra_context["versioning_enabled_for_nav"] = self._versioning_enabled
 
         return super().changelist_view(request, extra_context)
