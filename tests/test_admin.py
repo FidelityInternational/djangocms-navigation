@@ -2,6 +2,7 @@ import html
 import importlib
 import json
 import sys
+from unittest import skipIf, skipUnless
 from unittest.mock import patch
 
 from django.contrib import admin
@@ -29,6 +30,7 @@ from djangocms_navigation.admin import (
     MenuItemAdmin,
     MenuItemChangeList,
 )
+from djangocms_navigation.compat import TREEBEARD_4_5
 from djangocms_navigation.models import Menu, MenuContent, MenuItem
 from djangocms_navigation.test_utils import factories
 
@@ -330,6 +332,18 @@ class MenuItemModelAdminTestCase(CMSTestCase):
             ['__str__', 'get_object_url', 'soft_root', 'hide_node', "list_actions"]
         )
 
+    @skipIf(TREEBEARD_4_5, "Test relevant only for treebeard>=4.6")
+    def test_get_changelist_template(self):
+        """
+        Check the template is the standard change list template when the request is for the changelist endpoint
+        """
+        request = self.get_request("/admin/djangocms_navigation/menuitem/1/")
+
+        result = self.model_admin.get_changelist_template(request=request)
+
+        self.assertEqual(result, "admin/djangocms_navigation/menuitem/tree_change_list.html")
+
+    @skipUnless(TREEBEARD_4_5, "Test relevant only for treebeard<4.6")
     def test_get_changelist_template(self):
         """
         Check the template is the standard change list template when the request is for the changelist endpoint
