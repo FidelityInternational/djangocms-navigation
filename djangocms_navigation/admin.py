@@ -26,6 +26,7 @@ from djangocms_versioning.helpers import get_admin_url, version_list_url
 from djangocms_versioning.models import Version
 from treebeard.admin import TreeAdmin
 
+from .compat import TREEBEARD_4_5
 from .conf import TREE_MAX_RESULT_PER_PAGE_COUNT
 from .filters import LanguageFilter
 from .forms import MenuContentForm, MenuItemForm
@@ -498,7 +499,10 @@ class MenuItemAdmin(TreeAdmin):
         """
         if is_preview_url(request=request):
             return "admin/djangocms_navigation/menuitem/preview.html"
-        return "admin/djangocms_navigation/menuitem/change_list.html"
+        elif TREEBEARD_4_5:
+            return "admin/djangocms_navigation/menuitem/change_list.html"
+        else:
+            return "admin/djangocms_navigation/menuitem/tree_change_list.html"
 
     def changelist_view(self, request, menu_content_id=None, extra_context=None):
         self.change_list_template = self.get_changelist_template(request=request)

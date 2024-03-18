@@ -1,6 +1,5 @@
-import django
-
 from packaging.version import Version
+from treebeard import __version__ as treebeard_version
 
 
-DJANGO_4_2 = Version(django.get_version()) >= Version('4.2')
+TREEBEARD_4_5 = Version(treebeard_version) < Version('4.6')

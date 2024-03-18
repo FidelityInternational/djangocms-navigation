@@ -1,5 +1,5 @@
 ====================
-djangocms-navigation
+djangocms-navigation 
 ====================
 
 Installation

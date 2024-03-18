@@ -43,9 +43,8 @@ def run():
     from app_helper import runner
     runner.cms("djangocms_navigation", extra_args=[])
     from cms.test_utils.testcases import CMSTestCase
-
-    from djangocms_navigation.compat import DJANGO_4_2
-    if not DJANGO_4_2:
+    from cms.utils.compat import DJANGO_4_1
+    if DJANGO_4_1:
         CMSTestCase.assertQuerySetEqual = CMSTestCase.assertQuerysetEqual
 
 
