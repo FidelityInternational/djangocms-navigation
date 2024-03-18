@@ -5,6 +5,7 @@ from django.contrib.admin.templatetags.admin_list import (
     result_hidden_fields,
 )
 from django.templatetags.static import static
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -104,7 +105,7 @@ def treebeard_js():
     """
 
     js_file = static('djangocms_navigation/js/navigation-tree-admin.js')
-
+    jsi18n_url = reverse('admin:jsi18n')
     jquery_ui = static('treebeard/jquery-ui-1.8.5.custom.min.js')
 
     # Jquery UI is needed to call disableSelection() on drag and drop so
@@ -118,7 +119,7 @@ def treebeard_js():
         '</script>'
         '<script type="text/javascript" src="{}"></script>')
     return format_html(
-        TEMPLATE, "jsi18n", mark_safe(js_file), mark_safe(jquery_ui))
+        TEMPLATE, jsi18n_url, mark_safe(js_file), mark_safe(jquery_ui))
 
 
 admin_tree.treebeard_js = treebeard_js
