@@ -4,6 +4,10 @@ Changelog
 
 Unreleased
 ==========
+* Python 3.10 support added
+* Python 3.7 support removed
+* Django 4.2 support added
+* Django 2.2 support removed
 
 1.8.3 (2024-03-06)
 ==================

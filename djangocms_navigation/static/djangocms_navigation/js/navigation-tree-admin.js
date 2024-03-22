@@ -14,6 +14,26 @@ Original code found in treebeard-admin.js
 
     const EXPANDED_SESSION_KEY = 'expanded-';
 
+    // Add jQuery util for disabling selection
+    // Originally taken from jquery-ui (where it is deprecated)
+    // https://api.jqueryui.com/disableSelection/
+    if($.fn.disableSelection == undefined) {
+        $.fn.extend( {
+            disableSelection: ( function() {
+                var eventType = "onselectstart" in document.createElement( "div" ) ? "selectstart" : "mousedown";
+                return function() {
+                    return this.on( eventType + ".ui-disableSelection", function( event ) {
+                        event.preventDefault();
+                    } );
+                };
+            } )(),
+    
+            enableSelection: function() {
+                return this.off( ".ui-disableSelection" );
+            }
+        } );
+    }
+
     // This is the basic Node class, which handles UI tree operations for each 'row'
     var Node = function (elem) {
         var $elem = $(elem);
@@ -146,7 +166,7 @@ Original code found in treebeard-admin.js
                 if (document.cookie && document.cookie != '') {
                     var cookies = document.cookie.split(';');
                     for (var i = 0; i < cookies.length; i++) {
-                        var cookie = jQuery.trim(cookies[i]);
+                        var cookie = $.trim(cookies[i]);
                         // Does this cookie string begin with the name we want?
                         if (cookie.substring(0, name.length + 1) == (name + '=')) {
                             cookieValue = decodeURIComponent(cookie.substring(name.length + 1));

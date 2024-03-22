@@ -1,5 +1,4 @@
 -r ./requirements_base.txt
 
 Django>=3.2,<4.0
-django-classy-tags
-django-sekizai
+django-treebeard<=4.5.1

@@ -1,0 +1,4 @@
+-r ./requirements_base.txt
+
+Django>=4.2,<5.0
+django-treebeard>=4.6.0

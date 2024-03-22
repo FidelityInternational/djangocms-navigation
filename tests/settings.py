@@ -42,6 +42,10 @@ HELPER_SETTINGS = {
 def run():
     from app_helper import runner
     runner.cms("djangocms_navigation", extra_args=[])
+    from cms.test_utils.testcases import CMSTestCase
+    from cms.utils.compat import DJANGO_4_1
+    if DJANGO_4_1:
+        CMSTestCase.assertQuerySetEqual = CMSTestCase.assertQuerysetEqual
 
 
 if __name__ == "__main__":

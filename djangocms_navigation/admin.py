@@ -13,7 +13,7 @@ from django.http import Http404, HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
-from django.urls import re_path, reverse, reverse_lazy
+from django.urls import path, re_path, reverse, reverse_lazy
 from django.utils.html import format_html, format_html_join
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
@@ -26,6 +26,7 @@ from djangocms_versioning.helpers import get_admin_url, version_list_url
 from djangocms_versioning.models import Version
 from treebeard.admin import TreeAdmin
 
+from .compat import TREEBEARD_4_5
 from .conf import TREE_MAX_RESULT_PER_PAGE_COUNT
 from .filters import LanguageFilter
 from .forms import MenuContentForm, MenuItemForm
@@ -66,6 +67,7 @@ class MenuItemChangeList(ChangeList):
         )
 
 
+@admin.register(MenuContent)
 class MenuContentAdmin(ExtendedVersionAdminMixin, admin.ModelAdmin):
     form = MenuContentForm
     menu_model = Menu
@@ -130,13 +132,14 @@ class MenuContentAdmin(ExtendedVersionAdminMixin, admin.ModelAdmin):
 
         return menu_content_list_display
 
+    @admin.display(
+        description=_("Lock State")
+    )
     def is_locked(self, obj):
         version = self.get_version(obj)
         if version.state == DRAFT and version_is_locked(version):
             return render_to_string("djangocms_version_locking/admin/locked_icon.html")
         return ""
-
-    is_locked.short_description = _("Lock State")
 
     def _get_references_link(self, obj, request):
         menu_content_type = ContentType.objects.get(
@@ -153,6 +156,10 @@ class MenuContentAdmin(ExtendedVersionAdminMixin, admin.ModelAdmin):
             {"url": url}
         )
 
+    @admin.display(
+        description="Main Navigation",
+        boolean=True,
+    )
     def get_main_navigation(self, obj):
         """
         Return main_navigation field from Menu associated with MenuContent.
@@ -160,9 +167,6 @@ class MenuContentAdmin(ExtendedVersionAdminMixin, admin.ModelAdmin):
         :return: Boolean
         """
         return obj.menu.main_navigation
-
-    get_main_navigation.short_description = "Main Navigation"
-    get_main_navigation.boolean = True
 
     def _get_main_navigation_link(self, obj, request, disabled=False):
         """
@@ -237,6 +241,9 @@ class MenuContentAdmin(ExtendedVersionAdminMixin, admin.ModelAdmin):
             )
         )
 
+    @admin.display(
+        description=_("Menu Items")
+    )
     def get_menuitem_link(self, obj):
         object_menuitem_url = reverse(
             "admin:{app}_{model}_list".format(
@@ -252,9 +259,9 @@ class MenuContentAdmin(ExtendedVersionAdminMixin, admin.ModelAdmin):
             object_menuitem_url,
             _("Items"),
         )
-    get_menuitem_link.short_description = _("Menu Items")
 
 
+@admin.register(MenuItem)
 class MenuItemAdmin(TreeAdmin):
     form = MenuItemForm
     menu_content_model = MenuContent
@@ -277,47 +284,47 @@ class MenuItemAdmin(TreeAdmin):
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
         return [
-            re_path(
-                r"^$",
+            path(
+                "",
                 self.admin_site.admin_view(self.changelist_view),
                 name="{}_{}_changelist".format(*info),
             ),
-            re_path(
-                r"^(?P<menu_content_id>\d+)/$",
+            path(
+                "<int:menu_content_id>/",
                 self.admin_site.admin_view(self.changelist_view),
                 name="{}_{}_list".format(*info),
             ),
-            re_path(
-                r"^(?P<menu_content_id>\d+)/preview/$",
+            path(
+                "<int:menu_content_id>/preview/",
                 self.admin_site.admin_view(self.preview_view),
                 name="{}_{}_preview".format(*info),
             ),
-            re_path(
-                r"^(?P<menu_content_id>\d+)/add/$",
+            path(
+                "<int:menu_content_id>/add/",
                 self.admin_site.admin_view(self.add_view),
                 name="{}_{}_add".format(*info),
             ),
-            re_path(
-                r"^(?P<menu_content_id>\d+)/(?P<object_id>\d+)/change/$",
+            path(
+                "<int:menu_content_id>/<int:object_id>/change/",
                 self.admin_site.admin_view(self.change_view),
                 name="{}_{}_change".format(*info),
             ),
-            re_path(
-                r"^(?P<menu_content_id>\d+)/(?P<object_id>\d+)/delete/$",
+            path(
+                "<int:menu_content_id>/<int:object_id>/delete/",
                 self.admin_site.admin_view(self.delete_view),
                 name="{}_{}_delete".format(*info),
             ),
-            re_path(
-                r"^(?P<menu_content_id>\d+)/move/$",
+            path(
+                "<int:menu_content_id>/move/",
                 self.admin_site.admin_view(self.move_node),
                 name="{}_{}_move_node".format(*info),
             ),
-            re_path(
-                r"^(?P<menu_content_id>\d+)/jsi18n/$",
+            path(
+                "<int:menu_content_id>/jsi18n/",
                 JavaScriptCatalog.as_view(packages=["treebeard"]),
             ),
-            re_path(
-                r"^select2/$",
+            path(
+                "select2/",
                 self.admin_site.admin_view(ContentObjectSelect2View.as_view(
                     menu_content_model=self.menu_content_model,
                 )),
@@ -325,8 +332,8 @@ class MenuItemAdmin(TreeAdmin):
                     self.model._meta.app_label
                 )
             ),
-            re_path(
-                r"^(?P<menu_content_id>\d+)/messages/$",
+            path(
+                "<int:menu_content_id>/messages/",
                 self.admin_site.admin_view(MessageStorageView.as_view()),
                 name="{}_{}_message_storage".format(*info),
             ),
@@ -442,7 +449,7 @@ class MenuItemAdmin(TreeAdmin):
             kwargs={"menu_content_id": menu_content_id, "object_id": object_id},
         )
         return super().change_view(
-            request, object_id, form_url="", extra_context=extra_context
+            request, str(object_id), form_url="", extra_context=extra_context
         )
 
     def add_view(self, request, menu_content_id=None, form_url="", extra_context=None):
@@ -492,7 +499,10 @@ class MenuItemAdmin(TreeAdmin):
         """
         if is_preview_url(request=request):
             return "admin/djangocms_navigation/menuitem/preview.html"
-        return "admin/djangocms_navigation/menuitem/change_list.html"
+        elif TREEBEARD_4_5:
+            return "admin/djangocms_navigation/menuitem/change_list.html"
+        else:
+            return "admin/djangocms_navigation/menuitem/tree_change_list.html"
 
     def changelist_view(self, request, menu_content_id=None, extra_context=None):
         self.change_list_template = self.get_changelist_template(request=request)
@@ -632,7 +642,7 @@ class MenuItemAdmin(TreeAdmin):
                 to_be_deleted = [f"Menu item: {menu_item}"]
                 extra_context["deleted_objects"] = self._get_to_be_deleted(menu_item.get_children(), to_be_deleted)
 
-        return super().delete_view(request, object_id, extra_context)
+        return super().delete_view(request, str(object_id), extra_context)
 
     def response_delete(self, request, obj_display, obj_id):
         """
@@ -784,12 +794,13 @@ class MenuItemAdmin(TreeAdmin):
 
         return Form
 
+    @admin.display(
+        description=_("URL")
+    )
     def get_object_url(self, obj):
         if obj.content:
             obj_url = obj.content.get_absolute_url()
             return format_html("<a href='{0}'>{0}</a>", obj_url)
-
-    get_object_url.short_description = _("URL")
 
     @property
     def _versioning_enabled(self):
@@ -798,7 +809,3 @@ class MenuItemAdmin(TreeAdmin):
         return apps.get_app_config(
             self.model._meta.app_label
         ).cms_config.djangocms_versioning_enabled
-
-
-admin.site.register(MenuItem, MenuItemAdmin)
-admin.site.register(MenuContent, MenuContentAdmin)

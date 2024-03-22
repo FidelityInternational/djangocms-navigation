@@ -2,9 +2,9 @@ import html
 import importlib
 import json
 import sys
+from unittest import skipIf, skipUnless
 from unittest.mock import patch
 
-import django
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
@@ -17,6 +17,7 @@ from django.utils.translation import gettext_lazy as _
 from cms.api import add_plugin, create_page, create_title
 from cms.test_utils.testcases import CMSTestCase
 from cms.toolbar.utils import get_object_preview_url
+from cms.utils.compat import DJANGO_4_1
 
 from bs4 import BeautifulSoup
 from djangocms_versioning.constants import DRAFT, PUBLISHED, UNPUBLISHED
@@ -29,14 +30,11 @@ from djangocms_navigation.admin import (
     MenuItemAdmin,
     MenuItemChangeList,
 )
+from djangocms_navigation.compat import TREEBEARD_4_5
 from djangocms_navigation.models import Menu, MenuContent, MenuItem
 from djangocms_navigation.test_utils import factories
 
 from .utils import UsefulAssertsMixin, disable_versioning_for_navigation
-
-
-version = list(map(int, django.__version__.split('.')))
-GTE_DJ21 = version[0] >= 2 and version[1] >= 1
 
 
 class MenuItemChangelistTestCase(CMSTestCase):
@@ -69,8 +67,9 @@ class MenuItemChangelistTestCase(CMSTestCase):
             model_admin,  # model_admin
             admin_field,  # sortable_by
         ]
-        if not GTE_DJ21:
-            args.pop()
+        if not DJANGO_4_1:
+            search_help_text = model_admin.search_help_text
+            args.append(search_help_text)
 
         return MenuItemChangeList(*args)
 
@@ -297,7 +296,7 @@ class MenuItemModelAdminTestCase(CMSTestCase):
 
         queryset = self.model_admin.get_queryset(request)
 
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             queryset, [menu_contents[0].root.pk, child_item.pk], lambda o: o.pk
         )
 
@@ -333,7 +332,19 @@ class MenuItemModelAdminTestCase(CMSTestCase):
             ['__str__', 'get_object_url', 'soft_root', 'hide_node', "list_actions"]
         )
 
-    def test_get_changelist_template(self):
+    @skipIf(TREEBEARD_4_5, "Test relevant only for treebeard>=4.6")
+    def test_get_changelist_template_for_old_treebeard(self):
+        """
+        Check the template is the standard change list template when the request is for the changelist endpoint
+        """
+        request = self.get_request("/admin/djangocms_navigation/menuitem/1/")
+
+        result = self.model_admin.get_changelist_template(request=request)
+
+        self.assertEqual(result, "admin/djangocms_navigation/menuitem/tree_change_list.html")
+
+    @skipUnless(TREEBEARD_4_5, "Test relevant only for treebeard<4.6")
+    def test_get_changelist_template_for_new_treebeard(self):
         """
         Check the template is the standard change list template when the request is for the changelist endpoint
         """
