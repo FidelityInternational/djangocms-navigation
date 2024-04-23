@@ -10,6 +10,7 @@ HELPER_SETTINGS = {
         "djangocms_version_locking",
         "djangocms_moderation",
         "djangocms_references",
+        "djangocms_snippet",
     ],
     "CMS_CONFIRM_VERSION4": True,
     "DJANGOCMS_VERSIONING_ENABLE_MENU_REGISTRATION": False,
@@ -27,6 +28,7 @@ HELPER_SETTINGS = {
         'djangocms_version_locking': None,
         'djangocms_moderation': None,
         "djangocms_references": None,
+        "djangocms_snippet": None,
     },
     "LANGUAGES": (
         ("en", "English"),

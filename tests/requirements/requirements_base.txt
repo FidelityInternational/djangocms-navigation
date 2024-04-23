@@ -15,5 +15,6 @@ https://github.com/divio/djangocms-text-ckeditor/tarball/master#egg=djangocms-te
 https://github.com/django-cms/djangocms-versioning/tarball/support/django-cms-4.0.x#egg=djangocms-versioning
 https://github.com/FidelityInternational/djangocms-version-locking/tarball/master#egg=djangocms-version-locking
 https://github.com/django-cms/djangocms-moderation/tarball/master#egg=djangocms-moderation
-https://github.com/FidelityInternational/djangocms-references/tarball/master#egg=djangocms-references
+https://github.com/FidelityInternational/djangocms-references/tarball/release/1.5.0#egg=djangocms-references
 https://github.com/django-cms/djangocms-alias/tarball/support/django-cms-4.0.x#egg=djangocms-alias
+https://github.com/joshyu/djangocms-snippet/tarball/release/4.0.1.dev3#egg=djangocms-snippet
